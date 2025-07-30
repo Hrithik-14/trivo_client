@@ -4,7 +4,8 @@ import React from 'react'
 function Register() {
   return (
     <div>
-    <Link href={"/auth/login"}>Login</Link>
+      <h1>Register</h1><br/>
+    <Link href={"/auth/login"}>Login</Link><br/>
     <Link href={"/"}>Home</Link>
     </div>
   )
