@@ -1,11 +1,11 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FC } from 'react'
 import { Users, UserCheck, Clock, ChevronLeft, ChevronRight, Calendar  } from 'lucide-react';
 import PerformanceChart from "@/app/components/PerformanceChart"
 
-const Dashboard = () => {
+const Dashboard: FC = () => {
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
