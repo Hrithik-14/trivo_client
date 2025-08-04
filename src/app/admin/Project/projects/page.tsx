@@ -13,7 +13,6 @@ const managerOptions: ManagerOption[] = [
     { value: 'bob', label: 'Bob Williams' },
 ];
 
-// Modal component inside same file
 const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
     const [selectedManager, setSelectedManager] = useState<ManagerOption | null>(null);
 
