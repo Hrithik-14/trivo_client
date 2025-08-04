@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   employeeCode: string,
+  role: string
   token?: string;
 }
 
