@@ -40,6 +40,7 @@ const onSubmit = async (data: LoginFormData) => {
       name: res.data.user.name,
       email: res.data.user.email,
       employeeCode: res.data.user.employeeCode,
+      role: res.data.user.role,
       token: res.data.token,
     }))
 
@@ -68,14 +69,11 @@ const onSubmit = async (data: LoginFormData) => {
     return (
       <div className='bg-[url("/bg.png")] bg-center bg-cover h-screen flex items-center'>
         <div className='w-80 h-[80vh] bg-white/10 backdrop-blur-md p-8 rounded-xl text-white text-center ml-20 flex flex-col items-center justify-center'>
-          {/* Logo */}
           <div className='mb-12'>
             <Image src="/logo_png.png" alt="Logo image" width={150} height={35} />
           </div>
           
-          {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)} className='w-full space-y-6'>
-            {/* Username Field */}
             <div className='relative'>
               <div className='relative'>
                 <User className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#eee] w-5 h-5' />
@@ -99,7 +97,6 @@ const onSubmit = async (data: LoginFormData) => {
               )}
             </div>
 
-            {/* Password Field */}
             <div className='relative'>
               <div className='relative'>
                 <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#eee] w-4 h-4' />

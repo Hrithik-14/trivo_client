@@ -14,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         const storedUser = localStorage.getItem('user');
         const parsed = storedUser ? JSON.parse(storedUser) : null;
         setRole(parsed?.role || null);
+        console.log(storedUser);
     }, []);
 
     const logout = () => {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         alert('Logged out successfully!');
         window.location.href = '/auth/login';
     };
+    
 
     if (role !== "admin") return children
 
@@ -64,19 +66,54 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     >
                         Projects
                     </Link>
-                    <li className="w-fit py-2 px-4 rounded">Managers</li>
-                    <li className="w-fit py-2 px-4 rounded">Managers Report</li>
-                    <li className="w-fit py-2 px-4 rounded">Employees</li>
+                    <Link
+                        href={"/admin/managers/manager"}
+                        className={` w-fit py-2 px-4  rounded ${
+                        pathname === "/admin/managers/manager" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Managers
+                    </Link>
+                    <Link
+                        href={"/admin/managers/dailyReport"}
+                        className={` w-fit py-2 px-4  rounded ${
+                        pathname === "/admin/managers/dailyReport" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Managers Report
+                    </Link>
+                    <Link
+                        href={"/admin/employee"}
+                        className={` w-fit py-2 px-4  rounded ${
+                        pathname === "/admin/employee" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Employees
+                    </Link>
                     <li className="w-fit py-2 px-4 rounded">Messenger</li>
-                    <li className="w-fit py-2 px-4 rounded">Paylips</li>
-                    <li className="w-fit py-2 px-4 rounded">Mail</li>
+                    <Link
+                        href={"/admin/paylips"}
+                        className={` w-fit py-2 px-4  rounded ${
+                        pathname === "/admin/paylips" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Payslip
+                    </Link>
+                    <Link
+                        href={"/admin/mail"}
+                        className={` w-fit py-2 px-4  rounded ${
+                        pathname === "/admin/mail" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Mail
+                    </Link>
                     </ul>
                     <button onClick={logout} className="py-2 mx-2 border mb-2">
                     LogOut
                     </button>
                 </nav>
 
-                <main className="flex-1 p-6 overflow-auto">{children}</main>
+                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3]">{children}</main>
             </div>
         </>
     )
