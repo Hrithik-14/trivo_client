@@ -44,7 +44,7 @@ export default function LandingPage() {
             <div>
               <h2 className="text-5xl font-bold text-gray-900 leading-tight mb-6 ">
                 Innovating<br />
-                Tomorrow's<br />
+                Tomorrow&apos;s<br />
                 Business<br />
                 Solutions
               </h2>
@@ -70,7 +70,6 @@ export default function LandingPage() {
         </div>
     </section>
 
-      {/* About Us Section */}
     <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h3 className="text-3xl font-bold text-gray-900 mb-12">About Us</h3>
@@ -95,7 +94,6 @@ export default function LandingPage() {
               </p>
             </div>
             
-            {/* Team Members */}
             <div className="space-y-6 ">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
@@ -139,7 +137,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="bg-white p-8 rounded-lg shadow-sm">
               <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
@@ -157,7 +154,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-white py-12 border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
