@@ -1,14 +1,22 @@
-
 'use client'
 
 import { useState, useEffect, FC } from 'react'
 import { Users, UserCheck, Clock, ChevronLeft, ChevronRight, Calendar  } from 'lucide-react';
 import PerformanceChart from "@/app/components/PerformanceChart"
 
+import api from '@/app/api/axios';
+
 const Dashboard: FC = () => {
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [users, setUsers] = useState(null)
+
+    useEffect(() => {
+        const fetchUser = async() => {
+            const res = await api.get('/')
+        }
+    }, [])
 
     useEffect(() => {
         const timer = setInterval(() => {
