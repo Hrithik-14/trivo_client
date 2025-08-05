@@ -1,73 +1,119 @@
 "use client"
 
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User } from 'lucide-react';
 import Select, { SingleValue } from 'react-select';
+import api from '@/app/api/axios';
+import { useForm, Controller } from 'react-hook-form';
 
 type ManagerOption = { value: string; label: string };
 
-const managerOptions: ManagerOption[] = [
-    { value: 'john', label: 'John Doe' },
-    { value: 'jane', label: 'Jane Smith' },
-    { value: 'alice', label: 'Alice Johnson' },
-    { value: 'bob', label: 'Bob Williams' },
-];
+type ProjectFormData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  client: string;
+  clientEmail: string;
+  description: string;
+  managerId: ManagerOption | null;
+};
 
 const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
-    const [selectedManager, setSelectedManager] = useState<ManagerOption | null>(null);
+  const { register, handleSubmit, control, reset } = useForm<ProjectFormData>();
+  const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
 
-    const handleManagerChange = (option: SingleValue<ManagerOption>) => {
-        setSelectedManager(option);
+  useEffect(() => {
+    const fetchManagers = async () => {
+      try {
+        const res = await api.get('/managers');
+        const options = res.data.map((manager: any) => ({
+          value: manager._id,
+          label: manager.name
+        }));
+        setManagerOptions(options);
+      } catch (err) {
+        console.error("Failed to fetch managers:", err);
+      }
     };
 
-    return (
-        <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-            <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-2xl text-black">
-                <div className='flex justify-between'>
-                    <h2 className='font-bold text-lg'>Add Project</h2>
-                    <button onClick={onClose} className='cursor-pointer'>
-                        <X size={18} />
-                    </button>
-                </div>
-                <form action="" className='flex flex-col gap-3 mt-3'>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Project name</p>
-                        <input type="text" placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-                    </label>
-                    <div className='flex gap-3'>
-                        <label className='flex flex-col gap-1 flex-1'>
-                            <p className='text-xs font-semibold'>Starting Date</p>
-                            <input type="date" className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-                        </label>
-                        <label className='flex flex-col gap-1 flex-1'>
-                            <p className='text-xs font-semibold'>Ending Date</p>
-                            <input type="date" className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-                        </label>
-                    </div>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Add manager</p>
-                        <Select
-                            options={managerOptions}
-                            value={selectedManager}
-                            onChange={handleManagerChange}
-                            placeholder='Select manager'
-                            className='text-sm'
-                            isClearable
-                        />
-                    </label>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Description</p>
-                        <input type="text" placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-                    </label>
-                    <div className='flex justify-end'>
-                        <button className='bg-[#22C55E] text-white px-4 py-2 rounded cursor-pointer'>
-                            Add Project
-                        </button>
-                    </div>
-                </form>
-            </div>
+    fetchManagers();
+  }, []);
+
+  const onSubmit = (data: ProjectFormData) => {
+    const project = {
+      ...data,
+      managerId: data.managerId?.value,
+    };
+
+    console.log("📦 Submitted Project:", project);
+    api.post('/admin/addAdminProject', project)
+
+    reset();
+  };
+
+  return (
+    <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+      <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-2xl text-black">
+        <div className='flex justify-between'>
+          <h2 className='font-bold text-lg'>Add Project</h2>
+          <button onClick={onClose} className='cursor-pointer'>
+            <X size={18} />
+          </button>
         </div>
-    );
+        <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3 mt-3'>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Project name</p>
+            <input type="text" {...register("name")} placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+          </label>
+          <div className='flex gap-3'>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Starting Date</p>
+              <input type="date" {...register("startDate")} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+            </label>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Ending Date</p>
+              <input type="date" {...register("endDate")} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+            </label>
+          </div>
+          <div className='flex gap-3'>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Client Name</p>
+              <input type="text" {...register("client")} placeholder='Client name' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+            </label>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Client Mail</p>
+              <input type="email" {...register("clientEmail")} placeholder='Client mail' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+            </label>
+          </div>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Add Manager</p>
+            <Controller
+              control={control}
+              name="managerId"
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={managerOptions}
+                  placeholder='Select manager'
+                  className='text-sm'
+                  isClearable
+                />
+              )}
+            />
+          </label>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Description</p>
+            <input type="text" {...register("description")} placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+          </label>
+          <div className='flex justify-end'>
+            <button type="submit" className='bg-[#22C55E] text-white px-4 py-2 rounded cursor-pointer'>
+              Add Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 

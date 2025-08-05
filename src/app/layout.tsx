@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import './globals.css';
 import { ReduxProvider } from './ReduxProvider';
 import type { Metadata } from 'next';
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <Toaster position="top-right" reverseOrder={false} />
         <ReduxProvider>
           {children}
         </ReduxProvider>
