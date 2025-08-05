@@ -1,22 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { Users, Plus, Search, Mail, Map, Phone, X, User, Camera } from "lucide-react";
 import Image from "next/image";
 import api from "@/app/api/axios";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation"; // Updated import for App Router
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
-// Match backend enum values
 const jobRoleLabels: { [key: string]: string } = {
   productmanager: "Product Manager",
   designmanager: "Design Manager",
-  frontend: "Frontend Developer",
-  backend: "Backend Developer",
-  tester: "Tester",
-  seniordeveloper: "Senior Developer",
-  designer: "UI/UX Designer",
 };
 
 const jobRoleEnum = Object.keys(jobRoleLabels);
@@ -24,7 +19,7 @@ const jobRoleEnum = Object.keys(jobRoleLabels);
 const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
   const [form, setForm] = useState({
     name: "",
-    designation: "", // Fixed typo
+    designation: "",
     role: "manager",
     email: "",
     dateOfBirth: "",
@@ -56,17 +51,11 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      console.log("Image selected:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    console.log(`Form field changed: ${name} = ${value}`);
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -75,9 +64,6 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submission started");
-    console.log("Current form state:", form);
-    console.log("Image file:", imageFile);
 
     if (!form.name.trim()) {
       toast.error("Name is required");
@@ -116,7 +102,7 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         role: form.role,
-        designation: form.designation, // Fixed typo
+        designation: form.designation,
         phoneNumber: form.phoneNumber || "",
         dateOfBirth: form.dateOfBirth || "",
         street: form.street || "",
@@ -129,37 +115,30 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
       Object.entries(fieldsToSend).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== "") {
           formData.append(key, value);
-          console.log(`Added to FormData: ${key} = ${value}`);
         }
       });
 
       if (imageFile) {
         formData.append("profileImage", imageFile);
-        console.log(`Added file to FormData: profileImage = ${imageFile.name}`);
       }
-
-      console.log("=== Complete FormData ===");
-      for (let pair of formData.entries()) {
+      for (const pair of formData.entries()) {
         if (pair[1] instanceof File) {
           console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
         } else {
           console.log(`${pair[0]}: ${pair[1]}`);
         }
       }
-      console.log("========================");
 
       const response = await api.post("/auth/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      console.log("Registration successful:", response.data);
       toast.success(response.data.message || "Manager registered successfully!");
 
       setForm({
         name: "",
-        designation: "", // Fixed typo
+        designation: "",
         role: "manager",
         email: "",
         dateOfBirth: "",
@@ -248,7 +227,7 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
               <label className="w-full">
                 <div className="text-xs font-semibold text-[#696969]">Job Role</div>
                 <select
-                  name="designation" // Fixed typo
+                  name="designation"
                   value={form.designation}
                   onChange={handleChange}
                   className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -363,11 +342,35 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
+
+type User = {
+  _id: string,
+  name: string,
+  profileImage: string,
+  email: string,
+  street: string,
+  city: string,
+  state: string,
+  phoneNumber: string
+}
+
 const Managers: FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [managers, setmanagers] = useState<User[]>([])
+
+
+  useEffect(() => {
+    api.get<User[]>('/managersdeatil')
+      .then(res => setmanagers(res.data))
+      .catch(err => console.error("Error inFetching manager:", err))
+  }, [])
+
+
 
   const handleAdd = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+
+  if (!managers) return notFound()
 
   return (
     <div className="flex flex-col gap-5">
@@ -395,23 +398,41 @@ const Managers: FC = () => {
         </Link>
       </div>
       <div className="grid grid-cols-3 gap-5">
-        <div className="bg-white border border-[#ddd] rounded p-3 flex flex-col gap-3">
+      {managers.map(manager => (
+        <div key={manager._id} className="bg-white border border-[#ddd] rounded p-3 flex flex-col gap-3">
           <div className="flex items-center gap-4 font-semibold text-lg">
-            <Image src="/avatar.png" alt="manager profile" width={50} height={50} className="rounded-full" />
-            <h2>Rushaid</h2>
+            {manager.profileImage ? (
+              <Image
+                src={manager.profileImage}
+                alt="manager profile"
+                width={50}
+                height={50}
+                className="rounded-full object-cover"
+                style={{ maxWidth: '50px', maxHeight: '50px' }}
+              />
+            ) : (
+              <Image
+                src="/avatar.png"
+                alt="default profile"
+                width={50}
+                height={50}
+                className="rounded-full"
+              />
+            )}
+            <h2>{manager.name}</h2>
           </div>
           <div>
             <div className="flex gap-3 items-center">
               <Mail size={13} className="text-[#696969]" />
-              <p className="text-sm text-[#696969]">rushaid@gmail.com</p>
+              <p className="text-sm text-[#696969]">{manager.email}</p>
             </div>
             <div className="flex gap-3 items-center">
               <Map size={13} className="text-[#696969]" />
-              <p className="text-sm text-[#696969]">Benguluru, mala</p>
+              <p className="text-sm text-[#696969]">{manager.street}, {manager.city}, {manager.state}</p>
             </div>
             <div className="flex gap-3 items-center">
               <Phone size={13} className="text-[#696969]" />
-              <p className="text-sm text-[#696969]">+91 9999999999</p>
+              <p className="text-sm text-[#696969]">+91 {manager.phoneNumber}</p>
             </div>
           </div>
           <div className="flex gap-2 justify-between">
@@ -421,8 +442,11 @@ const Managers: FC = () => {
             <button className="text-[#000] border border-[#ddd] py-2 text-center rounded w-full hover:bg-gray-50 transition-colors">
               Profile
             </button>
+            <ul>
+            </ul>
           </div>
         </div>
+      ))}
       </div>
     </div>
   );
