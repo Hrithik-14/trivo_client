@@ -1,5 +1,5 @@
   'use client'
-  import React, { useState } from 'react'
+  import React, { useEffect, useState } from 'react'
   import Image from 'next/image'
   import { useForm } from 'react-hook-form'
   import { Eye, EyeOff, User, Lock } from 'lucide-react'
@@ -29,6 +29,19 @@ import toast from 'react-hot-toast'
       mode: 'onChange'
     })
 
+        useEffect(() => {
+          const token = localStorage.getItem("token");
+          const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+          if (token && user?.role) {
+            if (user.role === "admin") {
+              router.replace("/admin/dashboard");
+            } else {
+              router.replace("/");
+            }
+          }
+        }, []);
+
 const onSubmit = async (data: LoginFormData) => {
   try {
     const res = await api.post('/auth/login', data)
@@ -56,7 +69,7 @@ const onSubmit = async (data: LoginFormData) => {
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Login failed')
     } else {
-      alert('Something went wrong')
+      toast.error('Something went wrong')
     }
   }
 }
