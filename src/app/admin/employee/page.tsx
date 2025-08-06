@@ -407,7 +407,7 @@ const Employees: FC = () => {
                     alt="manager profile"
                     width={50}
                     height={50}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover object-center"
                     style={{ maxWidth: '50px', maxHeight: '50px' }}
                 />
                 ) : (
