@@ -440,9 +440,9 @@ const Managers: FC = () => {
             <button className="bg-blue-500 text-white py-2 text-center rounded w-full hover:bg-blue-600 transition-colors">
               Message
             </button>
-            <button className="text-[#000] border border-[#ddd] py-2 text-center rounded w-full hover:bg-gray-50 transition-colors">
+            <Link href={`/admin/profile/${manager._id}`} className="text-[#000] border border-[#ddd] py-2 text-center rounded w-full hover:bg-gray-50 transition-colors">
               Profile
-            </button>
+            </Link>
             <ul>
             </ul>
           </div>

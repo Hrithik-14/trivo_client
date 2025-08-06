@@ -46,9 +46,7 @@ const Profile = () => {
     
 
 
-    const handleEdit = () => {
-        router.push('/admin/profile/1/edit')
-    }
+
 
     if (!user) return <p className='absolute left-[50%] top-[50%]'>Loading...</p>
     user.createdAt = new Date(user.createdAt);
@@ -93,7 +91,7 @@ const Profile = () => {
                             <button className='bg-blue-500 text-white rounded p-2 w-full'>
                                 Message
                             </button>
-                            <button onClick={handleEdit} className=' text-[#696969] border border-[#ddd] rounded p-2 w-full'>
+                            <button className=' text-[#696969] border border-[#ddd] rounded p-2 w-full'>
                                 Edit Profile
                             </button>
                             <button className='bg-red-500 text-white rounded p-2'>

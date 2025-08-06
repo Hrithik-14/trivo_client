@@ -1,13 +1,17 @@
 'use client'
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+interface MainContainerProps {
+    children: ReactNode;
+}
+
+export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
 
@@ -121,7 +125,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </button>
                 </nav>
 
-                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3]">{children}</main>
+                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
         </>
     )

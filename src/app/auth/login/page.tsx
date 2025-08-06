@@ -34,7 +34,6 @@ import toast from 'react-hot-toast'
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (token && user?.role) {
-    // Prevent going back to login page
     if (user.role === "admin") {
       router.replace("/admin/dashboard");
     } else {
