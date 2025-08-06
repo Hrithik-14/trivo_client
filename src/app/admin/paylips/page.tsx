@@ -376,7 +376,7 @@ const Payslip: FC = () => {
                     <p className='text-2xl font-semibold'>Payslips</p>
                 </div>
                 <button onClick={handleAdd} className='flex gap-3 py-2 px-4 text-white rounded items-center bg-green-500'>
-                    <Plus size={15} />
+                    <Plus size={16} />
                     <p>Create Payslips</p>
                 </button>
             </div>
