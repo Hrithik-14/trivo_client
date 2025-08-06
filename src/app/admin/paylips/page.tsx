@@ -36,6 +36,7 @@ interface FormData {
     allowance: string;
 }
 
+
 interface AddPayslipProps {
     onClose: () => void;
 }
@@ -62,6 +63,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
 
     const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+    const [employeeList, setEmployeeList] = useState<Employee[]>([]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -69,6 +71,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
             console.log('Payslip saved:', res.data);
             toast.success('Payslips created')
             reset();
+            onClose()
         } catch (error) {
             console.error('Failed to save payslip:', error);
         }
@@ -113,7 +116,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
         });
     };
 
-    const [employeeList, setEmployeeList] = useState<Employee[]>([]);
+    
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -155,7 +158,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
 
                 <div className="space-y-4">
 
-                    {/* Employee Select */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
@@ -167,7 +169,10 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                                     render={({ field }) => (
                                         <Select
                                             {...field}
-                                            options={employeeOptions}
+                                            options={employeeList.map(emp => ({
+                                                value: emp.employeeCode,
+                                                label: `${emp.name} (${emp.employeeCode})`
+                                            }))}
                                             placeholder='Select employee'
                                             className='text-sm w-60'
                                             isClearable
@@ -175,7 +180,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                                                 field.onChange(val?.value ?? '');
                                                 handleEmployeeSelect(val as EmployeeOption | null);
                                             }}
-                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: selectedEmployee.name } : null}
+                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: `${selectedEmployee.name} (${selectedEmployee.employeeCode})` } : null}
                                         />
                                     )}
                                 />
@@ -206,7 +211,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Second Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Email</label>
@@ -244,7 +248,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Street Address */}
                     <div>
                         <label className="block text-sm text-gray-600 mb-1">Street</label>
                         <input
@@ -256,7 +259,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
                     </div>
 
-                    {/* Third Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">City</label>
@@ -292,7 +294,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Salary inputs */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Basic Salary</label>
@@ -345,25 +346,31 @@ type Paylips = {
 }
 
 const Payslip: FC = () => {
-    const [isExpand, setIsExpand] = useState(false)
+    const [isExpand, setIsExpand] = useState<string | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [ payslips, setPayslips ] = useState<Paylips[]>([])
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [reload, setReload] = useState(false);
+
+
 
     useEffect(() => {
         const fetchPayslips = async() => {
             try {
-                const res = await api.get('/payslips')
-                setPayslips(res.data)
+                const res = await api.get(`/payslips?page=${page}&limit=4`);
+                setPayslips(res.data.data);
+                setTotalPages(res.data.totalPages);
             } catch (err) {
                 console.error("Payslips fetching error");
                 
             }
         }
         fetchPayslips()
-    }, [])
+    }, [page, reload])
     
     const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
 
 
@@ -380,9 +387,9 @@ const Payslip: FC = () => {
                     <p>Create Payslips</p>
                 </button>
             </div>
-            <div className='bg-white border border-gray-300 p-3 rounded'>
+            <div className=''>
                 {payslips.map(pay => (
-                    <div key={pay._id}>
+                    <div key={pay._id} className='mb-2 bg-white border border-gray-300 p-3 rounded'>
                         <div className=' flex justify-between items-center'>
                             <div className='flex gap-3'>
                                 <div>
@@ -411,8 +418,8 @@ const Payslip: FC = () => {
                             </div>
                             <div className='flex gap-3'>
                                 <h2 className='text-md font-semibold'>₹ {(pay.basicSalary + pay.allowance).toLocaleString()}</h2>
-                                <button onClick={() => setIsExpand(!isExpand)}>
-                                    {isExpand ? (
+                                <button onClick={() => setIsExpand(prevId => prevId === pay._id ? null : pay._id)}>
+                                    {isExpand === pay._id ? (
                                         <ChevronDown className='text-gray-500 transition-transform duration-300' />
                                     ) : (
                                         <ChevronRight className='text-gray-500 transition-transform duration-300' />
@@ -420,7 +427,7 @@ const Payslip: FC = () => {
                                 </button>
                             </div>
                         </div>
-                        { isExpand && (
+                        { isExpand === pay._id  && (
                             <>
                                 <div className='border-t border-gray-300 mt-3 px-3 py-2 flex flex-col gap-2'>
                                     <div className='flex justify-between items-center'>
@@ -437,6 +444,24 @@ const Payslip: FC = () => {
                     </div>
                 ))}
             </div>
+            <div className="flex justify-center mt-4 gap-2">
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(prev => prev - 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Prev
+                </button>
+                <span className="px-4 py-2">{page} / {totalPages}</span>
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(prev => prev + 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
+
         </div>
     )
 }
