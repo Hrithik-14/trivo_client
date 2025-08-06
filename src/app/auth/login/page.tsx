@@ -20,6 +20,7 @@ import toast from 'react-hot-toast'
     const router = useRouter()
     const dispatch = useDispatch()
     
+    
     const {
       register,
       handleSubmit,
@@ -143,7 +144,7 @@ const onSubmit = async (data: LoginFormData) => {
             </div>
 
             <div className='text-right'>
-              <a href="#" className='text-sm text-gray-300 hover:text-white transition-colors'>
+              <a href="/forgotpass" className='text-sm text-gray-300 hover:text-white transition-colors'>
                 Forgotten password?
               </a>
             </div>
