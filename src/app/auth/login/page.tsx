@@ -1,5 +1,5 @@
   'use client'
-  import React, { useState } from 'react'
+  import React, { useEffect, useState } from 'react'
   import Image from 'next/image'
   import { useForm } from 'react-hook-form'
   import { Eye, EyeOff, User, Lock } from 'lucide-react'
@@ -28,6 +28,21 @@ import toast from 'react-hot-toast'
     } = useForm<LoginFormData>({
       mode: 'onChange'
     })
+
+    useEffect(() => {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (token && user?.role) {
+    // Prevent going back to login page
+    if (user.role === "admin") {
+      router.replace("/admin/dashboard");
+    } else {
+      router.replace("/");
+    }
+  }
+}, []);
+
 
 const onSubmit = async (data: LoginFormData) => {
   try {

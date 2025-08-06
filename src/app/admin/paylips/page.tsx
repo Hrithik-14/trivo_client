@@ -1,26 +1,32 @@
 "use client"
 
-import { ChevronDown, ChevronRight, FileText, Plus, X, Search } from 'lucide-react'
-import React, { FC, useState, useRef, useEffect } from 'react'
+import api from '@/app/api/axios';
+import { ChevronDown, ChevronRight, FileText, Plus, X } from 'lucide-react'
+import Image from 'next/image';
+import React, { FC, useEffect, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import Select from 'react-select';
 
 interface Employee {
-    id: string;
+    employeeCode: string;
     name: string;
     email: string;
-    mobile: string;
-    jobRole: string;
+    phoneNumber: string;
+    designation: string;
     street: string;
     city: string;
     state: string;
     pincode: string;
+    role: string;
 }
 
 interface FormData {
     employeeName: string;
-    employeeId: string;
-    jobRole: string;
+    employeeCode: string;
+    designation: string;
     email: string;
-    mobileNo: string;
+    phoneNumber: string;
     salaryDate: string;
     street: string;
     city: string;
@@ -30,288 +36,173 @@ interface FormData {
     allowance: string;
 }
 
-interface SearchableDropdownProps {
-    value: string;
-    onSelect: (employee: Employee) => void;
-    placeholder: string;
-    searchKey: keyof Employee;
-    displayKey: keyof Employee;
-    data?: Employee[];
-    disabled?: boolean;
-}
-
-const mockEmployees: Employee[] = [
-    {
-        id: 'TAN0378-0021',
-        name: 'Anirudh',
-        email: 'anirudh@gmail.com',
-        mobile: '+91 9999999999',
-        jobRole: 'Backend Developer',
-        street: '123, Banglore street',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '606060'
-    },
-    {
-        id: 'TAN0378-0022',
-        name: 'Priya Sharma',
-        email: 'priya.sharma@gmail.com',
-        mobile: '+91 9876543210',
-        jobRole: 'Frontend Developer',
-        street: '456, MG Road',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560001'
-    },
-    {
-        id: 'TAN0378-0023',
-        name: 'Rajesh Kumar',
-        email: 'rajesh.kumar@gmail.com',
-        mobile: '+91 8765432109',
-        jobRole: 'Full Stack Developer',
-        street: '789, Brigade Road',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560025'
-    },
-    {
-        id: 'TAN0378-0024',
-        name: 'Sneha Reddy',
-        email: 'sneha.reddy@gmail.com',
-        mobile: '+91 7654321098',
-        jobRole: 'UI/UX Designer',
-        street: '321, Koramangala',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560034'
-    },
-    {
-        id: 'TAN0378-0025',
-        name: 'Arjun Patel',
-        email: 'arjun.patel@gmail.com',
-        mobile: '+91 6543210987',
-        jobRole: 'DevOps Engineer',
-        street: '654, Whitefield',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560066'
-    }
-];
-
-const SearchableDropdown: FC<SearchableDropdownProps> = ({ 
-    value, 
-    onSelect, 
-    placeholder, 
-    searchKey, 
-    displayKey, 
-    data = mockEmployees,
-    disabled = false 
-}) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const dropdownRef = useRef(null);
-
-    const filteredData = data.filter(item =>
-        item[searchKey].toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item[displayKey].toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-                setSearchTerm('');
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleSelect = (item: Employee) => {
-        onSelect(item);
-        setIsOpen(false);
-        setSearchTerm('');
-    };
-
-    return (
-        <div className="relative" ref={dropdownRef}>
-            <div
-                className={`w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer flex items-center justify-between ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => !disabled && setIsOpen(!isOpen)}
-            >
-                <span className={value ? 'text-black' : 'text-gray-500'}>
-                    {value || placeholder}
-                </span>
-                <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </div>
-
-            {isOpen && !disabled && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
-                    <div className="p-2 border-b border-gray-100">
-                        <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search..."
-                                className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                autoFocus
-                            />
-                        </div>
-                    </div>
-                    
-                    <div className="max-h-48 overflow-y-auto">
-                        {filteredData.length > 0 ? (
-                            filteredData.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-b-0"
-                                    onClick={() => handleSelect(item)}
-                                >
-                                    <div className="font-medium text-sm text-gray-900">{item[displayKey]}</div>
-                                    <div className="text-xs text-gray-500">{item[searchKey]} • {item.jobRole}</div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                                No employees found
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
 interface AddPayslipProps {
     onClose: () => void;
 }
 
+type EmployeeOption = { value: string; label: string };
+
 const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
-    const [formData, setFormData] = useState<FormData>({
-        employeeName: '',
-        employeeId: '',
-        jobRole: '',
-        email: '',
-        mobileNo: '',
-        salaryDate: '2025-07',
-        street: '',
-        city: '',
-        state: '',
-        pincode: '',
-        basicSalary: '',
-        allowance: ''
-    });
-
-    const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-
-    const handleInputChange = (field: keyof FormData, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleEmployeeSelect = (employee: Employee) => {
-        setSelectedEmployee(employee);
-        setFormData(prev => ({
-            ...prev,
-            employeeName: employee.name,
-            employeeId: employee.id,
-            jobRole: employee.jobRole,
-            email: employee.email,
-            mobileNo: employee.mobile,
-            street: employee.street,
-            city: employee.city,
-            state: employee.state,
-            pincode: employee.pincode
-        }));
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Form submitted:', formData);
-    };
-
-    const clearEmployeeSelection = () => {
-        setSelectedEmployee(null);
-        setFormData({
+    const { register, handleSubmit, control, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
+        defaultValues: {
             employeeName: '',
-            employeeId: '',
-            jobRole: '',
+            employeeCode: '',
+            designation: '',
             email: '',
-            mobileNo: '',
-            salaryDate: formData.salaryDate,
+            phoneNumber: '',
+            salaryDate: '2025-07',
             street: '',
             city: '',
             state: '',
             pincode: '',
-            basicSalary: formData.basicSalary,
-            allowance: formData.allowance
+            basicSalary: '',
+            allowance: ''
+        }
+    });
+
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+    const onSubmit = async (data: FormData) => {
+        try {
+            const res = await api.post('/payslips', data);
+            console.log('Payslip saved:', res.data);
+            toast.success('Payslips created')
+            reset();
+        } catch (error) {
+            console.error('Failed to save payslip:', error);
+        }
+    };
+
+
+    const handleEmployeeSelect = (option: EmployeeOption | null) => {
+        if (!option) {
+            clearEmployeeSelection();
+            return;
+        }
+        const employee = employeeList.find(emp => emp.employeeCode === option.value);
+        if (employee) {
+            setSelectedEmployee(employee);
+            setValue('employeeName', employee.name);
+            setValue('employeeCode', employee.employeeCode);
+            setValue('designation', employee.designation);
+            setValue('email', employee.email);
+            setValue('phoneNumber', employee.phoneNumber);
+            setValue('street', employee.street);
+            setValue('city', employee.city);
+            setValue('state', employee.state);
+            setValue('pincode', employee.pincode);
+        }
+    };
+
+    const clearEmployeeSelection = () => {
+        setSelectedEmployee(null);
+        reset({
+            employeeName: '',
+            employeeCode: '',
+            designation: '',
+            email: '',
+            phoneNumber: '',
+            salaryDate: watch('salaryDate'),
+            street: '',
+            city: '',
+            state: '',
+            pincode: '',
+            basicSalary: watch('basicSalary'),
+            allowance: watch('allowance')
         });
     };
 
+    const [employeeList, setEmployeeList] = useState<Employee[]>([]);
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const res = await api.get('/users');
+                const employees: Employee[] = res.data.users;
+                const filteredEmployees = employees.filter(emp => emp.role !== 'admin');
+
+                setEmployeeList(filteredEmployees);
+                const options = filteredEmployees.map(emp => ({
+                    value: emp.employeeCode,
+                    label: emp.name
+                }));
+                setEmployeeOptions(options);
+            } catch (err) {
+                console.error("Failed to fetch employees:", err);
+            }
+        };
+
+        fetchEmployees();
+    }, []);
+
     return (
         <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-            <div className="bg-white rounded-lg w-full max-w-4xl p-6 relative shadow-2xl text-black">
+            <form 
+                onSubmit={handleSubmit(onSubmit)} 
+                className="bg-white rounded-lg w-full max-w-4xl p-6 relative shadow-2xl text-black"
+            >
                 <div className='flex justify-between items-center mb-6'>
                     <h2 className="text-xl font-medium text-gray-800">Payslips</h2>
                     <button 
+                        type="button"
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
+
                 <div className="space-y-4">
-                    {/* First Row */}
+
+                    {/* Employee Select */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
                             <div className="relative">
-                                <SearchableDropdown
-                                    value={formData.employeeName}
-                                    onSelect={handleEmployeeSelect}
-                                    placeholder="Select Employee"
-                                    searchKey="id"
-                                    displayKey="name"
+                                <Controller
+                                    control={control}
+                                    name="employeeCode"
+                                    rules={{ required: "Employee is required" }}
+                                    render={({ field }) => (
+                                        <Select
+                                            {...field}
+                                            options={employeeOptions}
+                                            placeholder='Select employee'
+                                            className='text-sm w-60'
+                                            isClearable
+                                            onChange={val => {
+                                                field.onChange(val?.value ?? '');
+                                                handleEmployeeSelect(val as EmployeeOption | null);
+                                            }}
+                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: selectedEmployee.name } : null}
+                                        />
+                                    )}
                                 />
-                                {selectedEmployee && (
-                                    <button 
-                                        type="button"
-                                        className="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-20"
-                                        onClick={clearEmployeeSelection}
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                )}
+                                {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
                             </div>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee ID</label>
-                            <SearchableDropdown
-                                value={formData.employeeId}
-                                onSelect={handleEmployeeSelect}
-                                placeholder="Select Employee ID"
-                                searchKey="name"
-                                displayKey="id"
-                                disabled={!!selectedEmployee}
-                            />
-                        </div>
-                        
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Job Role</label>
                             <input
+                                {...register('employeeCode', { required: "Employee ID is required" })}
                                 type="text"
-                                value={formData.jobRole}
-                                onChange={(e) => handleInputChange('jobRole', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-gray-600 mb-1">Job Role</label>
+                            <input
+                                {...register('designation', { required: "Job Role is required" })}
+                                type="text"
+                                className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={!!selectedEmployee}
+                            />
+                            {errors.designation && <p className="text-red-500 text-xs mt-1">{errors.designation.message}</p>}
                         </div>
                     </div>
 
@@ -320,33 +211,36 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Email</label>
                             <input
+                                {...register('email', { 
+                                    required: "Email is required", 
+                                    pattern: { value: /^\S+@\S+$/i, message: "Invalid email" }
+                                })}
                                 type="email"
-                                value={formData.email}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Mobile No.</label>
                             <input
+                                {...register('phoneNumber', { required: "Mobile number is required" })}
                                 type="text"
-                                value={formData.mobileNo}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('mobileNo', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Salary Date</label>
                             <input
+                                {...register('salaryDate', { required: "Salary Date is required" })}
                                 type="month"
-                                value={formData.salaryDate}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('salaryDate', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            {errors.salaryDate && <p className="text-red-500 text-xs mt-1">{errors.salaryDate.message}</p>}
                         </div>
                     </div>
 
@@ -354,12 +248,12 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                     <div>
                         <label className="block text-sm text-gray-600 mb-1">Street</label>
                         <input
+                            {...register('street', { required: "Street is required" })}
                             type="text"
-                            value={formData.street}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('street', e.target.value)}
                             className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={!!selectedEmployee}
                         />
+                        {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
                     </div>
 
                     {/* Third Row */}
@@ -367,83 +261,111 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">City</label>
                             <input
+                                {...register('city', { required: "City is required" })}
                                 type="text"
-                                value={formData.city}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('city', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">State</label>
                             <input
+                                {...register('state', { required: "State is required" })}
                                 type="text"
-                                value={formData.state}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('state', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Pincode</label>
                             <input
+                                {...register('pincode', { required: "Pincode is required" })}
                                 type="text"
-                                value={formData.pincode}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('pincode', e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 disabled={!!selectedEmployee}
                             />
+                            {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>}
                         </div>
                     </div>
 
-                    {/* Fourth Row */}
+                    {/* Salary inputs */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Basic Salary</label>
                             <input
+                                {...register('basicSalary', { required: "Basic Salary is required" })}
                                 type="number"
-                                value={formData.basicSalary}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('basicSalary', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder=""
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            {errors.basicSalary && <p className="text-red-500 text-xs mt-1">{errors.basicSalary.message}</p>}
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Allowance</label>
                             <input
+                                {...register('allowance', { required: "Allowance is required" })}
                                 type="number"
-                                value={formData.allowance}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('allowance', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-100 border-0 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder=""
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            {errors.allowance && <p className="text-red-500 text-xs mt-1">{errors.allowance.message}</p>}
                         </div>
                     </div>
-
-                    {/* Submit Button */}
-                    <div className="flex justify-end pt-4">
-                        <button
-                            onClick={handleSubmit}
-                            className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded transition-colors duration-200"
-                        >
-                            Add
-                        </button>
-                    </div>
                 </div>
-            </div>
+
+                <div className="flex justify-end mt-6 gap-4">
+                    <button
+                        type="submit"
+                        className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        Submit
+                    </button>
+                </div>
+            </form>
         </div>
-    );
-};
+    )
+}
+
+
+type Paylips = {
+    _id: string,
+    employeeCode: string,
+    employeeName: string,
+    email: string,
+    street: string,
+    city: string,
+    state: string,
+    phoneNumber: string,
+    profileImage?: string | null;
+    basicSalary: number;
+    allowance: number;
+}
 
 const Payslip: FC = () => {
     const [isExpand, setIsExpand] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [ payslips, setPayslips ] = useState<Paylips[]>([])
+
+    useEffect(() => {
+        const fetchPayslips = async() => {
+            try {
+                const res = await api.get('/payslips')
+                setPayslips(res.data)
+            } catch (err) {
+                console.error("Payslips fetching error");
+                
+            }
+        }
+        fetchPayslips()
+    }, [])
     
     const handleAdd = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
+
+
 
     return (
         <div className='flex flex-col gap-5'>
@@ -459,46 +381,65 @@ const Payslip: FC = () => {
                 </button>
             </div>
             <div className='bg-white border border-gray-300 p-3 rounded'>
-                <div className=' flex justify-between items-center'>
-                    <div className='flex gap-3'>
-                        <div>
-                            <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold'>
-                                R
+                {payslips.map(pay => (
+                    <div key={pay._id}>
+                        <div className=' flex justify-between items-center'>
+                            <div className='flex gap-3'>
+                                <div>
+                                    {pay.profileImage ? (
+                                        <Image
+                                            src={pay.profileImage}
+                                            alt='profile'
+                                            width={50}
+                                            height={50}
+                                            className='rounded-full max-w-[50px] max-h-[50px] object-cover'
+                                        />
+                                        ) : (
+                                        <Image
+                                            src='/avatar.png'
+                                            alt='default profile'
+                                            width={50}
+                                            height={50}
+                                            className='rounded-full max-w-[50px] max-h-[50px] object-cover'
+                                        />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className='font-semibold'>{pay.employeeName}</h3>
+                                    <p className='text-xs font-semibold text-gray-500'>{pay.employeeCode}</p>
+                                </div>
+                            </div>
+                            <div className='flex gap-3'>
+                                <h2 className='text-md font-semibold'>₹ {(pay.basicSalary + pay.allowance).toLocaleString()}</h2>
+                                <button onClick={() => setIsExpand(!isExpand)}>
+                                    {isExpand ? (
+                                        <ChevronDown className='text-gray-500 transition-transform duration-300' />
+                                    ) : (
+                                        <ChevronRight className='text-gray-500 transition-transform duration-300' />
+                                    )}
+                                </button>
                             </div>
                         </div>
-                        <div>
-                            <h3 className='font-semibold'>Rushaid</h3>
-                            <p className='text-xs font-semibold text-gray-500'>TR/2025/05</p>
-                        </div>
+                        { isExpand && (
+                            <>
+                                <div className='border-t border-gray-300 mt-3 px-3 py-2 flex flex-col gap-2'>
+                                    <div className='flex justify-between items-center'>
+                                        <h2 className='text-sm'>Basic Salary</h2>
+                                        <p className='text-sm'>₹ {pay.basicSalary?.toLocaleString()}</p>
+                                    </div>
+                                    <div className='flex justify-between items-center'>
+                                        <h2 className='text-sm'>Allowance</h2>
+                                        <p className='text-sm'>₹ {pay.allowance?.toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <div className='flex gap-3'>
-                        <h2 className='text-md font-semibold'>42,000</h2>
-                        <button onClick={() => setIsExpand(!isExpand)}>
-                            {isExpand ? (
-                                <ChevronDown className='text-gray-500 transition-transform duration-300' />
-                            ) : (
-                                <ChevronRight className='text-gray-500 transition-transform duration-300' />
-                            )}
-                        </button>
-                    </div>
-                </div>
-                { isExpand && (
-                    <>
-                        <div className='border-t border-gray-300 mt-3 px-3 py-2 flex flex-col gap-2'>
-                            <div className='flex justify-between items-center'>
-                                <h2 className='text-sm'>Basic Salary</h2>
-                                <p className='text-sm'>41,500</p>
-                            </div>
-                            <div className='flex justify-between items-center'>
-                                <h2 className='text-sm'>Allowance</h2>
-                                <p className='text-sm'>1,500</p>
-                            </div>
-                        </div>
-                    </>
-                )}
+                ))}
             </div>
         </div>
     )
 }
 
 export default Payslip
+

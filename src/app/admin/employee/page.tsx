@@ -8,6 +8,7 @@ import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import UserSearch from "@/app/components/UserSearch";
 
 const jobRoleLabels: { [key: string]: string } = {
     frontend: "Frontend Developer",
@@ -392,10 +393,9 @@ const Employees: FC = () => {
             </button>
         </div>
         <div className="flex justify-between">
-            <div className="flex items-center gap-3 border border-[#ddd] w-fit px-3 py-2 rounded-full bg-white">
-            <Search size={15} className="text-[#696969]" />
-            <input type="text" placeholder="search employee name..." className="w-60 focus:outline-none" />
-            </div>
+            <form onSubmit={(e) => e.preventDefault()}>
+                <UserSearch role="employee" />
+            </form>
         </div>
         <div className="grid grid-cols-3 gap-5">
         {employees.map(employee => (

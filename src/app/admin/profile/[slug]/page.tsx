@@ -15,7 +15,12 @@ type User = {
     street: string,
     city: string,
     state: string,
-    phoneNumber: string
+    phoneNumber: string,
+    role: string,
+    employeeCode: string,
+    createdAt: Date,
+    pincode: number,
+    designation: string,
 }
 
 const Profile = () => {
@@ -38,12 +43,15 @@ const Profile = () => {
         }
         fetchUser()
     }, [userId])
+    
+
 
     const handleEdit = () => {
         router.push('/admin/profile/1/edit')
     }
 
     if (!user) return <p className='absolute left-[50%] top-[50%]'>Loading...</p>
+    user.createdAt = new Date(user.createdAt);
 
     return (
         <div className='flex flex-col gap-5'>
@@ -54,14 +62,31 @@ const Profile = () => {
             </div>
 
             <div className='flex flex-col gap-5'>
-                <div className='flex gap-5'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
                     <div className='bg-white p-3 w-full border border-[#ddd] rounded flex flex-col gap-5'>
                         <div className='flex items-center gap-5'>
-                            <Image src={'/avatar.png'} alt='profile image' width={80} height={80} className='rounded-full' />
+                            {user.profileImage ? (
+                                <Image
+                                    src={user.profileImage}
+                                    alt="manager profile"
+                                    width={80}
+                                    height={80}
+                                    className="rounded-full object-cover"
+                                    style={{ maxWidth: '80px', maxHeight: '80px' }}
+                                />
+                                ) : (
+                                <Image
+                                    src="/avatar.png"
+                                    alt="default profile"
+                                    width={80}
+                                    height={80}
+                                    className="rounded-full"
+                                />
+                                )}
                             <div className='flex flex-col gap-1'>
                                 <h2 className='font-semibold'>{user.name}</h2>
-                                <p className='text-sm text-[#696969]'>Manager</p>
-                                <p className='text-xs flex gap-3 text-[#696969]'><span>ID: TR/2025/01</span>  <span>Joined Date: 01/03/2024</span></p>
+                                <p className='text-sm text-[#696969]'>{user.role === 'employee' ? 'Employee' : 'Manager'}</p>
+                                <p className='text-xs flex gap-3 text-[#696969]'><span>ID: {user.employeeCode}</span>  <span>Joined Date: {user.createdAt.toISOString().slice(0, 10)}</span></p>
                             </div>
                         </div>
                         <div className='flex gap-5'>
@@ -76,59 +101,62 @@ const Profile = () => {
                             </button>
                         </div>
                     </div>
-                    <div className='bg-white p-3 w-full border border-[#ddd] rounded flex flex-col gap-3'>
+                    <div className='bg-white p-3 px-6 w-full border border-[#ddd] rounded flex flex-col gap-3'>
                         <h1 className='text-2xl font-semibold'>Contact Information</h1>
                         <div>
                             <div className='flex gap-3 items-center text-[#696969]'>
                                 <Mail size={13} />
-                                <p>rushaid@gmail.com</p>
+                                <p>{user.email}</p>
                             </div>
                             <div className='flex gap-3 items-center text-[#696969]'>
                                 <Map size={13} />
-                                <p>Benguluru, mala</p>
+                                <p>{user.street}, {user.city}, {user.state}, {user.pincode}</p>
                             </div>
                             <div className='flex gap-3 items-center text-[#696969]'>
                                 <Phone size={13} />
-                                <p>+91 9999999999</p>
+                                <p>+91 {user.phoneNumber}</p>
                             </div>
                             <div className='flex gap-3 items-center text-[#696969]'>
                                 <Briefcase size={13} />
-                                <p>Product Manager</p>
+                                <p>{user.designation.charAt(0).toUpperCase() + user.designation.slice(1)}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className='grid grid-cols-3 gap-5 bg-white border border-[#ddd] p-5 rounded'>
-                    <div className='bg-[#DCFCE7] text-[#16A34A] h-30 flex flex-col items-center justify-center rounded'>
-                        <Calendar size={20} />
-                        <p className='font-semibold text-xl'>22</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Present Days</p>
-                    </div>
-                    <div className='bg-[#DBEAFE] text-[#2563EB] h-30 flex flex-col items-center justify-center rounded'>
-                        <Clock size={20} />
-                        <p className='font-semibold text-xl'>160</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Total Hours</p>
-                    </div>
-                    <div className='bg-[#F3E8FF] text-[#9333EA] h-30 flex flex-col items-center justify-center rounded'>
-                        <TrendingUp size={20} />
-                        <p className='font-semibold text-xl'>94%</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Attendance</p>
-                    </div>
-                    <div className='bg-[#FEF9C3] text-[#CA8A04] h-30 flex flex-col items-center justify-center rounded'>
-                        <Info size={20} />
-                        <p className='font-semibold text-xl'>2</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Late</p>
-                    </div>
-                    <div className='bg-[#FFEDD5] text-[#772200] h-30 flex flex-col items-center justify-center rounded'>
-                        <AlarmClock size={20} />
-                        <p className='font-semibold text-xl'>1</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Half Day</p>
-                    </div>
-                    <div className='bg-[#FEE2E2] text-[#DC2626] h-30 flex flex-col items-center justify-center rounded'>
-                        <TrendingDown size={20} />
-                        <p className='font-semibold text-xl'>4</p>
-                        <p className='text-[#696969] text-[10px] font-semibold'>Total Leave</p>
+                <div className='bg-white  border border-[#ddd] rounded'>
+                    <h2 className='px-5 pt-3 text-lg font-semibold'>Attendance Overview</h2>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-5 p-5'>
+                        <div className='bg-[#DCFCE7] text-[#16A34A] h-30 flex flex-col items-center justify-center rounded'>
+                            <Calendar size={20} />
+                            <p className='font-semibold text-xl'>22</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Present Days</p>
+                        </div>
+                        <div className='bg-[#DBEAFE] text-[#2563EB] h-30 flex flex-col items-center justify-center rounded'>
+                            <Clock size={20} />
+                            <p className='font-semibold text-xl'>160</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Total Hours</p>
+                        </div>
+                        <div className='bg-[#F3E8FF] text-[#9333EA] h-30 flex flex-col items-center justify-center rounded'>
+                            <TrendingUp size={20} />
+                            <p className='font-semibold text-xl'>94%</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Attendance</p>
+                        </div>
+                        <div className='bg-[#FEF9C3] text-[#CA8A04] h-30 flex flex-col items-center justify-center rounded'>
+                            <Info size={20} />
+                            <p className='font-semibold text-xl'>2</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Late</p>
+                        </div>
+                        <div className='bg-[#FFEDD5] text-[#772200] h-30 flex flex-col items-center justify-center rounded'>
+                            <AlarmClock size={20} />
+                            <p className='font-semibold text-xl'>1</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Half Day</p>
+                        </div>
+                        <div className='bg-[#FEE2E2] text-[#DC2626] h-30 flex flex-col items-center justify-center rounded'>
+                            <TrendingDown size={20} />
+                            <p className='font-semibold text-xl'>4</p>
+                            <p className='text-[#696969] text-[10px] font-semibold'>Total Leave</p>
+                        </div>
                     </div>
                 </div>
 

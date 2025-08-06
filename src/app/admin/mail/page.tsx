@@ -1,11 +1,36 @@
 "use client"
 
+import api from '@/app/api/axios';
 import { Mail, Send, Users } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import Select from 'react-select';
+
+type ManagerOption = { value: string; label: string };
 
 const MailSend = () => {
 
     const [isOpen, setIsOpen] = useState('allEmployee')
+    const { control } = useForm()
+    const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
+
+    useEffect(() => {
+        const fetchManagers = async () => {
+        try {
+            const res = await api.get('/managers');
+            const options = res.data.map((manager: any) => ({
+            value: manager._id,
+            label: manager.name
+            }));
+            setManagerOptions(options);
+            
+        } catch (err) {
+            console.error("Failed to fetch managers:", err);
+        }
+        };
+
+        fetchManagers();
+    }, []);
 
     return (
         <div className='flex flex-col gap-5'>
@@ -49,11 +74,47 @@ const MailSend = () => {
                 ) : (
                     isOpen === 'managerAndTeam' ? (
                         <>
-                        w
+                            <Controller
+                                control={control}
+                                name="managerId"
+                                rules={{ required: "Manager is required" }}
+                                render={({ field }) => (
+                                    <Select
+                                    {...field}
+                                    options={managerOptions}
+                                    placeholder='Select manager'
+                                    className='text-sm w-60'
+                                    isClearable
+                                    />
+                                )}
+                            />
+                        <div className='flex gap-2 bg-[#f2f2f2] p-2 items-center px-6 w-fit rounded'>
+                            <Users size={15} className='text-[#696969]' />
+                            <h2 className='text-sm'>Recipients : </h2>
+                            <h2 className='font-semibold'>110</h2>
+                        </div>
                         </>
                     ) : (
                         <>
-                        h
+                            <Controller
+                                control={control}
+                                name="managerId"
+                                rules={{ required: "Manager is required" }}
+                                render={({ field }) => (
+                                    <Select
+                                    {...field}
+                                    options={managerOptions}
+                                    placeholder='Select manager'
+                                    className='text-sm w-60'
+                                    isClearable
+                                    />
+                                )}
+                            />
+                        <div className='flex gap-2 bg-[#f2f2f2] p-2 items-center px-6 w-fit rounded'>
+                            <Users size={15} className='text-[#696969]' />
+                            <h2 className='text-sm'>Recipients : </h2>
+                            <h2 className='font-semibold'>110</h2>
+                        </div>
                         </>
                     )
                 ) }

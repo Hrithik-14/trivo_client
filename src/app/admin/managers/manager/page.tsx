@@ -8,6 +8,7 @@ import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import UserSearch from "@/app/components/UserSearch";
 
 const jobRoleLabels: { [key: string]: string } = {
   productmanager: "Product Manager",
@@ -369,6 +370,7 @@ const Managers: FC = () => {
 
   const handleAdd = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+  
 
   if (!managers) return notFound()
 
@@ -389,10 +391,9 @@ const Managers: FC = () => {
         </button>
       </div>
       <div className="flex justify-between">
-        <div className="flex items-center gap-3 border border-[#ddd] w-fit px-3 py-2 rounded-full bg-white">
-          <Search size={15} className="text-[#696969]" />
-          <input type="text" placeholder="search manager name..." className="w-60 focus:outline-none" />
-        </div>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <UserSearch role="manager" />
+        </form>
         <Link href="/admin/managers/managerRequest" className="py-2 px-5 bg-white border border-[#ddd] rounded hover:bg-gray-50 transition-colors">
           Managers Request
         </Link>
