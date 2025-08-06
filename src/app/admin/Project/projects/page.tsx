@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { FC, useState, useEffect } from 'react';
 import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User } from 'lucide-react';
-import Select, { SingleValue } from 'react-select';
+import Select from 'react-select';
 import api from '@/app/api/axios';
 import { useForm, Controller } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
 type ManagerOption = { value: string; label: string };
 
@@ -19,7 +21,8 @@ type ProjectFormData = {
 };
 
 const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { register, handleSubmit, control, reset } = useForm<ProjectFormData>();
+  const { register, handleSubmit, control, reset, formState: { errors, isValid, isSubmitting } } = useForm<ProjectFormData>({mode: 'onChange',});
+
   const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
 
   useEffect(() => {
@@ -31,6 +34,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
           label: manager.name
         }));
         setManagerOptions(options);
+        
       } catch (err) {
         console.error("Failed to fetch managers:", err);
       }
@@ -45,8 +49,8 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
       managerId: data.managerId?.value,
     };
 
-    console.log("📦 Submitted Project:", project);
     api.post('/admin/addAdminProject', project)
+    toast.success('Project created successfull')
 
     reset();
   };
@@ -63,26 +67,31 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3 mt-3'>
           <label className='flex flex-col gap-1'>
             <p className='text-xs font-semibold'>Project name</p>
-            <input type="text" {...register("name")} placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            <input type="text" {...register("name", { required: "Project name is required" })}  placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
           </label>
           <div className='flex gap-3'>
             <label className='flex flex-col gap-1 flex-1'>
               <p className='text-xs font-semibold'>Starting Date</p>
-              <input type="date" {...register("startDate")} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              <input type="date" {...register("startDate", { required: "Starting date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.startDate && <span className="text-red-500 text-xs">{errors.startDate.message}</span>}
             </label>
             <label className='flex flex-col gap-1 flex-1'>
               <p className='text-xs font-semibold'>Ending Date</p>
-              <input type="date" {...register("endDate")} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              <input type="date" {...register("endDate", { required: "Ending date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.endDate && <span className="text-red-500 text-xs">{errors.endDate.message}</span>}
             </label>
           </div>
           <div className='flex gap-3'>
             <label className='flex flex-col gap-1 flex-1'>
               <p className='text-xs font-semibold'>Client Name</p>
-              <input type="text" {...register("client")} placeholder='Client name' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              <input type="text" {...register("client", { required: "Client name is required" })} placeholder='Client name' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.client && <span className="text-red-500 text-xs">{errors.client.message}</span>}
             </label>
             <label className='flex flex-col gap-1 flex-1'>
               <p className='text-xs font-semibold'>Client Mail</p>
-              <input type="email" {...register("clientEmail")} placeholder='Client mail' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              <input type="email" {...register("clientEmail", { required: "Client mail id is required" })} placeholder='Client mail' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.clientEmail && <span className="text-red-500 text-xs">{errors.clientEmail.message}</span>}
             </label>
           </div>
           <label className='flex flex-col gap-1'>
@@ -90,6 +99,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
             <Controller
               control={control}
               name="managerId"
+              rules={{ required: "Manager is required" }}
               render={({ field }) => (
                 <Select
                   {...field}
@@ -100,15 +110,24 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                 />
               )}
             />
+            {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
           </label>
           <label className='flex flex-col gap-1'>
             <p className='text-xs font-semibold'>Description</p>
-            <input type="text" {...register("description")} placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            <input type="text" {...register("description", { required: "Project description is required" })} placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
           </label>
           <div className='flex justify-end'>
-            <button type="submit" className='bg-[#22C55E] text-white px-4 py-2 rounded cursor-pointer'>
-              Add Project
+            <button
+              type="submit"
+              disabled={!isValid}
+              className={`px-4 py-2 rounded  text-white ${
+                isValid ? "bg-[#22C55E] cursor-pointer" : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {isSubmitting ? "Adding..." : "Add Project"}
             </button>
+
           </div>
         </form>
       </div>
