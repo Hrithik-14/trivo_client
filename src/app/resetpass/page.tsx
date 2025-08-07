@@ -1,4 +1,6 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -80,6 +82,18 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     }
   }, [newPassword, confirmPassword, setError, clearErrors]);
 
+  useEffect(() => {
+  if (typeof window !== "undefined") {
+    const storedEmail = localStorage.getItem("forgotPasswordEmail");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    } else {
+    
+      router.replace("/"); 
+    }
+  }
+}, []);
+
   const onSubmit = async (data: PasswordSetupForm) => {
     setApiMessage("");
     setApiError("");
@@ -110,7 +124,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
           headers: { "Content-Type": "application/json" },
         }
       );
-      
+      console.log("response:",response)
 
       setApiMessage(response.data.message || "Password reset successfully!");
       reset();
@@ -120,6 +134,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Server error. Please try again later.";
+        console.log("error message",errorMessage)
       setApiError(errorMessage);
     }
   };
