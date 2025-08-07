@@ -1,73 +1,138 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User } from 'lucide-react';
-import Select, { SingleValue } from 'react-select';
+import Select from 'react-select';
+import api from '@/app/api/axios';
+import { useForm, Controller } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
 type ManagerOption = { value: string; label: string };
 
-const managerOptions: ManagerOption[] = [
-    { value: 'john', label: 'John Doe' },
-    { value: 'jane', label: 'Jane Smith' },
-    { value: 'alice', label: 'Alice Johnson' },
-    { value: 'bob', label: 'Bob Williams' },
-];
+type ProjectFormData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  client: string;
+  clientEmail: string;
+  description: string;
+  managerId: ManagerOption | null;
+};
 
 const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
-    const [selectedManager, setSelectedManager] = useState<ManagerOption | null>(null);
+  const { register, handleSubmit, control, reset, formState: { errors, isValid, isSubmitting } } = useForm<ProjectFormData>({mode: 'onChange',});
 
-    const handleManagerChange = (option: SingleValue<ManagerOption>) => {
-        setSelectedManager(option);
+  const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
+
+  useEffect(() => {
+    const fetchManagers = async () => {
+      try {
+        const res = await api.get('/managers');
+        const options = res.data.map((manager: any) => ({
+          value: manager._id,
+          label: manager.name
+        }));
+        setManagerOptions(options);
+        
+      } catch (err) {
+        console.error("Failed to fetch managers:", err);
+      }
     };
 
-    return (
-        <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-            <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-2xl text-black">
-                <div className='flex justify-between'>
-                    <h2 className='font-bold text-lg'>Add Project</h2>
-                    <button onClick={onClose} className='cursor-pointer'>
-                        <X size={18} />
-                    </button>
-                </div>
-                <form action="" className='flex flex-col gap-3 mt-3'>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Project name</p>
-                        <input type="text" placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-                    </label>
-                    <div className='flex gap-3'>
-                        <label className='flex flex-col gap-1 flex-1'>
-                            <p className='text-xs font-semibold'>Starting Date</p>
-                            <input type="date" className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-                        </label>
-                        <label className='flex flex-col gap-1 flex-1'>
-                            <p className='text-xs font-semibold'>Ending Date</p>
-                            <input type="date" className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-                        </label>
-                    </div>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Add manager</p>
-                        <Select
-                            options={managerOptions}
-                            value={selectedManager}
-                            onChange={handleManagerChange}
-                            placeholder='Select manager'
-                            className='text-sm'
-                            isClearable
-                        />
-                    </label>
-                    <label className='flex flex-col gap-1'>
-                        <p className='text-xs font-semibold'>Description</p>
-                        <input type="text" placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-                    </label>
-                    <div className='flex justify-end'>
-                        <button className='bg-[#22C55E] text-white px-4 py-2 rounded cursor-pointer'>
-                            Add Project
-                        </button>
-                    </div>
-                </form>
-            </div>
+    fetchManagers();
+  }, []);
+
+  const onSubmit = (data: ProjectFormData) => {
+    const project = {
+      ...data,
+      managerId: data.managerId?.value,
+    };
+
+    api.post('/admin/addAdminProject', project)
+    toast.success('Project created successfull')
+
+    reset();
+  };
+
+  return (
+    <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+      <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-2xl text-black">
+        <div className='flex justify-between'>
+          <h2 className='font-bold text-lg'>Add Project</h2>
+          <button onClick={onClose} className='cursor-pointer'>
+            <X size={18} />
+          </button>
         </div>
-    );
+        <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3 mt-3'>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Project name</p>
+            <input type="text" {...register("name", { required: "Project name is required" })}  placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
+          </label>
+          <div className='flex gap-3'>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Starting Date</p>
+              <input type="date" {...register("startDate", { required: "Starting date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.startDate && <span className="text-red-500 text-xs">{errors.startDate.message}</span>}
+            </label>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Ending Date</p>
+              <input type="date" {...register("endDate", { required: "Ending date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.endDate && <span className="text-red-500 text-xs">{errors.endDate.message}</span>}
+            </label>
+          </div>
+          <div className='flex gap-3'>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Client Name</p>
+              <input type="text" {...register("client", { required: "Client name is required" })} placeholder='Client name' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.client && <span className="text-red-500 text-xs">{errors.client.message}</span>}
+            </label>
+            <label className='flex flex-col gap-1 flex-1'>
+              <p className='text-xs font-semibold'>Client Mail</p>
+              <input type="email" {...register("clientEmail", { required: "Client mail id is required" })} placeholder='Client mail' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
+              {errors.clientEmail && <span className="text-red-500 text-xs">{errors.clientEmail.message}</span>}
+            </label>
+          </div>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Add Manager</p>
+            <Controller
+              control={control}
+              name="managerId"
+              rules={{ required: "Manager is required" }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={managerOptions}
+                  placeholder='Select manager'
+                  className='text-sm'
+                  isClearable
+                />
+              )}
+            />
+            {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
+          </label>
+          <label className='flex flex-col gap-1'>
+            <p className='text-xs font-semibold'>Description</p>
+            <input type="text" {...register("description", { required: "Project description is required" })} placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
+            {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
+          </label>
+          <div className='flex justify-end'>
+            <button
+              type="submit"
+              disabled={!isValid}
+              className={`px-4 py-2 rounded  text-white ${
+                isValid ? "bg-[#22C55E] cursor-pointer" : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {isSubmitting ? "Adding..." : "Add Project"}
+            </button>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 

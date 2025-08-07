@@ -14,7 +14,7 @@ const Dashboard: FC = () => {
 
     useEffect(() => {
         const fetchUser = async() => {
-            const res = await api.get('/')
+            const res = await api.get('/users')
         }
     }, [])
 

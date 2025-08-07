@@ -1,5 +1,5 @@
   'use client'
-  import React, { useState } from 'react'
+  import React, { useEffect, useState } from 'react'
   import Image from 'next/image'
   import { useForm } from 'react-hook-form'
   import { Eye, EyeOff, User, Lock } from 'lucide-react'
@@ -8,6 +8,7 @@
   import { useRouter } from 'next/navigation'
   import { useDispatch } from 'react-redux'
   import { setUser } from '@/app/store/userSlice'
+import toast from 'react-hot-toast'
 
   interface LoginFormData {
     identifier: string
@@ -28,10 +29,25 @@
       mode: 'onChange'
     })
 
+    useEffect(() => {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (token && user?.role) {
+    // Prevent going back to login page
+    if (user.role === "admin") {
+      router.replace("/admin/dashboard");
+    } else {
+      router.replace("/");
+    }
+  }
+}, []);
+
+
 const onSubmit = async (data: LoginFormData) => {
   try {
     const res = await api.post('/auth/login', data)
-    alert('Login successful!')
+    toast.success('Login successful!')
 
     localStorage.setItem("token", res.data.token)
 
@@ -53,7 +69,7 @@ const onSubmit = async (data: LoginFormData) => {
     }
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      alert(error.response?.data?.message || 'Login failed')
+      toast.error(error.response?.data?.message || 'Login failed')
     } else {
       alert('Something went wrong')
     }
@@ -68,7 +84,7 @@ const onSubmit = async (data: LoginFormData) => {
 
     return (
       <div className='bg-[url("/bg.png")] bg-center bg-cover h-screen flex items-center'>
-        <div className='w-80 h-[80vh] bg-white/10 backdrop-blur-md p-8 rounded-xl text-white text-center ml-20 flex flex-col items-center justify-center'>
+        <div className='w-[30%] h-[80vh] bg-white/10 backdrop-blur-md p-8 rounded-xl text-white text-center ml-20 flex flex-col items-center justify-center'>
           <div className='mb-12'>
             <Image src="/logo_png.png" alt="Logo image" width={150} height={35} />
           </div>
