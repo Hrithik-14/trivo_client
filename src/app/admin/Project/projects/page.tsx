@@ -164,6 +164,7 @@ const Projects: FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
+    const [reload, setReload] = useState(false);
 
     useEffect(() => {
         api.get<{ totalPages: number; project: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/admin/getAllProject?page=${page}&limit=2`)
@@ -174,16 +175,19 @@ const Projects: FC = () => {
           setLoading(false);
         })
         .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
-    }, [page])
+    }, [page, reload])
 
     const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
-    if (loading) return  (   
-    <div className="flex items-center justify-center h-full">
-      <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-    </div>
-    )
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project details...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className='flex flex-col gap-5'>

@@ -1,6 +1,7 @@
 "use client"
 
 import api from '@/app/api/axios';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 import { ChevronDown, ChevronRight, FileText, Plus, X } from 'lucide-react'
 import Image from 'next/image';
 import React, { FC, useEffect, useState } from 'react'
@@ -352,6 +353,7 @@ const Payslip: FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reload, setReload] = useState(false);
+    const { loading } = useAdminAuthGuard()
 
 
 
@@ -372,7 +374,14 @@ const Payslip: FC = () => {
     const handleAdd = () => setIsModalOpen(true);
     const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
-
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex flex-col gap-5'>

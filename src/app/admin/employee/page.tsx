@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import UserSearch from "@/app/components/UserSearch";
+import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 
 const jobRoleLabels: { [key: string]: string } = {
     frontend: "Frontend Developer",
@@ -363,7 +364,9 @@ const Employees: FC = () => {
     const [employees, setEmployees] = useState<User[]>([])
     const [ page, setPage ] = useState(1)
     const [ totalPages, setTotalPages ] = useState(1)
-    const [ loading, setLoading ] = useState(true)
+    const { loading } = useAdminAuthGuard()
+    const [ load, setLoading ] = useState(true)
+    const [reload, setReload] = useState(false);
 
 
     useEffect(() => {
@@ -374,16 +377,27 @@ const Employees: FC = () => {
             setLoading(false)
         })
         .catch(err => {console.error("Error inFetching manager:", err); setLoading(false)})
-    }, [page])
+    }, [page, reload])
 
 
 
     const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
     if (loading) return  (   
-        <div className="flex items-center justify-center h-full">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
+    if (load) return  (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
         </div>
     )
     if (!employees) return notFound()
