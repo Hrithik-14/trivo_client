@@ -29,18 +29,20 @@ import toast from 'react-hot-toast'
       mode: 'onChange'
     })
 
-        useEffect(() => {
-          const token = localStorage.getItem("token");
-          const user = JSON.parse(localStorage.getItem("user") || "{}");
+    useEffect(() => {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-          if (token && user?.role) {
-            if (user.role === "admin") {
-              router.replace("/admin/dashboard");
-            } else {
-              router.replace("/");
-            }
-          }
-        }, []);
+  if (token && user?.role) {
+    // Prevent going back to login page
+    if (user.role === "admin") {
+      router.replace("/admin/dashboard");
+    } else {
+      router.replace("/");
+    }
+  }
+}, []);
+
 
 const onSubmit = async (data: LoginFormData) => {
   try {
