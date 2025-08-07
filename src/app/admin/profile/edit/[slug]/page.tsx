@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { ArrowLeft, Camera, User } from 'lucide-react'
@@ -7,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import api from '@/app/api/axios'
 import { useParams } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard'
 
 const jobRoles: { [key: string]: string } = {
   frontend: 'Frontend Developer',
@@ -27,7 +29,8 @@ const EditProfile = () => {
 
     const [userData, setUserData] = React.useState<any>(null);
     const [managerList, setManagerList] = React.useState<any[]>([]);
-    const [loading, setLoading] = React.useState(true);
+    const [load, setLoading] = React.useState(true);
+    const { loading } = useAdminAuthGuard()
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
     const [imagePreview, setImagePreview] = React.useState<string>('');
 
@@ -116,14 +119,25 @@ const EditProfile = () => {
         }
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (load) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading profile details...</p>
+            </div>
+        </div>
+    );
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex flex-col gap-5'>
-        <div className='flex gap-3 items-center text-blue-500 cursor-pointer'>
-            <ArrowLeft size={15} />
-            <p>Back</p>
-        </div>
         <form onSubmit={handleSubmit(onSubmit)} className='bg-white border border-[#ddd] p-5 flex gap-10'>
             <div className='relative h-[230px] w-[300px]'>
             <Image

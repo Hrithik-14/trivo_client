@@ -12,6 +12,7 @@ export default function VerifyOtpForm() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false)
   const router = useRouter();
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function VerifyOtpForm() {
       return;
     }
 
-    setIsLoading(true);
+    setResendLoading(true);
     setError('');
     setMessage('');
 
@@ -71,7 +72,7 @@ export default function VerifyOtpForm() {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to resend OTP.');
     } finally {
-      setIsLoading(false);
+      setResendLoading(false);
     }
   };
 
@@ -152,10 +153,10 @@ export default function VerifyOtpForm() {
             </p>
             <button
               onClick={handleResendOTP}
-              disabled={isLoading}
+              disabled={resendLoading}
               className="w-full text-slate-700 hover:text-slate-800 py-2 px-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
             >
-              {isLoading ? 'Resending...' : 'Resend Code'}
+              {resendLoading ? 'Resending...' : 'Resend Code'}
             </button>
           </div>
         </div>

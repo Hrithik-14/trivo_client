@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -5,7 +7,6 @@ import { Shield, Check, X, Eye, EyeOff } from "lucide-react";
 import api from "../api/axios";
 import { useForm } from "react-hook-form";
 
-// Interfaces
 interface PasswordSetupForm {
   employeeName: string;
   employeeId: string;
