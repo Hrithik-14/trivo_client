@@ -361,19 +361,31 @@ type User = {
 const Employees: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [employees, setEmployees] = useState<User[]>([])
+    const [ page, setPage ] = useState(1)
+    const [ totalPages, setTotalPages ] = useState(1)
+    const [ loading, setLoading ] = useState(true)
 
 
     useEffect(() => {
-        api.get<User[]>('/employeesdeatil')
-        .then(res => setEmployees(res.data))
-        .catch(err => console.error("Error inFetching manager:", err))
-    }, [employees])
+        api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/employeesdeatil?page=${page}&limit=6`)
+        .then(res => {
+            setEmployees(res.data.managers)
+            setTotalPages(res.data.totalPages)
+            setLoading(false)
+        })
+        .catch(err => {console.error("Error inFetching manager:", err); setLoading(false)})
+    }, [page])
 
 
 
     const handleAdd = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
 
+    if (loading) return  (   
+        <div className="flex items-center justify-center h-full">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+    )
     if (!employees) return notFound()
 
     return (
@@ -407,7 +419,7 @@ const Employees: FC = () => {
                     alt="manager profile"
                     width={50}
                     height={50}
-                    className="rounded-full object-cover object-center"
+                    className="rounded-full object-cover object-center w-[50px] h-[50px]"
                     style={{ maxWidth: '50px', maxHeight: '50px' }}
                 />
                 ) : (
@@ -448,6 +460,23 @@ const Employees: FC = () => {
             </div>
         ))}
         </div>
+            <div className="flex justify-center mt-4 gap-2">
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(prev => prev - 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Prev
+                </button>
+                <span className="px-4 py-2">{page} / {totalPages}</span>
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(prev => prev + 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };

@@ -47,11 +47,12 @@ const calculateDuration = (start?: string, end?: string) => {
     }
 };
 
-const ProjectDetail = () => {
+const ProjectDetail: FC = () => {
     const [project, setProject] = useState<Project | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [isActive, setIsActive] = useState<boolean>(true);
+    const [isActive, setIsActive] = useState<boolean | null>(null);
+
 
     const params = useParams();
     const projectId = params.slug as string;
@@ -73,6 +74,20 @@ const ProjectDetail = () => {
         fetchProject();
     }, [projectId]);
 
+    const handleActiveChange = async (newStatus: boolean) => {
+        try {
+            await api.patch(`/toggleActive/${projectId}`, {
+                isActive: newStatus,
+            });
+            setIsActive(newStatus);
+        } catch (error) {
+            console.error("Failed to toggle active status:", error);
+        }
+    };
+
+
+
+
     if (loading) return <p>Loading...</p>;
     if (!project) return notFound();
 
@@ -80,11 +95,10 @@ const ProjectDetail = () => {
 
     return (
         <div className="flex flex-col gap-5">
-        {/* Project header */}
         <div className="bg-white border border-[#ddd] rounded py-2 px-6 flex justify-between items-center">
-            <div>
-            <h2 className="text-2xl font-bold">{project.name}</h2>
-            <p className="text-gray-600">{project.description}</p>
+            <div className="p-3">
+            <h2 className="text-xl font-bold">{project.name}</h2>
+            <p className="text-gray-600 text-sm">{project.description}</p>
             </div>
             <div className="flex gap-3">
             <div
@@ -113,7 +127,7 @@ const ProjectDetail = () => {
                     <li
                     className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                     onClick={() => {
-                        setIsActive(true);
+                        handleActiveChange(true);
                         setIsOpen(false);
                     }}
                     >
@@ -122,7 +136,7 @@ const ProjectDetail = () => {
                     <li
                     className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                     onClick={() => {
-                        setIsActive(false);
+                        handleActiveChange(false);
                         setIsOpen(false);
                     }}
                     >
@@ -134,7 +148,6 @@ const ProjectDetail = () => {
             </div>
         </div>
 
-        {/* Manager */}
         <div className="bg-white border border-[#ddd] rounded py-4 px-6">
             <div className="flex items-center gap-3">
             <User size={18} />
@@ -152,7 +165,6 @@ const ProjectDetail = () => {
             </div>
         </div>
 
-        {/* Client + Timeline */}
         <div className="grid grid-cols-2 gap-5">
             <div className="bg-white border border-[#ddd] rounded p-4">
             <div className="flex items-center gap-2">
@@ -180,7 +192,6 @@ const ProjectDetail = () => {
             </div>
         </div>
 
-        {/* Members */}
         <div className="bg-white border border-[#ddd] rounded p-6">
             <div className="flex items-center gap-3 mb-3">
             <Users size={18} />

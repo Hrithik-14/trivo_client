@@ -22,6 +22,7 @@ type User = {
     createdAt: Date,
     pincode: number,
     designation: string,
+    isActive: boolean
 }
 
 const Profile = () => {
@@ -45,6 +46,10 @@ const Profile = () => {
         fetchUser()
     }, [userId])
     
+    const updateIsActive = async (userId: string, isActive: boolean): Promise<User> => {
+        const res = await api.patch(`/${userId}/active`, { isActive });
+        return res.data;
+    };
 
 
 
@@ -84,11 +89,18 @@ const Profile = () => {
                             <button className='bg-blue-500 text-white rounded p-2 w-full'>
                                 Message
                             </button>
-                            <Link href={`/admin/profile/edit`} className=' text-[#696969] border border-[#ddd] rounded p-2 w-full'>
+                            <Link href={`/admin/profile/edit/${user._id}`} className=' text-[#696969] text-center border border-[#ddd] rounded p-2 w-full'>
                                 Edit Profile
                             </Link>
-                            <button className='bg-red-500 text-white rounded p-2'>
-                                Block
+                            <button
+                                onClick={async () => {
+                                    if (!user) return;
+                                    const updatedUser = await updateIsActive(user._id, !user.isActive);
+                                    setUser(updatedUser);
+                                }}
+                                className={`rounded p-2 ${user.isActive ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+                            >
+                                {user.isActive ? 'Block' : 'Unblock'}
                             </button>
                         </div>
                     </div>

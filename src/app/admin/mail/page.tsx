@@ -8,6 +8,11 @@ import Select from 'react-select';
 
 type ManagerOption = { value: string; label: string };
 
+interface Manager {
+    _id: string;
+    name: string;
+}
+
 const MailSend = () => {
 
     const [isOpen, setIsOpen] = useState('allEmployee')
@@ -17,8 +22,8 @@ const MailSend = () => {
     useEffect(() => {
         const fetchManagers = async () => {
         try {
-            const res = await api.get('/managers');
-            const options = res.data.map((manager: any) => ({
+            const res = await api.get('/managersdeatil');
+            const options = res.data.map((manager: Manager) => ({
             value: manager._id,
             label: manager.name
             }));
@@ -99,12 +104,12 @@ const MailSend = () => {
                             <Controller
                                 control={control}
                                 name="managerId"
-                                rules={{ required: "Manager is required" }}
+                                rules={{ required: "Team is required" }}
                                 render={({ field }) => (
                                     <Select
                                     {...field}
                                     options={managerOptions}
-                                    placeholder='Select manager'
+                                    placeholder='Select a Team'
                                     className='text-sm w-60'
                                     isClearable
                                     />

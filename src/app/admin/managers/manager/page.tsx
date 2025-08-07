@@ -358,21 +358,31 @@ type User = {
 const Managers: FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [managers, setmanagers] = useState<User[]>([])
-
+  const [ page, setPage ] = useState(1)
+  const [ totalPages, setTotalPages ] = useState(1)
+  const [ loading, setLoading ] = useState(true)
 
   useEffect(() => {
-    api.get<User[]>('/managersdeatil')
-      .then(res => setmanagers(res.data))
-      .catch(err => console.error("Error inFetching manager:", err))
-  }, [])
+    api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=3`)
+      .then(res => {
+        setmanagers(res.data.managers)
+        setTotalPages(res.data.totalPages)
+        setLoading(false)
+      })
+      .catch(err => {console.error("Error inFetching manager:", err); setLoading(true)})
+  }, [page])
 
 
 
   const handleAdd = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
   
-
-  if (!managers) return notFound()
+    if (loading) return  (   
+        <div className="flex items-center justify-center h-full">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+    )
+    if (!managers) return notFound()
 
   return (
     <div className="flex flex-col gap-5">
@@ -448,6 +458,23 @@ const Managers: FC = () => {
           </div>
         </div>
       ))}
+      </div>
+      <div className="flex justify-center mt-4 gap-2">
+          <button
+              disabled={page === 1}
+              onClick={() => setPage(prev => prev - 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+              Prev
+          </button>
+          <span className="px-4 py-2">{page} / {totalPages}</span>
+          <button
+              disabled={page === totalPages}
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+              Next
+          </button>
       </div>
     </div>
   );

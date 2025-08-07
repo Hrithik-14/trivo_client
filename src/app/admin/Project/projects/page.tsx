@@ -9,6 +9,7 @@ import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import ProjectSearch from '@/app/components/ProjectSearch';
 
 type ManagerOption = { value: string; label: string };
 
@@ -30,7 +31,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
   useEffect(() => {
     const fetchManagers = async () => {
       try {
-        const res = await api.get('/managers');
+        const res = await api.get('/managersdeatil');
         const options = res.data.map((manager: any) => ({
           value: manager._id,
           label: manager.name
@@ -162,12 +163,14 @@ const Projects: FC = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
 
     useEffect(() => {
-        api.get<{ totalPages: number; project: Project[]; total: number, page: number }>(`/admin/getAllProject?page=${page}&limit=2`)
+        api.get<{ totalPages: number; project: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/admin/getAllProject?page=${page}&limit=2`)
         .then(res => {
           setProject(res.data.project); 
           setTotalPages(res.data.totalPages);
+          setStats(res.data.stats)
           setLoading(false);
         })
         .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
@@ -203,7 +206,7 @@ const Projects: FC = () => {
                     <div>
                         <h2 className='text-[#696969] text-xs font-medium'>Ongoing Projects</h2>
                         <h4 className='font-semibold'>
-                            {projects.filter(p => p.status === 'ongoing').length}
+                            {stats.ongoing}
                         </h4>
                     </div>
                 </div>
@@ -213,7 +216,7 @@ const Projects: FC = () => {
                     <div>
                         <h2 className='text-[#696969] text-xs font-medium'>Completed Projects</h2>
                         <h4 className='font-semibold'>
-                            {projects.filter(p => p.status === 'completed').length}
+                            {stats.completed}
                         </h4>
                     </div>
                 </div>
@@ -222,16 +225,14 @@ const Projects: FC = () => {
                     <Info size={35} className='p-2 bg-[#E9D5FF] text-[#A855F7] rounded-full' />
                     <div>
                         <h2 className='text-[#696969] text-xs font-medium'>Total Projects</h2>
-                        <h4 className='font-semibold'>{projects.length}</h4>
+                        <h4 className='font-semibold'>{stats.total}</h4>
                     </div>
                 </div>
             </div>
 
             <div>
-                <div className='flex items-center gap-3 border border-[#ddd] w-fit px-3 py-2 rounded-full bg-white'>
-                    <Search size={15} className='text-[#696969]' />
-                    <input type="text" placeholder='search project name...' className='w-60 focus:outline-none' />
-                </div>
+                
+                <ProjectSearch/>
             </div>
 
             {/* Render all projects */}
