@@ -20,6 +20,7 @@ import toast from 'react-hot-toast'
     const router = useRouter()
     const dispatch = useDispatch()
     
+    
     const {
       register,
       handleSubmit,
@@ -34,7 +35,6 @@ import toast from 'react-hot-toast'
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (token && user?.role) {
-    // Prevent going back to login page
     if (user.role === "admin") {
       router.replace("/admin/dashboard");
     } else {
@@ -144,7 +144,7 @@ const onSubmit = async (data: LoginFormData) => {
             </div>
 
             <div className='text-right'>
-              <a href="#" className='text-sm text-gray-300 hover:text-white transition-colors'>
+              <a href="/forgotpass" className='text-sm text-gray-300 hover:text-white transition-colors'>
                 Forgotten password?
               </a>
             </div>

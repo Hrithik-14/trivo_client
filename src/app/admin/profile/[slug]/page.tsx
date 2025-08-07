@@ -3,6 +3,7 @@
 import api from '@/app/api/axios'
 import { AlarmClock, ArrowLeft, Briefcase, Calendar, ChevronDown, ChevronRight, CircleCheckBig, Clock, File, Info, Mail, Map, Phone, TicketCheck, TrendingDown, TrendingUp, User  } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { notFound, useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
@@ -21,6 +22,7 @@ type User = {
     createdAt: Date,
     pincode: number,
     designation: string,
+    isActive: boolean
 }
 
 const Profile = () => {
@@ -44,11 +46,13 @@ const Profile = () => {
         fetchUser()
     }, [userId])
     
+    const updateIsActive = async (userId: string, isActive: boolean): Promise<User> => {
+        const res = await api.patch(`/${userId}/active`, { isActive });
+        return res.data;
+    };
 
 
-    const handleEdit = () => {
-        router.push('/admin/profile/1/edit')
-    }
+
 
     if (!user) return <p className='absolute left-[50%] top-[50%]'>Loading...</p>
     user.createdAt = new Date(user.createdAt);
@@ -65,24 +69,16 @@ const Profile = () => {
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
                     <div className='bg-white p-3 w-full border border-[#ddd] rounded flex flex-col gap-5'>
                         <div className='flex items-center gap-5'>
-                            {user.profileImage ? (
+                            <div className="w-20 h-20 rounded-full overflow-hidden">
                                 <Image
-                                    src={user.profileImage}
-                                    alt="manager profile"
+                                    src={user.profileImage || "/avatar.png"}
+                                    alt="profile"
                                     width={80}
                                     height={80}
-                                    className="rounded-full object-cover"
-                                    style={{ maxWidth: '80px', maxHeight: '80px' }}
+                                    className="object-cover"
                                 />
-                                ) : (
-                                <Image
-                                    src="/avatar.png"
-                                    alt="default profile"
-                                    width={80}
-                                    height={80}
-                                    className="rounded-full"
-                                />
-                                )}
+                            </div>
+
                             <div className='flex flex-col gap-1'>
                                 <h2 className='font-semibold'>{user.name}</h2>
                                 <p className='text-sm text-[#696969]'>{user.role === 'employee' ? 'Employee' : 'Manager'}</p>
@@ -93,11 +89,18 @@ const Profile = () => {
                             <button className='bg-blue-500 text-white rounded p-2 w-full'>
                                 Message
                             </button>
-                            <button onClick={handleEdit} className=' text-[#696969] border border-[#ddd] rounded p-2 w-full'>
+                            <Link href={`/admin/profile/edit/${user._id}`} className=' text-[#696969] text-center border border-[#ddd] rounded p-2 w-full'>
                                 Edit Profile
-                            </button>
-                            <button className='bg-red-500 text-white rounded p-2'>
-                                Block
+                            </Link>
+                            <button
+                                onClick={async () => {
+                                    if (!user) return;
+                                    const updatedUser = await updateIsActive(user._id, !user.isActive);
+                                    setUser(updatedUser);
+                                }}
+                                className={`rounded p-2 ${user.isActive ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+                            >
+                                {user.isActive ? 'Block' : 'Unblock'}
                             </button>
                         </div>
                     </div>
