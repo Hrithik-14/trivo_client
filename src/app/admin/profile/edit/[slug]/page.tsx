@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import api from '@/app/api/axios'
 import { useParams } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard'
 
 const jobRoles: { [key: string]: string } = {
   frontend: 'Frontend Developer',
@@ -28,7 +29,8 @@ const EditProfile = () => {
 
     const [userData, setUserData] = React.useState<any>(null);
     const [managerList, setManagerList] = React.useState<any[]>([]);
-    const [loading, setLoading] = React.useState(true);
+    const [load, setLoading] = React.useState(true);
+    const { loading } = useAdminAuthGuard()
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
     const [imagePreview, setImagePreview] = React.useState<string>('');
 
@@ -117,7 +119,7 @@ const EditProfile = () => {
         }
     };
 
-    if (loading) return (
+    if (load) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -125,6 +127,14 @@ const EditProfile = () => {
             </div>
         </div>
     );
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex flex-col gap-5'>
