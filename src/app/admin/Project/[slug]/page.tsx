@@ -6,6 +6,7 @@ import Image from "next/image";
 import { differenceInDays, parseISO } from "date-fns";
 import api from "@/app/api/axios";
 import { notFound, useParams } from "next/navigation";
+import Link from "next/link";
 
 interface Member {
     _id: string;
@@ -88,13 +89,25 @@ const ProjectDetail: FC = () => {
 
 
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project details...</p>
+            </div>
+        </div>
+    );
     if (!project) return notFound();
 
     const duration = calculateDuration(project.startDate, project.endDate);
 
     return (
         <div className="flex flex-col gap-5">
+            <div className="w-full flex justify-end">
+                <Link href={`/admin/Project/edit/${project._id}`} className="py-2 px-6 border rounded">
+                    Edit Project
+                </Link>
+            </div>
         <div className="bg-white border border-[#ddd] rounded py-2 px-6 flex justify-between items-center">
             <div className="p-3">
             <h2 className="text-xl font-bold">{project.name}</h2>

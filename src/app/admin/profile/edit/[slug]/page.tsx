@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { ArrowLeft, Camera, User } from 'lucide-react'
@@ -116,14 +117,17 @@ const EditProfile = () => {
         }
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading profile details...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className='flex flex-col gap-5'>
-        <div className='flex gap-3 items-center text-blue-500 cursor-pointer'>
-            <ArrowLeft size={15} />
-            <p>Back</p>
-        </div>
         <form onSubmit={handleSubmit(onSubmit)} className='bg-white border border-[#ddd] p-5 flex gap-10'>
             <div className='relative h-[230px] w-[300px]'>
             <Image
