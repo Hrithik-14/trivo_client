@@ -361,6 +361,7 @@ const Managers: FC = () => {
   const [ page, setPage ] = useState(1)
   const [ totalPages, setTotalPages ] = useState(1)
   const [ loading, setLoading ] = useState(true)
+  const [reload, setReload] = useState(false);
 
   useEffect(() => {
     api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=3`)
@@ -370,12 +371,12 @@ const Managers: FC = () => {
         setLoading(false)
       })
       .catch(err => {console.error("Error inFetching manager:", err); setLoading(true)})
-  }, [page])
+  }, [page, reload])
 
 
 
   const handleAdd = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
+  const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
   
     if (loading) return  (   
         <div className="flex items-center justify-center h-full">
