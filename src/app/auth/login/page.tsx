@@ -67,6 +67,10 @@ const onSubmit = async (data: LoginFormData) => {
 
     if (res.data.user.role === "admin") {
       router.push("/admin/dashboard")
+    } else if (res.data.user.role === "employee") {
+      router.push("/employee/dashboard")
+    } else if (res.data.user.role === "manager") {
+      router.push("/manager/dashboard")
     } else {
       router.push("/")
     }
