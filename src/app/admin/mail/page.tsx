@@ -1,6 +1,7 @@
 "use client"
 
 import api from '@/app/api/axios';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 import { Mail, Send, Users } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -8,17 +9,23 @@ import Select from 'react-select';
 
 type ManagerOption = { value: string; label: string };
 
+interface Manager {
+    _id: string;
+    name: string;
+}
+
 const MailSend = () => {
 
     const [isOpen, setIsOpen] = useState('allEmployee')
     const { control } = useForm()
     const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
+    const { loading } = useAdminAuthGuard()
 
     useEffect(() => {
         const fetchManagers = async () => {
         try {
-            const res = await api.get('/managers');
-            const options = res.data.map((manager: any) => ({
+            const res = await api.get('/managersdeatil');
+            const options = res.data.map((manager: Manager) => ({
             value: manager._id,
             label: manager.name
             }));
@@ -31,6 +38,15 @@ const MailSend = () => {
 
         fetchManagers();
     }, []);
+
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex flex-col gap-5'>
@@ -99,12 +115,12 @@ const MailSend = () => {
                             <Controller
                                 control={control}
                                 name="managerId"
-                                rules={{ required: "Manager is required" }}
+                                rules={{ required: "Team is required" }}
                                 render={({ field }) => (
                                     <Select
                                     {...field}
                                     options={managerOptions}
-                                    placeholder='Select manager'
+                                    placeholder='Select a Team'
                                     className='text-sm w-60'
                                     isClearable
                                     />

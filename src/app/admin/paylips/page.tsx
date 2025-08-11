@@ -1,6 +1,7 @@
 "use client"
 
 import api from '@/app/api/axios';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 import { ChevronDown, ChevronRight, FileText, Plus, X } from 'lucide-react'
 import Image from 'next/image';
 import React, { FC, useEffect, useState } from 'react'
@@ -34,6 +35,9 @@ interface FormData {
     pincode: string;
     basicSalary: string;
     allowance: string;
+    bonus: string;
+    incentive: string;
+    tax: string;
 }
 
 interface AddPayslipProps {
@@ -56,12 +60,35 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
             state: '',
             pincode: '',
             basicSalary: '',
-            allowance: ''
+            allowance: '',
+            bonus: '',
+            incentive: '',
+            tax: ''
         }
     });
 
     const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+    const [employeeList, setEmployeeList] = useState<Employee[]>([]);
+
+    // Watch salary fields for tax calculation
+    const basicSalary = watch('basicSalary');
+    const allowance = watch('allowance');
+    const bonus = watch('bonus');
+    const incentive = watch('incentive');
+
+    // Calculate and set tax automatically (10% of total earnings)
+    useEffect(() => {
+        const basic = parseFloat(basicSalary) || 0;
+        const allow = parseFloat(allowance) || 0;
+        const bon = parseFloat(bonus) || 0;
+        const incent = parseFloat(incentive) || 0;
+        
+        const totalEarnings = basic + allow + bon + incent;
+        const calculatedTax = totalEarnings * 0.10; // 10% tax
+        
+        setValue('tax', calculatedTax.toFixed(2));
+    }, [basicSalary, allowance, bonus, incentive, setValue]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -69,11 +96,11 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
             console.log('Payslip saved:', res.data);
             toast.success('Payslips created')
             reset();
+            onClose()
         } catch (error) {
             console.error('Failed to save payslip:', error);
         }
     };
-
 
     const handleEmployeeSelect = (option: EmployeeOption | null) => {
         if (!option) {
@@ -109,11 +136,12 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
             state: '',
             pincode: '',
             basicSalary: watch('basicSalary'),
-            allowance: watch('allowance')
+            allowance: watch('allowance'),
+            bonus: watch('bonus'),
+            incentive: watch('incentive'),
+            tax: watch('tax')
         });
     };
-
-    const [employeeList, setEmployeeList] = useState<Employee[]>([]);
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -140,7 +168,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
         <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
             <form 
                 onSubmit={handleSubmit(onSubmit)} 
-                className="bg-white rounded-lg w-full max-w-4xl p-6 relative shadow-2xl text-black"
+                className="bg-white rounded-lg w-full max-w-4xl p-6 relative shadow-2xl text-black max-h-[90vh] overflow-y-auto"
             >
                 <div className='flex justify-between items-center mb-6'>
                     <h2 className="text-xl font-medium text-gray-800">Payslips</h2>
@@ -155,7 +183,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
 
                 <div className="space-y-4">
 
-                    {/* Employee Select */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
@@ -167,7 +194,10 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                                     render={({ field }) => (
                                         <Select
                                             {...field}
-                                            options={employeeOptions}
+                                            options={employeeList.map(emp => ({
+                                                value: emp.employeeCode,
+                                                label: `${emp.name} (${emp.employeeCode})`
+                                            }))}
                                             placeholder='Select employee'
                                             className='text-sm w-60'
                                             isClearable
@@ -175,7 +205,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                                                 field.onChange(val?.value ?? '');
                                                 handleEmployeeSelect(val as EmployeeOption | null);
                                             }}
-                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: selectedEmployee.name } : null}
+                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: `${selectedEmployee.name} (${selectedEmployee.employeeCode})` } : null}
                                         />
                                     )}
                                 />
@@ -206,7 +236,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Second Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Email</label>
@@ -244,7 +273,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Street Address */}
                     <div>
                         <label className="block text-sm text-gray-600 mb-1">Street</label>
                         <input
@@ -256,7 +284,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
                     </div>
 
-                    {/* Third Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">City</label>
@@ -292,26 +319,80 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* Salary inputs */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Basic Salary</label>
-                            <input
-                                {...register('basicSalary', { required: "Basic Salary is required" })}
-                                type="number"
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            {errors.basicSalary && <p className="text-red-500 text-xs mt-1">{errors.basicSalary.message}</p>}
+                    {/* Salary Components Section */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-medium text-gray-800 mb-4">Salary Components</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Basic Salary</label>
+                                <input
+                                    {...register('basicSalary', { required: "Basic Salary is required" })}
+                                    type="number"
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.basicSalary && <p className="text-red-500 text-xs mt-1">{errors.basicSalary.message}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Allowance</label>
+                                <input
+                                    {...register('allowance', { required: "Allowance is required" })}
+                                    type="number"
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.allowance && <p className="text-red-500 text-xs mt-1">{errors.allowance.message}</p>}
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Allowance</label>
-                            <input
-                                {...register('allowance', { required: "Allowance is required" })}
-                                type="number"
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            {errors.allowance && <p className="text-red-500 text-xs mt-1">{errors.allowance.message}</p>}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Bonus</label>
+                                <input
+                                    {...register('bonus')}
+                                    type="number"
+                                    defaultValue="0"
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Incentive</label>
+                                <input
+                                    {...register('incentive')}
+                                    type="number"
+                                    defaultValue="0"
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Tax (10% Auto-calculated)</label>
+                                <input
+                                    {...register('tax')}
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm focus:outline-none"
+                                    disabled
+                                />
+                            </div>
+                            
+                            <div className="flex items-end">
+                                <div className="bg-blue-50 p-3 rounded border border-blue-200 w-full">
+                                    <p className="text-sm text-gray-600">Net Salary</p>
+                                    <p className="text-lg font-semibold text-blue-600">
+                                        ₹ {(
+                                            (parseFloat(basicSalary) || 0) + 
+                                            (parseFloat(allowance) || 0) + 
+                                            (parseFloat(bonus) || 0) + 
+                                            (parseFloat(incentive) || 0) - 
+                                            (parseFloat(watch('tax')) || 0)
+                                        ).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -329,7 +410,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
     )
 }
 
-
 type Paylips = {
     _id: string,
     employeeCode: string,
@@ -342,30 +422,50 @@ type Paylips = {
     profileImage?: string | null;
     basicSalary: number;
     allowance: number;
+    bonus?: number;
+    incentive?: number;
+    tax?: number;
 }
 
 const Payslip: FC = () => {
-    const [isExpand, setIsExpand] = useState(false)
+    const [isExpand, setIsExpand] = useState<string | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [ payslips, setPayslips ] = useState<Paylips[]>([])
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [reload, setReload] = useState(false);
+    const { loading } = useAdminAuthGuard()
 
     useEffect(() => {
         const fetchPayslips = async() => {
             try {
-                const res = await api.get('/payslips')
-                setPayslips(res.data)
+                const res = await api.get(`/payslips?page=${page}&limit=4`);
+                setPayslips(res.data.data);
+                setTotalPages(res.data.totalPages);
             } catch (err) {
                 console.error("Payslips fetching error");
-                
             }
         }
         fetchPayslips()
-    }, [])
+    }, [page, reload])
     
     const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
+    const calculateNetSalary = (payslip: Paylips) => {
+        const totalEarnings = payslip.basicSalary + payslip.allowance + (payslip.bonus || 0) + (payslip.incentive || 0);
+        const tax = payslip.tax || 0;
+        return totalEarnings - tax;
+    };
 
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex flex-col gap-5'>
@@ -380,9 +480,9 @@ const Payslip: FC = () => {
                     <p>Create Payslips</p>
                 </button>
             </div>
-            <div className='bg-white border border-gray-300 p-3 rounded'>
+            <div className=''>
                 {payslips.map(pay => (
-                    <div key={pay._id}>
+                    <div key={pay._id} className='mb-2 bg-white border border-gray-300 p-3 rounded'>
                         <div className=' flex justify-between items-center'>
                             <div className='flex gap-3'>
                                 <div>
@@ -410,9 +510,9 @@ const Payslip: FC = () => {
                                 </div>
                             </div>
                             <div className='flex gap-3'>
-                                <h2 className='text-md font-semibold'>₹ {(pay.basicSalary + pay.allowance).toLocaleString()}</h2>
-                                <button onClick={() => setIsExpand(!isExpand)}>
-                                    {isExpand ? (
+                                <h2 className='text-md font-semibold'>₹ {calculateNetSalary(pay).toLocaleString()}</h2>
+                                <button onClick={() => setIsExpand(prevId => prevId === pay._id ? null : pay._id)}>
+                                    {isExpand === pay._id ? (
                                         <ChevronDown className='text-gray-500 transition-transform duration-300' />
                                     ) : (
                                         <ChevronRight className='text-gray-500 transition-transform duration-300' />
@@ -420,16 +520,50 @@ const Payslip: FC = () => {
                                 </button>
                             </div>
                         </div>
-                        { isExpand && (
+                        { isExpand === pay._id  && (
                             <>
-                                <div className='border-t border-gray-300 mt-3 px-3 py-2 flex flex-col gap-2'>
-                                    <div className='flex justify-between items-center'>
-                                        <h2 className='text-sm'>Basic Salary</h2>
-                                        <p className='text-sm'>₹ {pay.basicSalary?.toLocaleString()}</p>
+                                <div className='border-t border-gray-300 mt-3 px-3 py-2'>
+                                    <div className='mb-2'>
+                                        <h4 className='font-medium text-green-600 text-sm mb-2'>Earnings</h4>
+                                        <div className='flex flex-col gap-1 pl-2'>
+                                            <div className='flex justify-between items-center'>
+                                                <h2 className='text-sm'>Basic Salary</h2>
+                                                <p className='text-sm'>₹ {pay.basicSalary?.toLocaleString()}</p>
+                                            </div>
+                                            <div className='flex justify-between items-center'>
+                                                <h2 className='text-sm'>Allowance</h2>
+                                                <p className='text-sm'>₹ {pay.allowance?.toLocaleString()}</p>
+                                            </div>
+                                            {pay.bonus && pay.bonus > 0 && (
+                                                <div className='flex justify-between items-center'>
+                                                    <h2 className='text-sm'>Bonus</h2>
+                                                    <p className='text-sm'>₹ {pay.bonus?.toLocaleString()}</p>
+                                                </div>
+                                            )}
+                                            {pay.incentive && pay.incentive > 0 && (
+                                                <div className='flex justify-between items-center'>
+                                                    <h2 className='text-sm'>Incentive</h2>
+                                                    <p className='text-sm'>₹ {pay.incentive?.toLocaleString()}</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className='flex justify-between items-center'>
-                                        <h2 className='text-sm'>Allowance</h2>
-                                        <p className='text-sm'>₹ {pay.allowance?.toLocaleString()}</p>
+                                    
+                                    <div className='mb-2'>
+                                        <h4 className='font-medium text-red-600 text-sm mb-2'>Deductions</h4>
+                                        <div className='flex flex-col gap-1 pl-2'>
+                                            <div className='flex justify-between items-center'>
+                                                <h2 className='text-sm'>Tax (10%)</h2>
+                                                <p className='text-sm'>₹ {pay.tax?.toLocaleString() || '0'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className='border-t border-gray-300 pt-2'>
+                                        <div className='flex justify-between items-center font-semibold'>
+                                            <h2 className='text-sm'>Net Salary</h2>
+                                            <p className='text-sm text-blue-600'>₹ {calculateNetSalary(pay).toLocaleString()}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </>
@@ -437,9 +571,25 @@ const Payslip: FC = () => {
                     </div>
                 ))}
             </div>
+            <div className="flex justify-center mt-4 gap-2">
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(prev => prev - 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Prev
+                </button>
+                <span className="px-4 py-2">{page} / {totalPages}</span>
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(prev => prev + 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     )
 }
 
 export default Payslip
-

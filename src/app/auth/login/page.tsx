@@ -19,6 +19,8 @@ import toast from 'react-hot-toast'
     const [showPassword, setShowPassword] = useState(false)
     const router = useRouter()
     const dispatch = useDispatch()
+    const [ loading, setLoading ] = useState(true)
+    
     
     const {
       register,
@@ -34,12 +36,13 @@ import toast from 'react-hot-toast'
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (token && user?.role) {
-    // Prevent going back to login page
     if (user.role === "admin") {
       router.replace("/admin/dashboard");
     } else {
       router.replace("/");
     }
+  } else {
+    setLoading(false)
   }
 }, []);
 
@@ -64,6 +67,10 @@ const onSubmit = async (data: LoginFormData) => {
 
     if (res.data.user.role === "admin") {
       router.push("/admin/dashboard")
+    } else if (res.data.user.role === "employee") {
+      router.push("/employee/dashboard")
+    } else if (res.data.user.role === "manager") {
+      router.push("/manager/dashboard")
     } else {
       router.push("/")
     }
@@ -81,6 +88,15 @@ const onSubmit = async (data: LoginFormData) => {
     const togglePasswordVisibility = () => {
       setShowPassword(!showPassword)
     }
+
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
       <div className='bg-[url("/bg.png")] bg-center bg-cover h-screen flex items-center'>
@@ -144,7 +160,7 @@ const onSubmit = async (data: LoginFormData) => {
             </div>
 
             <div className='text-right'>
-              <a href="#" className='text-sm text-gray-300 hover:text-white transition-colors'>
+              <a href="/forgotpass" className='text-sm text-gray-300 hover:text-white transition-colors'>
                 Forgotten password?
               </a>
             </div>

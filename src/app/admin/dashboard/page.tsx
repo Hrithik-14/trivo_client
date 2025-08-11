@@ -3,20 +3,18 @@
 import { useState, useEffect, FC } from 'react'
 import { Users, UserCheck, Clock, ChevronLeft, ChevronRight, Calendar  } from 'lucide-react';
 import PerformanceChart from "@/app/components/PerformanceChart"
+import { RootState } from '@/app/store';
+import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation'; 
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 
-import api from '@/app/api/axios';
 
 const Dashboard: FC = () => {
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [users, setUsers] = useState(null)
+    const { loading } = useAdminAuthGuard()
 
-    useEffect(() => {
-        const fetchUser = async() => {
-            const res = await api.get('/users')
-        }
-    }, [])
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -73,6 +71,15 @@ const Dashboard: FC = () => {
     const isCurrentMonth = currentDate.getMonth() === today.getMonth() && 
                             currentDate.getFullYear() === today.getFullYear();
     const todayDate = today.getDate();
+
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
         <div className='flex gap-5  text-black'>

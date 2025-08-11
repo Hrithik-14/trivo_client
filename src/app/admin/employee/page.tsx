@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import UserSearch from "@/app/components/UserSearch";
+import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 
 const jobRoleLabels: { [key: string]: string } = {
     frontend: "Frontend Developer",
@@ -361,19 +362,44 @@ type User = {
 const Employees: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [employees, setEmployees] = useState<User[]>([])
+    const [ page, setPage ] = useState(1)
+    const [ totalPages, setTotalPages ] = useState(1)
+    const { loading } = useAdminAuthGuard()
+    const [ load, setLoading ] = useState(true)
+    const [reload, setReload] = useState(false);
 
 
     useEffect(() => {
-        api.get<User[]>('/employeesdeatil')
-        .then(res => setEmployees(res.data))
-        .catch(err => console.error("Error inFetching manager:", err))
-    }, [employees])
+        api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/employeesdeatil?page=${page}&limit=6`)
+        .then(res => {
+            setEmployees(res.data.managers)
+            setTotalPages(res.data.totalPages)
+            setLoading(false)
+        })
+        .catch(err => {console.error("Error inFetching manager:", err); setLoading(false)})
+    }, [page, reload])
 
 
 
     const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
+    if (load) return  (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
     if (!employees) return notFound()
 
     return (
@@ -407,7 +433,7 @@ const Employees: FC = () => {
                     alt="manager profile"
                     width={50}
                     height={50}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover object-center w-[50px] h-[50px]"
                     style={{ maxWidth: '50px', maxHeight: '50px' }}
                 />
                 ) : (
@@ -448,6 +474,23 @@ const Employees: FC = () => {
             </div>
         ))}
         </div>
+            <div className="flex justify-center mt-4 gap-2">
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(prev => prev - 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Prev
+                </button>
+                <span className="px-4 py-2">{page} / {totalPages}</span>
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(prev => prev + 1)}
+                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };
