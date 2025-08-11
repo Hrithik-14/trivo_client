@@ -364,10 +364,7 @@ const Employees: FC = () => {
     const [employees, setEmployees] = useState<User[]>([])
     const [ page, setPage ] = useState(1)
     const [ totalPages, setTotalPages ] = useState(1)
-<<<<<<< HEAD
-=======
 
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
     const { loading } = useAdminAuthGuard()
     const [ load, setLoading ] = useState(true)
     const [reload, setReload] = useState(false);
