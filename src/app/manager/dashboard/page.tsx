@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+import { Clock } from 'lucide-react'
+import React from 'react'
+
+const ManagerDashboard = () => {
+    return (
+        <div>
+=======
 'use client'
 
 import api from '@/app/api/axios'
@@ -46,6 +54,7 @@ const ManagerDashboard = () => {
 
     return (
         <div className='flex flex-col gap-5'>
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
             <div className='flex gap-5'>
                 <div className='p-4 bg-white rounded border border-[#ddd] w-full flex gap-3 items-center px-10'>
                     <Clock className='text-green-500' />
@@ -65,6 +74,8 @@ const ManagerDashboard = () => {
                     SignIn
                 </button>
             </div>
+<<<<<<< HEAD
+=======
             <div className='flex justify-between gap-5'>
                 <div className='bg-white p-4  border border-[#ddd] rounded w-full'>
                     <h2 className='font-semibold text-sm mb-4'>Working Hours</h2>
@@ -84,6 +95,7 @@ const ManagerDashboard = () => {
                     </div>
                 ))}
             </div>
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
         </div>
     )
 }

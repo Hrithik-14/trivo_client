@@ -10,8 +10,11 @@ import toast from 'react-hot-toast';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
+<<<<<<< HEAD
+=======
 import UserSearch from '@/app/components/UserSearch';
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
 
 type ManagerOption = { value: string; label: string };
 
@@ -106,6 +109,15 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
               name="managerId"
               rules={{ required: "Manager is required" }}
               render={({ field }) => (
+<<<<<<< HEAD
+                <Select
+                  {...field}
+                  options={managerOptions}
+                  placeholder='Select manager'
+                  className='text-sm'
+                  isClearable
+                />
+=======
                 <>
                   <ManagerProjectSearch
                     role="manager"
@@ -120,6 +132,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     <span className="text-red-500 text-xs">{errors.managerId.message}</span>
                   )}
                 </>
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
               )}
             />
             {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
