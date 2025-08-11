@@ -1,4 +1,6 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client'
 
 import React, { useState, useEffect, ReactNode } from "react"
@@ -50,16 +52,22 @@ interface MainContainerProps {
     children: ReactNode;
 }
 
+
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
 
+
+
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const parsed = storedUser ? JSON.parse(storedUser) : null;
         setRole(parsed?.role || null);
+
         setUser(parsed);
+
         console.log(storedUser);
     }, []);
 
@@ -89,6 +97,7 @@ export default function RootLayout({ children }: MainContainerProps) {
 
                 <div className="flex pt-13" style={{ height: "100vh" }}>
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
+
                     <div className="flex flex-col">
                         {/* Profile Section */}
                         <Link  href={"/employee/profile"}
@@ -155,6 +164,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         </ul>
                     </div>
                     
+
                     <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">
                     LogOut
                     </button>
@@ -164,4 +174,6 @@ export default function RootLayout({ children }: MainContainerProps) {
             </div>
         </>
     )
+
 }
+

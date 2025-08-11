@@ -1,7 +1,7 @@
 import { Clock } from 'lucide-react'
 import React from 'react'
 
-const EmployeeDashboard = () => {
+const ManagerDashboard = () => {
     return (
         <div>
             <div className='flex gap-5'>
@@ -28,5 +28,4 @@ const EmployeeDashboard = () => {
 }
 
 
-export default EmployeeDashboard
-
+export default ManagerDashboard
