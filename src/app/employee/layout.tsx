@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 import { Bell } from "lucide-react"
+import DraggableMessenger from "../components/messenger/DraggableMessenger"
 
 
 
@@ -19,7 +20,6 @@ const LiveClock = () => {
 
         const hours = now.getHours() % 12 || 12;
         const minutes = now.getMinutes().toString().padStart(2, '0');
-        const seconds = now.getSeconds().toString().padStart(2, '0');
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
 
         const day = now.getDate().toString().padStart(2, '0');
@@ -27,13 +27,13 @@ const LiveClock = () => {
         const year = now.getFullYear();
         const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-        const formatted = `${hours}:${minutes}:${seconds} ${ampm} `
+        const formatted = `${hours}:${minutes} ${ampm} `
         const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
         setTimes(formatted);
         setDates(formatedDate);
         };
 
-        updateTime(); // run once immediately
+        updateTime();
         const interval = setInterval(updateTime, 1000);
 
         return () => clearInterval(interval);
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </nav>
                 </header>
 
-                <div className="flex pt-13" style={{ height: "100vh" }}>
+                <div className="flex pt-13 relative" style={{ height: "100vh" }}>
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
@@ -137,6 +137,10 @@ export default function RootLayout({ children }: MainContainerProps) {
                     LogOut
                     </button>
                 </nav>
+
+                <div>
+                    <DraggableMessenger role="employee"/>
+                </div>
 
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>

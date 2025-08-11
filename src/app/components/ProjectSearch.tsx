@@ -37,7 +37,7 @@ const ProjectSearch: React.FC = () => {
         } else {
             setResults([]);
         }
-        }, 200); // debounce delay
+        }, 500);
 
         return () => clearTimeout(delayDebounce);
     }, [query]);

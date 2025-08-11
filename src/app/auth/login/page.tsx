@@ -37,9 +37,13 @@ import toast from 'react-hot-toast'
 
   if (token && user?.role) {
     if (user.role === "admin") {
-      router.replace("/admin/dashboard");
+      router.push("/admin/dashboard")
+    } else if (user.role === "employee") {
+      router.push("/employee/dashboard")
+    } else if (user.role === "manager") {
+      router.push("/manager/dashboard")
     } else {
-      router.replace("/");
+      router.push("/")
     }
   } else {
     setLoading(false)
