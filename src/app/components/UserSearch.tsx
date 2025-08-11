@@ -46,7 +46,11 @@ const UserSearch: React.FC<UserSearchProps> = ({ initialQuery = '', role, onResu
         } else {
             setResults([]);
         }
+<<<<<<< HEAD
         }, 100); 
+=======
+        }, 300); 
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
 
         return () => clearTimeout(delayDebounce);
     }, [query, role]);
