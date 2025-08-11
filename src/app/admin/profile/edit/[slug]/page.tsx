@@ -119,6 +119,7 @@ const EditProfile = () => {
         }
     };
 
+
     if (load) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
@@ -127,6 +128,7 @@ const EditProfile = () => {
             </div>
         </div>
     );
+
     if (loading) return  (   
         <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
@@ -135,6 +137,7 @@ const EditProfile = () => {
             </div>
         </div>
     )
+
 
     return (
         <div className='flex flex-col gap-5'>

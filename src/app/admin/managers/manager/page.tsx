@@ -361,9 +361,11 @@ const Managers: FC = () => {
   const [managers, setmanagers] = useState<User[]>([])
   const [ page, setPage ] = useState(1)
   const [ totalPages, setTotalPages ] = useState(1)
+
   const [ load, setLoading ] = useState(true)
   const [reload, setReload] = useState(false);
   const { loading } = useAdminAuthGuard()
+
 
   useEffect(() => {
     api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=3`)

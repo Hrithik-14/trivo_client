@@ -69,7 +69,7 @@ const onSubmit = async (data: LoginFormData) => {
 
     reset()
 
-    if (res.data.user.role === "admin") {
+if (res.data.user.role === "admin") {
       router.push("/admin/dashboard")
     } else if (res.data.user.role === "employee") {
       router.push("/employee/dashboard")
@@ -82,7 +82,7 @@ const onSubmit = async (data: LoginFormData) => {
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Login failed')
     } else {
-      alert('Something went wrong')
+      toast.error('Something went wrong')
     }
   }
 }

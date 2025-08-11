@@ -1,3 +1,6 @@
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client'
 
 import React, { useState, useEffect, ReactNode } from "react"
@@ -7,8 +10,6 @@ import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 import { Bell } from "lucide-react"
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
-
-
 
 const LiveClock = () => {
     const [dates, setDates] = useState<string>('');
@@ -52,15 +53,21 @@ interface MainContainerProps {
 }
 
 
-
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+
+
+
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const parsed = storedUser ? JSON.parse(storedUser) : null;
         setRole(parsed?.role || null);
+
+        setUser(parsed);
+
         console.log(storedUser);
     }, []);
 
@@ -90,49 +97,74 @@ export default function RootLayout({ children }: MainContainerProps) {
 
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
-                    <ul className="flex flex-col gap-1">
-                    <Link
-                        href={"/employee/dashboard"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "/employee/dashboard" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Dashboard
-                    </Link>
-                    <Link
-                        href={""}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Projects
-                    </Link>
-                    <Link
-                        href={""}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Daily Reports
-                    </Link>
-                    <Link
-                        href={""}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Attendance
-                    </Link>
-                    <Link
-                        href={""}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Messenger
-                    </Link>
+
+                    <div className="flex flex-col">
+                        {/* Profile Section */}
+                        <Link  href={"/employee/profile"}
+                            className={` ${
+                            pathname === "/employee/profil" ? "bg-black text-white" : ""
+                            }`}>
+                        <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                {user?.name ? user.name.charAt(0).toUpperCase() : 'M'}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-sm text-gray-800">
+                                    {user?.name || 'MINHAJ'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {user?.employeeCode || 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                        </Link>
+
+                        {/* Navigation Links */}
+                        <ul className="flex flex-col gap-1">
+                        <Link
+                            href={"/employee/dashboard"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/dashboard" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
+                            href={"/employee/projects"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/projects" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Projects
+                        </Link>
+                        <Link
+                            href={"/employee/daily-reports"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/daily-reports" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Daily Reports
+                        </Link>
+                        <Link
+                            href={"/employee/attendance"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/attendance" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Attendance
+                        </Link>
+                        <Link
+                            href={"/employee/messenger"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/messenger" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Messenger
+                        </Link>
+                        </ul>
+                    </div>
                     
-                    </ul>
+
                     <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">
                     LogOut
                     </button>
@@ -146,4 +178,6 @@ export default function RootLayout({ children }: MainContainerProps) {
             </div>
         </>
     )
+
 }
+
