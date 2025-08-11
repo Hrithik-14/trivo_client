@@ -1,0 +1,23 @@
+'use client'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/app/store'
+
+export const useAdminAuthGuard = () => {
+    const router = useRouter()
+    const user = useSelector((state: RootState) => state.user.user)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (!user) {
+        router.replace('/auth/login')
+        } else if (user.role !== 'admin') {
+        router.replace('/')
+        } else {
+        setLoading(false)
+        }
+    }, [user, router])
+
+    return { loading }
+}

@@ -72,7 +72,7 @@ export default function RootLayout({ children }: MainContainerProps) {
     };
     
 
-    if (role !== "employee") return children
+    if (role !== "manager") return children
 
     return (
         <>
@@ -92,9 +92,9 @@ export default function RootLayout({ children }: MainContainerProps) {
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
-                        href={"/employee/dashboard"}
+                        href={"/manager/dashboard"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "/employee/dashboard" ? "bg-black text-white" : ""
+                        pathname === "/manager/dashboard" ? "bg-black text-white" : ""
                         }`}
                     >
                         Dashboard
@@ -122,6 +122,22 @@ export default function RootLayout({ children }: MainContainerProps) {
                         }`}
                     >
                         Attendance
+                    </Link>
+                    <Link
+                        href={""}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Employees
+                    </Link>
+                    <Link
+                        href={""}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Employee Reports
                     </Link>
                     <Link
                         href={""}

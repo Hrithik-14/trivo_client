@@ -37,35 +37,8 @@ const ManagerDailyReport = () => {
                     {isExpand && (
                         <div className='mt-6 border p-4 rounded border-[#ddd] flex flex-col gap-4'>
                             <div className=' flex flex-col gap-1'>
-                                <h2 className='font-bold text-xs text-[#696969]'>Project Name</h2>
-                                <h2 className='text-lg font-semibold'>Company Portal</h2>
-                            </div>
-                            <div className='mt-3 flex flex-col gap-3'>
-                                <h2 className='font-bold text-xs text-[#696969]'>Task Completed</h2>
-                                <div>
-                                    <div className='flex gap-3'>
-                                        <CircleCheckBig size={15} className='text-green-500' />
-                                        <p className='text-xs'>Completed User Authentication</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='flex flex-col gap-3'>
-                                <h2 className='font-bold text-xs text-[#696969]'>Key Achievements</h2>
-                                <div className='bg-green-50 p-2 text-xs text-[#696969] rounded px-4'>
-                                    Successfully deployed new feature to production
-                                </div>
-                            </div>
-                            <div className='flex flex-col gap-3'>
-                                <h2 className='font-bold text-xs text-[#696969]'>Challenges</h2>
-                                <div className='bg-blue-50 p-2 text-xs text-[#696969] rounded px-4'>
-                                    Database optimization took longer than expected
-                                </div>
-                            </div>
-                            <div className='flex flex-col gap-3'>
-                                <h2 className='font-bold text-xs text-[#696969]'>Tomorrow&apos;s</h2>
-                                <div className='bg-yellow-50 p-2 text-xs text-[#696969] rounded px-4'>
-                                    Start working on mobile responsive design
-                                </div>
+                                <h2 className='text-sm font-semibold text-[#696969]'>Description:</h2>
+                                <p className='ml-10'>Communicate with 5 client to about project</p>
                             </div>
                         </div>
                     )}
@@ -80,7 +53,10 @@ const ManagerDailyReport = () => {
                         
                     </div>
                     <div className='border border-[#ddd] mt-6 p-5 rounded'>
-
+                        <div className=' flex flex-col gap-1'>
+                                <h2 className='text-sm font-semibold text-[#696969]'>Description:</h2>
+                                <p className='ml-10'>Communicate with 2 client to about project</p>
+                            </div>
                     </div>
                     <div className='flex mt-2 justify-end gap-5'>
                         <button className='flex items-center gap-3 p-2 px-8 bg-green-500 text-white rounded'>

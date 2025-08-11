@@ -19,6 +19,7 @@ import toast from 'react-hot-toast'
     const [showPassword, setShowPassword] = useState(false)
     const router = useRouter()
     const dispatch = useDispatch()
+    const [ loading, setLoading ] = useState(true)
     
     
     const {
@@ -40,6 +41,8 @@ import toast from 'react-hot-toast'
     } else {
       router.replace("/");
     }
+  } else {
+    setLoading(false)
   }
 }, []);
 
@@ -85,6 +88,15 @@ if (res.data.user.role === "admin") {
     const togglePasswordVisibility = () => {
       setShowPassword(!showPassword)
     }
+
+    if (loading) return  (   
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    )
 
     return (
       <div className='bg-[url("/bg.png")] bg-center bg-cover h-screen flex items-center'>
