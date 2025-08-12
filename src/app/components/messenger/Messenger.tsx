@@ -45,6 +45,7 @@ interface Message {
     profileImage: string;
   };
   groupId?: string;
+  readBy: string[];
 }
 
 interface Group {
@@ -56,13 +57,16 @@ interface Group {
   updatedAt: string;
   messages?: Message[];
   groupImage: string;
+  lastMessageId: { content: string; id: string; } | null;
+  content: string;
+  unreadCount?: number | undefined;
 }
 
 interface MessengerProps {
   role: "admin" | "manager" | "employee";
 }
 
-const MessengerFixed: FC<MessengerProps> = ({ role }) => {
+const Messenger: FC<MessengerProps> = ({ role }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -82,8 +86,7 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
   let lastDateLabel: string | null = null;
   const [activeArea, setActiveArea] = useState('list');
   const [groupImage, setProfileImage] = useState<File | null>(null);
-    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -99,6 +102,40 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
     }
   }, []);
 
+  // Function to calculate unread count for a group
+  const calculateUnreadCount = (groupId: string, groupMessages: Message[]): number => {
+    return groupMessages.filter(message => 
+      message.groupId === groupId && 
+      message.senderId._id !== currentUserId && 
+      !message.readBy.includes(currentUserId)
+    ).length;
+  };
+
+  // Function to load unread counts for all groups
+  const loadUnreadCounts = async () => {
+    if (!token || !currentUserId) return;
+    
+    try {
+      const updatedGroups = await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const res = await api.get(`/group/${group._id}/messages`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const unreadCount = calculateUnreadCount(group._id, res.data);
+            return { ...group, unreadCount };
+          } catch (error) {
+            console.error(`Failed to load messages for group ${group._id}`, error);
+            return { ...group, unreadCount: 0 };
+          }
+        })
+      );
+      setGroups(updatedGroups);
+    } catch (error) {
+      console.error("Failed to load unread counts", error);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
 
@@ -113,9 +150,18 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
       if (selectedGroup && msg.groupId === selectedGroup._id) {
         setMessages(prev => [...prev, msg]);
       }
+      
+      // Update groups with new message and unread count
       setGroups(prev => prev.map(group => {
         if (group._id === msg.groupId) {
-          return { ...group, updatedAt: new Date().toISOString() };
+          const newUnreadCount = msg.senderId._id !== currentUserId ? 
+            (group.unreadCount || 0) + 1 : group.unreadCount;
+          
+          return { 
+            ...group, 
+            updatedAt: new Date().toISOString(),
+            unreadCount: selectedGroup?._id === group._id ? 0 : newUnreadCount // Reset if currently viewing
+          };
         }
         return group;
       }));
@@ -124,7 +170,7 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
     return () => {
       newSocket.disconnect();
     };
-  }, [token, selectedGroup]);
+  }, [token, selectedGroup, currentUserId]);
 
   useEffect(() => {
     if (token) {
@@ -132,6 +178,13 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
       loadGroups();
     }
   }, [token]);
+
+  // Load unread counts after groups are loaded
+  useEffect(() => {
+    if (groups.length > 0 && currentUserId) {
+      loadUnreadCounts();
+    }
+  }, [groups.length, currentUserId]);
 
   const loadContacts = async () => {
     try {
@@ -154,6 +207,7 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
         }
       });
       setGroups(res.data);
+      console.log(res.data);
     } catch (err) {
       console.error("Failed to load groups", err);
     }
@@ -183,8 +237,7 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
     });
   };
 
-
-    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setProfileImage(file);
@@ -193,53 +246,71 @@ const MessengerFixed: FC<MessengerProps> = ({ role }) => {
     }
   };
 
-const createGroup = async () => {
-  if (!groupName.trim() || selectedMembers.length < 2) {
-    alert("Please provide a group name and select at least 2 members");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // Create FormData instead of JSON
-    const formData = new FormData();
-    formData.append("name", groupName);
-    formData.append("members", JSON.stringify(selectedMembers.map(m => m._id)));
-    if (groupImage) {
-      formData.append("groupImage", groupImage);  // profileImage is File object from input
+  const createGroup = async () => {
+    if (!groupName.trim() || selectedMembers.length < 2) {
+      alert("Please provide a group name and select at least 2 members");
+      return;
     }
 
-    const res = await api.post('/group/create', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Note: Do NOT set 'Content-Type' header manually when using FormData,
-        // let axios/browser set it including the boundary.
-      },
-    });
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", groupName);
+      formData.append("members", JSON.stringify(selectedMembers.map(m => m._id)));
+      if (groupImage) {
+        formData.append("groupImage", groupImage);
+      }
 
-    const newGroup = res.data;
-    setGroups(prev => [...prev, newGroup]);
-    setSelectedGroup(newGroup);
+      const res = await api.post('/group/create', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    socket?.emit("joinGroup", newGroup._id);
+      const newGroup = { ...res.data, unreadCount: 0 };
+      setGroups(prev => [...prev, newGroup]);
+      setSelectedGroup(newGroup);
 
-    setShowGroupModal(false);
-    setGroupName("");
-    setSelectedMembers([]);
-    setProfileImage(null); // reset image state
-  } catch (err) {
-    console.error("Failed to create group", err);
-    alert("Failed to create group");
-  } finally {
-    setLoading(false);
-  }
-};
+      socket?.emit("joinGroup", newGroup._id);
 
+      setShowGroupModal(false);
+      setGroupName("");
+      setSelectedMembers([]);
+      setProfileImage(null);
+    } catch (err) {
+      console.error("Failed to create group", err);
+      alert("Failed to create group");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleSelectGroup = (group: Group) => {
+  const handleSelectGroup = async (group: Group) => {
     setSelectedGroup(group);
     setActiveArea('chat');
-    loadGroupMessages(group._id);
+
+    await loadGroupMessages(group._id);
+
+    // Mark messages as read
+    await api.put(`/isRead/group/${group._id}`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // Reset unread count for selected group
+    setGroups(prev => prev.map(g => 
+      g._id === group._id ? { ...g, unreadCount: 0 } : g
+    ));
+
+    setMessages(prev =>
+      prev.map(m => {
+        const readByAsStrings = (m.readBy || []).map(id => String(id));
+        if (String(m.groupId) === String(group._id) && !readByAsStrings.includes(currentUserId) && String(m.senderId._id) !== currentUserId) {
+          return { ...m, readBy: [...readByAsStrings, currentUserId] };
+        }
+        return m;
+      })
+    );
+
     socket?.emit("joinGroup", group._id);
   };
 
@@ -275,8 +346,6 @@ const createGroup = async () => {
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  
-
   const filteredContacts = contacts.filter(contact =>
     (
     contact.name.toLowerCase().includes(contactSearchQuery.toLowerCase()) ||
@@ -290,17 +359,18 @@ const createGroup = async () => {
       {activeArea === 'list' && (
         <div className="w-full h-full overflow-y-auto scrollbar-thin bg-white rounded-md flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold text-gray-900">Messenger</h1>
-              {role === 'admin' && <button 
+            <div className="flex items-center justify-end mb-4">
+              {role === 'admin' &&
+              <button 
                 onClick={() => setShowGroupModal(true)}
-                className="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white transition-colors"
+                className=" h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center gap-5 px-4 justify-center text-white transition-colors"
               >
                 <Plus size={15} />
+                <p>Create Group</p>
               </button>}
             </div>
             
-            <div className="relative">
+            <div className="relative ">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={13} />
               <input
                 type="text"
@@ -330,21 +400,33 @@ const createGroup = async () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className='flex gap-2 items-center'>
-                      {group.groupImage ? (
-                        <div className='w-[30px] h-[30px] relative'>
-                          <Image src={group.groupImage} alt='Group profile' fill className='rounded-full object-cover object-center' />
-                        </div>
-                      ) : (
-                        <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-md'>
-                          {group.name.slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
+                      <div className="relative">
+                        {group.groupImage ? (
+                          <div className='w-[30px] h-[30px] relative'>
+                            <Image src={group.groupImage} alt='Group profile' fill className='rounded-full object-cover object-center' />
+                          </div>
+                        ) : (
+                          <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-md'>
+                            {group.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        {(group.unreadCount ?? 0) > 0 && (
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                            {group.unreadCount! > 99 ? '99+' : group.unreadCount}
+                          </div>
+                        )}
+                      </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                        <h3 className={`font-semibold text-gray-900 `}>
+                          {group.name}
+                        </h3>
+                        <h4 className={`text-sm ${group.unreadCount && group.unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                          {group.lastMessageId?.content}
+                        </h4>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(group.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div className="text-xs text-gray-400 flex flex-col items-end">
+                      <div>{formatGroupDate(group.updatedAt)}</div>
                     </div>
                   </div>
                 </div>
@@ -385,7 +467,7 @@ const createGroup = async () => {
                     <li className='border-b p-2 border-[#ddd] text-xs'>{selectedGroup.createdBy.name}</li>
                     {selectedGroup.members.map(m => (
                       <li key={m._id} className='border-b p-2 border-[#ddd] text-xs'>
-                        <p>{m.name}</p>
+                        <p>{m.name} {m.employeeCode}</p>
                       </li>
                     ))}
                   </ul>}
@@ -414,12 +496,12 @@ const createGroup = async () => {
                         )}
                         <div className={`max-w-50 px-3 py-2 rounded-lg break-words leading-none ${message.senderId._id === currentUserId ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
                           <div className={`text-xs font-semibold mb-1 ${message.senderId._id === currentUserId ? 'hidden': 'block'}`}>{message.senderId.name}</div>
-                      <div className='text-sm'>{message.content}</div>
-                      <div className={`text-[8px] mt-1 text-end ${
-                        message.senderId._id === currentUserId ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
-                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
+                          <div className='text-sm'>{message.content}</div>
+                          <div className={`text-[8px] mt-1 text-end ${
+                            message.senderId._id === currentUserId ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
+                            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -567,4 +649,22 @@ const createGroup = async () => {
   );
 };
 
-export default MessengerFixed;
+export default Messenger;
+
+const formatGroupDate = (dateString: any) => {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+};
