@@ -11,6 +11,7 @@ import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
 
+
 type ManagerOption = { value: string; label: string };
 
 type ProjectFormData = {
@@ -105,6 +106,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
               name="managerId"
               rules={{ required: "Manager is required" }}
               render={({ field }) => (
+
                 <>
                   <ManagerProjectSearch
                     role="manager"
@@ -119,6 +121,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     <span className="text-red-500 text-xs">{errors.managerId.message}</span>
                   )}
                 </>
+
               )}
             />
             {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}

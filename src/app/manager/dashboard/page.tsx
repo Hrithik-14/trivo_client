@@ -1,5 +1,5 @@
-'use client'
 
+'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import api from '@/app/api/axios'
 import PerformanceChart from '@/app/components/PerformanceChart'

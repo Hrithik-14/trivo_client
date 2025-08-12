@@ -6,7 +6,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 import { Bell } from "lucide-react"
+
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
+
 
 
 
@@ -26,8 +28,8 @@ const LiveClock = () => {
         const month = (now.getMonth() + 1).toString().padStart(2, '0');
         const year = now.getFullYear();
         const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
-
         const formatted = `${hours}:${minutes} ${ampm} `
+
         const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
         setTimes(formatted);
         setDates(formatedDate);
@@ -89,6 +91,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </header>
 
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
+
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
@@ -145,9 +148,11 @@ export default function RootLayout({ children }: MainContainerProps) {
                     LogOut
                     </button>
                 </nav>
+
                 <div>
                     <DraggableMessenger role="manager"/>
                 </div>
+
 
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
