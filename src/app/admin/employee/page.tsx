@@ -10,6 +10,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import UserSearch from "@/app/components/UserSearch";
 import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
+import ManagerSearchDropdown from "@/app/components/ManagerSearch";
 
 const jobRoleLabels: { [key: string]: string } = {
     frontend: "Frontend Developer",
@@ -245,6 +246,14 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
                     ))}
                     </select>
                 </label>
+                <label className="w-full">
+  <div className="text-xs font-semibold text-[#696969]">Manager</div>
+  <ManagerSearchDropdown
+    value={form.managerId}
+    onChange={(userId) => setForm((prev) => ({ ...prev, managerId: userId }))}
+    placeholder="Search and select manager"
+  />
+</label>
                 </div>
                 <div className="flex gap-5">
                 <label className="w-full">

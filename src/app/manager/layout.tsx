@@ -139,14 +139,6 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Employee Reports
                     </Link>
-                    <Link
-                        href={"/manager/messenger"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "/manager/messenger" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Messenger
-                    </Link>
                     
                     </ul>
                     <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">

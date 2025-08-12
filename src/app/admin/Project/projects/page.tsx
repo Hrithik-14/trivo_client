@@ -2,15 +2,13 @@
 "use client"
 
 import React, { FC, useState, useEffect } from 'react';
-import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User } from 'lucide-react';
-import Select from 'react-select';
+import { X, Clock, Plus, FileText, CheckCircle, Info, Calendar, User } from 'lucide-react';
+
 import api from '@/app/api/axios';
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
-import UserSearch from '@/app/components/UserSearch';
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
 
 type ManagerOption = { value: string; label: string };
@@ -56,6 +54,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
 
     api.post('/admin/addAdminProject', project)
     toast.success('Project created successfull')
+    onClose()
 
     reset();
   };
