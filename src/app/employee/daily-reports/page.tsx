@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { FC, useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import {
   CheckSquare,
   Award,
@@ -45,40 +46,22 @@ interface Report {
   statusColor: string;
 }
 
-// import { FC } from "react";
-// import { useForm, useFieldArray } from "react-hook-form";
-// import { useParams } from "react-router-dom";
-// import { X, Clock, CheckSquare, Award, AlertCircle, Plus } from "lucide-react";
-// import api from "../api"; // Assuming this is your configured axios instance
-// import toast from "react-toastify"; // Uncomment if using a toast library
-
-// Define the form data type
-interface DailyReportForm {
-  employeeId: string;
-  currentProject: string;
-  projectStatus: string;
-  startTime: string;
-  endTime: string;
-  effectiveHours: string;
-  completedTasks: { value: string }[];
-  plannedTasks: { value: string }[];
-  perfomance: string;
-  challenges: string;
-  supportNeeded: string;
-}
-
 interface Project {
   name: string;
   _id: string;
 }
 
+interface Task {
+  name: string;
+  _id: string;
+}
+
 const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
-  // const { id } = useParams<{ id: string }>(); // Type the id parameter
   const user = localStorage.getItem("user");
-  const parsedUser = user ? JSON.parse(user) : null; // Parse user from localStorage
-  // console.log(parsedUser);
-  const [projects, setProjects] = useState<Project | []>([]);
-  const [tasks, setTasks] = useState<Project | []>([]);
+  const parsedUser = user ? JSON.parse(user) : null;
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
   const {
     register,
     handleSubmit,
@@ -86,7 +69,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     formState: { errors },
   } = useForm<DailyReportForm>({
     defaultValues: {
-      employeeId: parsedUser?.employeeCode, // Set employeeId from user data
+      employeeId: parsedUser?.employeeCode,
       currentProject: "",
       projectStatus: "",
       startTime: "",
@@ -99,7 +82,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       supportNeeded: "",
     },
   });
-  const [currentProject, setCurrentProject] = useState([])
 
   const { fields: completedTasks, append: appendCompleted } = useFieldArray({
     control,
@@ -110,15 +92,13 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     control,
     name: "plannedTasks",
   });
-  useEffect(() => {
-    const fetchTask = async () => {
-      try{
-        const response = await api.get(
-          `/project/${}/user/:userId/tasks`
-        )
-      }
-    }
-  })
+
+  const selectedProjectId = useWatch({
+    control,
+    name: "currentProject",
+  });
+
+  console.log("selectedProjectId:", selectedProjectId);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -126,34 +106,50 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
         const response = await api.get(
           `/getProjectByEmployee/${parsedUser?.id}`
         );
-        setProjects(response.data.projects);
+        setProjects(response.data.projects || []);
       } catch (error) {
-        console.log("error is :", error);
+        console.error("Error fetching projects:", error);
       }
     };
     fetchProject();
   }, []);
 
+  useEffect(() => {
+    if (selectedProjectId) {
+      const fetchTasks = async () => {
+        try {
+          const response = await api.get(
+            `/project/${selectedProjectId}/user/${parsedUser?.id}/tasks`
+          );
+          console.log("Tasks fetched:", response.data);
+          setTasks(response.data.tasks || []);
+        } catch (error) {
+          console.error("Error fetching tasks:", error);
+          setTasks([]); 
+        }
+      };
+      fetchTasks();
+    } else {
+      setTasks([]); 
+    }
+  }, [selectedProjectId]);
+
   const onSubmit = async (data: DailyReportForm) => {
     try {
-      const token = parsedUser?.token; // Assume token is stored in user object
+      const token = parsedUser?.token;
       if (!token) throw new Error("No authentication token found");
 
-      // Make API call to submit the daily report
       const response = await api.post(
         `report/addReport/${parsedUser?.id}`,
-        data,
+        { ...data, projectId: selectedProjectId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Handle successful response
       console.log("Daily report submitted successfully:", response.data);
-      // toast.success("Daily report submitted successfully!"); // Uncomment if using toast
       alert("Daily report submitted successfully!");
-      onClose(); // Close the form
+      onClose();
     } catch (error) {
       console.error("Error submitting daily report:", error);
-      // toast.error("Failed to submit daily report. Please try again."); // Uncomment if using toast
       alert("Failed to submit daily report. Please try again.");
     }
   };
@@ -161,7 +157,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Daily Report</h2>
           <button
@@ -172,10 +167,8 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-6 space-y-6">
-            {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -202,9 +195,12 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   {...register("currentProject", {
                     required: "Current project is required",
                   })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                 >
-                  {projects.map((item: any) => (
+                  <option value="" disabled>
+                    Select a project...
+                  </option>
+                  {projects.map((item) => (
                     <option key={item._id} value={item._id}>
                       {item.name}
                     </option>
@@ -216,26 +212,8 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   </p>
                 )}
               </div>
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Project Status
-                </label>
-                <select
-                  {...register("projectStatus", { required: "Project status is required" })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="Ongoing">Ongoing</option>
-                  <option value="Completed">Completed</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-                {errors.projectStatus && (
-                  <p className="text-red-500 text-sm mt-1">{errors.projectStatus.message}</p>
-                )}
-              </div> */}
             </div>
 
-            {/* Working Hours */}
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <Clock className="text-green-600 mr-2" size={20} />
@@ -302,7 +280,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Tasks */}
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <CheckSquare className="text-purple-600 mr-2" size={20} />
@@ -311,7 +288,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Completed Tasks */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
                     Tasks Completed Today
@@ -341,21 +317,32 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   </button>
                 </div>
 
-                {/* Planned Tasks */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
                     Planned Tasks for Tomorrow
                   </label>
                   {plannedTasks.map((field, index) => (
                     <div key={field.id} className="mb-2">
+                      <label
+                        htmlFor={`task-${index}`}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Task {index + 1}
+                      </label>
                       <select
+                        id={`task-${index}`}
                         {...register(`plannedTasks.${index}.value`, {
                           required: "Task description is required",
                         })}
-                        // placeholder="Describe  task..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        defaultValue=""
                       >
-                        {projects.map((item: any) => (
+                        <option value="" disabled>
+                          {tasks.length === 0
+                            ? "No tasks available"
+                            : "Select a task..."}
+                        </option>
+                        {tasks.map((item) => (
                           <option key={item._id} value={item._id}>
                             {item.name}
                           </option>
@@ -379,7 +366,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Performance & Challenges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-yellow-50 rounded-lg p-4">
                 <div className="flex items-center mb-4">
@@ -422,7 +408,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex justify-end p-6 border-t border-gray-200">
             <button
               type="submit"
@@ -436,7 +421,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     </div>
   );
 };
-
 const DailyReport: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -572,10 +556,6 @@ const DailyReport: FC = () => {
               <option>Approved</option>
               <option>Pending</option>
             </select>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-2">
-              <Filter className="w-4 h-4" />
-              <span>Filter</span>
-            </button>
           </div>
         </div>
 

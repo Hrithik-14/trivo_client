@@ -9,13 +9,9 @@ import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
-<<<<<<< HEAD
 import UserSearch from '@/app/components/UserSearch';
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
-=======
-import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
 
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 
 type ManagerOption = { value: string; label: string };
 
@@ -111,10 +107,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
               name="managerId"
               rules={{ required: "Manager is required" }}
               render={({ field }) => (
-<<<<<<< HEAD
-=======
 
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
                 <>
                   <ManagerProjectSearch
                     role="manager"
@@ -129,10 +122,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     <span className="text-red-500 text-xs">{errors.managerId.message}</span>
                   )}
                 </>
-<<<<<<< HEAD
-=======
 
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
               )}
             />
             {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
@@ -294,7 +284,7 @@ const Projects: FC = () => {
                         <div className='text-[#696969] flex gap-3 flex-col'>
                             <div className='font-semibold text-xs'>Team Members :</div>
                             <div className='ml-5 flex flex-wrap gap-2'>
-                                {project.members.map((member, index) => (
+                                {project.members.filter((member) => member._id !== project.managerId).map((member, index) => (
                                     <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
                                         {member.name}
                                     </div>

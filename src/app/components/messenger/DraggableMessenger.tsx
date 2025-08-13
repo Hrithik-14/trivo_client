@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, FC, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import { MessageCircle, X } from "lucide-react";
@@ -9,6 +10,7 @@ import api from '@/app/api/axios';
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
 }
+
 
 interface Message {
   _id: string;
@@ -29,7 +31,6 @@ const SIDEBAR_WIDTH = 300;
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -103,10 +104,11 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   };
 
   return (
-    <div className="relative">
+    <div>
       <button
         onClick={handleToggleOpen}
         className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110 "
+
         style={{ right: 20, bottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
         title="Open Messenger"
       >
@@ -123,7 +125,6 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
         <Rnd
           size={{ width: 400, height: 500 }}
           position={position}
-
           bounds="window"
           onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
           enableResizing={false}
@@ -147,8 +148,10 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
           </div>
         </Rnd>
       )}
+
     </div>
   ); 
 };
 
 export default DraggableMessenger;
+
