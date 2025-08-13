@@ -5,7 +5,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
+<<<<<<< HEAD
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
+=======
+<<<<<<< HEAD
+=======
+import DraggableMessenger from "../components/messenger/DraggableMessenger"
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 
 
 interface MainContainerProps {
@@ -54,7 +61,15 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </nav>
                 </header>
 
+<<<<<<< HEAD
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
+=======
+<<<<<<< HEAD
+                <div className="flex pt-13" style={{ height: "100vh" }}>
+=======
+                <div className="flex pt-13 relative" style={{ height: "100vh" }}>
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
@@ -97,7 +112,21 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Employees
                     </Link>
+<<<<<<< HEAD
                     <Link
+<<<<<<< HEAD
+=======
+                        href={"/admin/messenger"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/admin/messenger" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Messenger
+                    </Link>
+=======
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+                    <Link
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
                         href={"/admin/paylips"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/paylips" ? "bg-black text-white" : ""
@@ -119,10 +148,19 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </button>
                 </nav>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
                 <div>
                     <DraggableMessenger role="admin"/>
                 </div>
 
+<<<<<<< HEAD
+=======
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
         </>

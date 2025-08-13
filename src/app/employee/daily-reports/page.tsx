@@ -73,7 +73,7 @@ interface Project {
 }
 
 const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { id } = useParams<{ id: string }>(); // Type the id parameter
+  // const { id } = useParams<{ id: string }>(); // Type the id parameter
   const user = localStorage.getItem("user");
   const parsedUser = user ? JSON.parse(user) : null; // Parse user from localStorage
   // console.log(parsedUser);
@@ -124,7 +124,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   }, []);
 
   const onSubmit = async (data: DailyReportForm) => {
-    console.log(data);
+
 
     try {
       const token = parsedUser?.token; // Assume token is stored in user object

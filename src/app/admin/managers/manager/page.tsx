@@ -362,6 +362,10 @@ const Managers: FC = () => {
   const [ page, setPage ] = useState(1)
   const [ totalPages, setTotalPages ] = useState(1)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
   const [ load, setLoading ] = useState(true)
   const [reload, setReload] = useState(false);
   const { loading } = useAdminAuthGuard()
@@ -435,6 +439,10 @@ const Managers: FC = () => {
                 alt="manager profile"
                 fill
                 className="rounded-full object-cover"
+<<<<<<< HEAD
+=======
+
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
               />
             ) : (
               <Image
@@ -445,6 +453,10 @@ const Managers: FC = () => {
                 className="rounded-full"
               />
             )}
+<<<<<<< HEAD
+=======
+
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
             </div>
             <h2>{manager.name}</h2>
           </div>
