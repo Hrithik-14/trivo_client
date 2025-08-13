@@ -1,9 +1,7 @@
+
 'use client'
 
-<<<<<<< HEAD
-=======
-import React from 'react';
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
+import React, { useEffect, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -11,29 +9,43 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import api from '../api/axios';
 
-const rawData = [
-  { value: 5 }, { value: 8 }, { value: 4 }, { value: 16 }, { value: 2 },
-  { value: 20 }, { value: 1 }
-];
+interface AttendanceData {
+  date: string;
+  hours: number;
+}
 
-// Add index to each data point
-const data = rawData.map((item, index) => ({ ...item, index }));
+interface WaveChartProps {
+  userId: string;
+}
 
-<<<<<<< HEAD
-const WaveChart = () => {
-=======
-const WaveChart = React.memo(() => {
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
+const WaveChart: React.FC<WaveChartProps> = ({ userId }) => {
+  const [data, setData] = useState<AttendanceData[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get(`/attendance/${userId}`);
+        setData(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (userId) fetchData();
+  }, [userId]);
+
   return (
     <div style={{ height: 250 }} className='w-full'>
       <ResponsiveContainer>
         <LineChart data={data}>
-          <XAxis dataKey="index" axisLine={{ stroke: '#dbeafe' }} />
+          <XAxis dataKey="date" axisLine={{ stroke: '#dbeafe' }} />
           <YAxis axisLine={{ stroke: '#dbeafe' }} />
           <Line
             type="monotone"
-            dataKey="value"
+            dataKey="hours"
             stroke="#1e90ff"
             strokeWidth={2}
             dot={false}
@@ -42,12 +54,6 @@ const WaveChart = React.memo(() => {
       </ResponsiveContainer>
     </div>
   );
-<<<<<<< HEAD
 };
-=======
-});
 
-WaveChart.displayName = 'WaveChart';
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
-
-export default WaveChart;
+export default React.memo(WaveChart);

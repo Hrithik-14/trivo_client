@@ -37,15 +37,8 @@ const ProjectSearch: React.FC = () => {
         } else {
             setResults([]);
         }
-<<<<<<< HEAD
         }, 500);
-=======
-<<<<<<< HEAD
-        }, 200); // debounce delay
-=======
-        }, 500);
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
+
 
         return () => clearTimeout(delayDebounce);
     }, [query]);

@@ -1,24 +1,17 @@
 "use client";
 
-<<<<<<< HEAD
-import React, { useState, FC } from "react";
-import { Rnd } from "react-rnd";
-import { MessageCircle, X } from "lucide-react";
-import MessengerFixed from "./MessengerFixed";
-=======
+
 import React, { useState, FC, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import { MessageCircle, X } from "lucide-react";
 import Messenger from "./Messenger";
 import api from '@/app/api/axios';
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
 }
 
-<<<<<<< HEAD
-=======
+
 interface Message {
   _id: string;
   content: string;
@@ -33,20 +26,11 @@ interface Message {
   readBy: string[];
 }
 
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 const SIDEBAR_WIDTH = 300;
 
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-<<<<<<< HEAD
-
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110"
-=======
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -124,30 +108,24 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
       <button
         onClick={handleToggleOpen}
         className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110 "
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
+
         style={{ right: 20, bottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
         title="Open Messenger"
       >
         <MessageCircle size={24} />
-<<<<<<< HEAD
-=======
+
         {hasUnreadMessages && !isOpen && (
           <div className="absolute -top-0 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse">
             <div className="w-full h-full bg-red-500 rounded-full animate-ping"></div>
           </div>
         )}
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
       </button>
 
       {isOpen && (
         <Rnd
           size={{ width: 400, height: 500 }}
           position={position}
-<<<<<<< HEAD
-          bounds="window" // <-- restrict drag inside viewport
-=======
           bounds="window"
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
           onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
           enableResizing={false}
           dragHandleClassName="drag-handle"
@@ -164,25 +142,16 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-<<<<<<< HEAD
-              <MessengerFixed role={role} />
-=======
+
               <Messenger role={role} />
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
             </div>
           </div>
         </Rnd>
       )}
-<<<<<<< HEAD
-    </>
-  );
-};
 
-export default DraggableMessenger;
-=======
     </div>
   );
 };
 
 export default DraggableMessenger;
->>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
+

@@ -12,11 +12,14 @@ interface Member {
     _id: string;
     name: string;
     role: string;
+    employeeCode: string;
+    profileImage: string;
 }
 
 interface Manager {
     _id: string;
     name: string;
+    profileImage: string
 }
 
 interface Project {
@@ -188,13 +191,14 @@ const ProjectDetail: FC<Props> = ({ role }) => {
             <p className="font-semibold">Project Manager</p>
             </div>
             <div className="flex items-center gap-3 mt-2">
-            <Image
-                src="/avatar.png"
-                alt="Avatar"
-                width={35}
-                height={35}
-                className="rounded-full"
-            />
+                <div className="relative w-10 h-10">
+                    <Image
+                        src={project.managerId.profileImage || '/avatar.png'}
+                        alt="Avatar"
+                        fill
+                        className="rounded-full object-cover"
+                    />
+                </div>
             <p className="font-semibold">{project.managerId.name}</p>
             </div>
         </div>
@@ -231,22 +235,23 @@ const ProjectDetail: FC<Props> = ({ role }) => {
             <Users size={18} />
             <p className="font-semibold">Team Members</p>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-            {project.members.map((member) => (
+            <div className="flex flex-col gap-4">
+            {project.members.filter((member) => member.role.toLowerCase() !== "manager").map((member) => (
                 <div
                 key={member._id}
                 className="border border-[#ddd] p-3 rounded flex gap-3 items-center"
                 >
-                <Image
-                    src="/avatar.png"
-                    alt="Avatar"
-                    width={35}
-                    height={35}
-                    className="rounded-full"
-                />
+                <div className="relative w-10 h-10">
+                    <Image
+                        src={member.profileImage || '/avatar.png'}
+                        alt="Avatar"
+                        fill
+                        className="rounded-full object-cover"
+                    />
+                </div>
                 <div>
                     <p>{member.name}</p>
-                    <p className="text-xs text-gray-600">{member.role}</p>
+                    <p className="text-xs text-gray-600">{member.employeeCode}</p>
                 </div>
                 </div>
             ))}
