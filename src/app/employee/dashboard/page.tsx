@@ -1,6 +1,7 @@
 import { Clock } from 'lucide-react'
 import React from 'react'
 
+
 const EmployeeDashboard = () => {
     return (
         <div>
@@ -27,10 +28,7 @@ const EmployeeDashboard = () => {
     )
 }
 
-<<<<<<< HEAD
-export default EmployeeDashboard
-=======
+
 
 export default EmployeeDashboard
 
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729

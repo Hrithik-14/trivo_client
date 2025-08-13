@@ -1,6 +1,9 @@
 'use client'
 
+<<<<<<< HEAD
+=======
 import React from 'react';
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 import {
   LineChart,
   Line,
@@ -17,7 +20,11 @@ const rawData = [
 // Add index to each data point
 const data = rawData.map((item, index) => ({ ...item, index }));
 
+<<<<<<< HEAD
+const WaveChart = () => {
+=======
 const WaveChart = React.memo(() => {
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
   return (
     <div style={{ height: 250 }} className='w-full'>
       <ResponsiveContainer>
@@ -35,8 +42,12 @@ const WaveChart = React.memo(() => {
       </ResponsiveContainer>
     </div>
   );
+<<<<<<< HEAD
+};
+=======
 });
 
 WaveChart.displayName = 'WaveChart';
+>>>>>>> dfe7477912a8dfb92f3a894db5409725529e61f1
 
 export default WaveChart;
