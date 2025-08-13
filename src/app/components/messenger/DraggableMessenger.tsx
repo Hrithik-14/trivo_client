@@ -150,7 +150,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
       )}
 
     </div>
-  );
+  ); 
 };
 
 export default DraggableMessenger;
