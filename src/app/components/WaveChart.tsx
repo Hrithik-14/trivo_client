@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import {
   LineChart,
   Line,
@@ -16,7 +17,7 @@ const rawData = [
 // Add index to each data point
 const data = rawData.map((item, index) => ({ ...item, index }));
 
-const WaveChart = () => {
+const WaveChart = React.memo(() => {
   return (
     <div style={{ height: 250 }} className='w-full'>
       <ResponsiveContainer>
@@ -34,6 +35,8 @@ const WaveChart = () => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
+
+WaveChart.displayName = 'WaveChart';
 
 export default WaveChart;
