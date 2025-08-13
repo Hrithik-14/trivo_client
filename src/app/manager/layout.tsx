@@ -105,7 +105,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     <Link
                         href={"/manager/project/Project"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
+                        pathname === "/manager/project/Project" ? "bg-black text-white" : ""
                         }`}
                     >
                         Projects

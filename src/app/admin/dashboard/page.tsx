@@ -3,17 +3,33 @@
 import { useState, useEffect, FC } from 'react'
 import { Users, UserCheck, Clock, ChevronLeft, ChevronRight, Calendar  } from 'lucide-react';
 import PerformanceChart from "@/app/components/PerformanceChart"
-import { RootState } from '@/app/store';
-import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation'; 
 import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
+import api from '@/app/api/axios';
 
+
+interface User {
+    _id: string;
+}
 
 const Dashboard: FC = () => {
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
     const { loading } = useAdminAuthGuard()
+    const [users, setUsers] = useState([])
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await api.get('/users')
+                setUsers(res.data)
+            } catch (err) {
+                console.error(err);
+                
+            }
+        }
+        fetchUser()
+    }, [])
 
 
     useEffect(() => {
@@ -68,8 +84,7 @@ const Dashboard: FC = () => {
 
     const days = getDaysInMonth(currentDate);
     const today = new Date();
-    const isCurrentMonth = currentDate.getMonth() === today.getMonth() && 
-                            currentDate.getFullYear() === today.getFullYear();
+    const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
     const todayDate = today.getDate();
 
     if (loading) return  (   
@@ -89,7 +104,7 @@ const Dashboard: FC = () => {
                     <div className='border border-[#dddddd] bg-white rounded  h-fit py-2 px-4'>
                         <h5 className='font-bold text-[10px]'>Total Employees</h5>
                         <div className='flex justify-between items-center'>
-                            <h2 className='font-semibold'>110</h2>
+                            <h2 className='font-semibold'>{users.length}</h2>
                             <div className='p-2 bg-[#DBEAFE] text-[#3B82F6] w-fit rounded-full'>
                                 <Users size={15}/>
                             </div>
