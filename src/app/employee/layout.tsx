@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client'
 
 import React, { useState, useEffect, ReactNode } from "react"
@@ -11,21 +12,21 @@ import DraggableMessenger from "../components/messenger/DraggableMessenger"
 
 
 const LiveClock = () => {
-    const [dates, setDates] = useState<string>('');
-    const [times, setTimes] = useState<string>('');
+  const [dates, setDates] = useState<string>("");
+  const [times, setTimes] = useState<string>("");
 
-    useEffect(() => {
-        const updateTime = () => {
-        const now = new Date();
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
 
         const hours = now.getHours() % 12 || 12;
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
 
-        const day = now.getDate().toString().padStart(2, '0');
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const year = now.getFullYear();
-        const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const day = now.getDate().toString().padStart(2, "0");
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const year = now.getFullYear();
+      const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
 
 
         const formatted = `${hours}:${minutes} ${ampm} `
@@ -39,20 +40,21 @@ const LiveClock = () => {
         updateTime();
         const interval = setInterval(updateTime, 1000);
 
-        return () => clearInterval(interval);
-    }, []);
+    return () => clearInterval(interval);
+  }, []);
 
-    return (
-        <div className=" text-sm flex flex-col justify-end items-end rounded">
-            <p>{times}</p>
-            <p>{dates}</p>
-        </div>
-    );
+  return (
+    <div className=" text-sm flex flex-col justify-end items-end rounded">
+      <p>{times}</p>
+      <p>{dates}</p>
+    </div>
+  );
 };
 
 interface MainContainerProps {
-    children: ReactNode;
+  children: ReactNode;
 }
+
 
 
 export default function RootLayout({ children }: MainContainerProps) {
@@ -68,35 +70,33 @@ export default function RootLayout({ children }: MainContainerProps) {
         setRole(parsed?.role || null);
 
 
-        setUser(parsed);
+    setUser(parsed);
 
         console.log(storedUser);
     }, []);
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        toast.success('Logged out successfully!');
-        window.location.href = '/auth/login';
-    };
-    
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    toast.success("Logged out successfully!");
+    window.location.href = "/auth/login";
+  };
 
-    if (role !== "employee") return children
+  if (role !== "employee") return children;
 
-    return (
-        <>
-            <header>
-                <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
-                    <div>
-                    <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <Bell size={18} />
-                        <LiveClock />
-                    </div>
-                </nav>
-                </header>
-
+  return (
+    <>
+      <header>
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
+          <div>
+            <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
+          </div>
+          <div className="flex items-center gap-6">
+            <Bell size={18} />
+            <LiveClock />
+          </div>
+        </nav>
+      </header>
 
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
@@ -133,9 +133,9 @@ export default function RootLayout({ children }: MainContainerProps) {
                             Dashboard
                         </Link>
                         <Link
-                            href={"/employee/projects/project"}
+                            href={"/employee/projects"}
                             className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                            pathname === "/employee/projects/project" ? "bg-black text-white" : ""
+                            pathname === "/employee/projects" ? "bg-black text-white" : ""
                             }`}
                         >
                             Projects
@@ -156,6 +156,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         >
                             Attendance
                         </Link>
+                        
                         </ul>
                     </div>
                     
@@ -175,6 +176,6 @@ export default function RootLayout({ children }: MainContainerProps) {
         </>
     )
 
-}
 
+}
 
