@@ -16,7 +16,6 @@ interface MainContainerProps {
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
-    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
