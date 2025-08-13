@@ -119,11 +119,8 @@ const EditProfile = () => {
         }
     };
 
-<<<<<<< HEAD
-    if (loading) return (
-=======
+
     if (load) return (
->>>>>>> 34596fa0cc2300f4d58fa496eefda5ff47b03a4c
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -131,8 +128,7 @@ const EditProfile = () => {
             </div>
         </div>
     );
-<<<<<<< HEAD
-=======
+
     if (loading) return  (   
         <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
@@ -141,7 +137,7 @@ const EditProfile = () => {
             </div>
         </div>
     )
->>>>>>> 34596fa0cc2300f4d58fa496eefda5ff47b03a4c
+
 
     return (
         <div className='flex flex-col gap-5'>

@@ -364,12 +364,9 @@ const Employees: FC = () => {
     const [employees, setEmployees] = useState<User[]>([])
     const [ page, setPage ] = useState(1)
     const [ totalPages, setTotalPages ] = useState(1)
-<<<<<<< HEAD
-    const [ loading, setLoading ] = useState(true)
-=======
+
     const { loading } = useAdminAuthGuard()
     const [ load, setLoading ] = useState(true)
->>>>>>> 34596fa0cc2300f4d58fa496eefda5ff47b03a4c
     const [reload, setReload] = useState(false);
 
 
@@ -380,11 +377,7 @@ const Employees: FC = () => {
             setTotalPages(res.data.totalPages)
             setLoading(false)
         })
-<<<<<<< HEAD
-        .catch(err => {console.error("Error inFetching manager:", err);     setLoading(false)})
-=======
         .catch(err => {console.error("Error inFetching manager:", err); setLoading(false)})
->>>>>>> 34596fa0cc2300f4d58fa496eefda5ff47b03a4c
     }, [page, reload])
 
 
