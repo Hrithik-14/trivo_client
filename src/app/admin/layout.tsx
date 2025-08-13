@@ -5,10 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
-<<<<<<< HEAD
-=======
+
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+
 
 
 interface MainContainerProps {
@@ -57,11 +56,10 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </nav>
                 </header>
 
-<<<<<<< HEAD
-                <div className="flex pt-13" style={{ height: "100vh" }}>
-=======
+
+
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
@@ -104,7 +102,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Employees
                     </Link>
-<<<<<<< HEAD
+
                     <Link
                         href={"/admin/messenger"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
@@ -113,8 +111,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Messenger
                     </Link>
-=======
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
+
                     <Link
                         href={"/admin/paylips"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
@@ -137,13 +134,11 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </button>
                 </nav>
 
-<<<<<<< HEAD
-=======
+
                 <div>
                     <DraggableMessenger role="admin"/>
                 </div>
 
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
         </>
