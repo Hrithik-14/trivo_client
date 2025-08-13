@@ -361,9 +361,12 @@ const Managers: FC = () => {
   const [managers, setmanagers] = useState<User[]>([])
   const [ page, setPage ] = useState(1)
   const [ totalPages, setTotalPages ] = useState(1)
+
+
   const [ load, setLoading ] = useState(true)
   const [reload, setReload] = useState(false);
   const { loading } = useAdminAuthGuard()
+
 
   useEffect(() => {
     api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=3`)
@@ -426,14 +429,14 @@ const Managers: FC = () => {
       {managers.map(manager => (
         <div key={manager._id} className="bg-white border border-[#ddd] rounded p-3 flex flex-col gap-3">
           <div className="flex items-center gap-4 font-semibold text-lg">
-            {manager.profileImage ? (
+            <div className=" w-[50px] h-[50px] relative">
+              {manager.profileImage ? (
               <Image
                 src={manager.profileImage}
                 alt="manager profile"
-                width={50}
-                height={50}
+                fill
                 className="rounded-full object-cover"
-                style={{ maxWidth: '50px', maxHeight: '50px' }}
+
               />
             ) : (
               <Image
@@ -444,6 +447,8 @@ const Managers: FC = () => {
                 className="rounded-full"
               />
             )}
+
+            </div>
             <h2>{manager.name}</h2>
           </div>
           <div>

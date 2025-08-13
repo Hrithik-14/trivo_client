@@ -37,9 +37,19 @@ import toast from 'react-hot-toast'
 
   if (token && user?.role) {
     if (user.role === "admin") {
+<<<<<<< HEAD
       router.replace("/admin/dashboard");
     } else {
       router.replace("/");
+=======
+      router.push("/admin/dashboard")
+    } else if (user.role === "employee") {
+      router.push("/employee/dashboard")
+    } else if (user.role === "manager") {
+      router.push("/manager/dashboard")
+    } else {
+      router.push("/")
+>>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729
     }
   } else {
     setLoading(false)
@@ -65,7 +75,7 @@ const onSubmit = async (data: LoginFormData) => {
 
     reset()
 
-    if (res.data.user.role === "admin") {
+if (res.data.user.role === "admin") {
       router.push("/admin/dashboard")
     } else if (res.data.user.role === "employee") {
       router.push("/employee/dashboard")
@@ -78,7 +88,7 @@ const onSubmit = async (data: LoginFormData) => {
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Login failed')
     } else {
-      alert('Something went wrong')
+      toast.error('Something went wrong')
     }
   }
 }

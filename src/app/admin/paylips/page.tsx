@@ -4,10 +4,11 @@ import api from '@/app/api/axios';
 import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 import { ChevronDown, ChevronRight, FileText, Plus, X } from 'lucide-react'
 import Image from 'next/image';
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import Select from 'react-select';
+import Select, { SingleValue } from 'react-select';
+import debounce from 'lodash.debounce'; 
 
 interface Employee {
     employeeCode: string;
@@ -65,6 +66,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
     const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [employeeList, setEmployeeList] = useState<Employee[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -119,13 +121,14 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
 
     
 
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
+    const fetchEmployees = async (term: string) => {
+        try {
                 const res = await api.get('/users');
                 const employees: Employee[] = res.data.users;
-                const filteredEmployees = employees.filter(emp => emp.role !== 'admin');
-
+                const filteredEmployees = employees
+                    .filter(emp => emp.role !== 'admin')
+                    .filter(emp => emp.name.toLowerCase().includes(term.toLowerCase()));
+                
                 setEmployeeList(filteredEmployees);
                 const options = filteredEmployees.map(emp => ({
                     value: emp.employeeCode,
@@ -137,8 +140,18 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
             }
         };
 
-        fetchEmployees();
-    }, []);
+    const debouncedFetch = useMemo(
+        () => debounce(fetchEmployees, 300),
+        []
+    );
+
+    useEffect(() => {
+        debouncedFetch(searchTerm);
+
+        return () => {
+        debouncedFetch.cancel();
+        };
+    }, [searchTerm, debouncedFetch]);
 
     return (
         <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
@@ -163,28 +176,41 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
                             <div className="relative">
-                                <Controller
-                                    control={control}
-                                    name="employeeCode"
-                                    rules={{ required: "Employee is required" }}
-                                    render={({ field }) => (
-                                        <Select
-                                            {...field}
-                                            options={employeeList.map(emp => ({
-                                                value: emp.employeeCode,
-                                                label: `${emp.name} (${emp.employeeCode})`
-                                            }))}
-                                            placeholder='Select employee'
-                                            className='text-sm w-60'
-                                            isClearable
-                                            onChange={val => {
-                                                field.onChange(val?.value ?? '');
-                                                handleEmployeeSelect(val as EmployeeOption | null);
-                                            }}
-                                            value={selectedEmployee ? { value: selectedEmployee.employeeCode, label: `${selectedEmployee.name} (${selectedEmployee.employeeCode})` } : null}
-                                        />
-                                    )}
-                                />
+    <Controller
+      control={control}
+      name="employeeCode"
+      rules={{ required: "Employee is required" }}
+      render={({ field }) => (
+        <Select
+          {...field}
+          options={employeeList.map(emp => ({
+            value: emp.employeeCode,
+            label: `${emp.name} (${emp.employeeCode})`,
+          }))}
+          placeholder="Select employee"
+          className="text-sm w-60"
+          isClearable
+          // This tracks the search input inside the select box
+          onInputChange={(value, { action }) => {
+            if (action === 'input-change') {
+              setSearchTerm(value);
+            }
+          }}
+          onChange={(val: SingleValue<EmployeeOption>) => {
+            field.onChange(val?.value ?? '');
+            handleEmployeeSelect(val);
+          }}
+          value={
+            employeeList.find(emp => emp.employeeCode === field.value)
+              ? {
+                  value: field.value,
+                  label: employeeList.find(emp => emp.employeeCode === field.value)!.name + ` (${field.value})`,
+                }
+              : null
+          }
+        />
+      )}
+    />
                                 {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
                             </div>
                         </div>

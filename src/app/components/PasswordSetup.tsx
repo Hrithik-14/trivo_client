@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState } from 'react';
@@ -203,15 +202,3 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 
 export default PasswordSetup;
-=======
-import React, { Suspense } from 'react';
-import PasswordSetup from '@/app/components/PasswordSetup';
-
-export default function Page() {
-  return (
-    <Suspense fallback={<div className="text-center p-8 text-gray-600">Loading...</div>}>
-      <PasswordSetup />
-    </Suspense>
-  );
-}
->>>>>>> 645c818e21aca5174c3d0d721732f22a5bf44729

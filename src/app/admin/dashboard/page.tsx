@@ -84,9 +84,9 @@ const Dashboard: FC = () => {
     return (
         <div className='flex gap-5  text-black'>
 
-            <div className='flex flex-col gap-5'>
-                <div className='flex gap-5'>
-                    <div className='border border-[#dddddd] bg-white rounded w-50 h-fit py-2 px-4'>
+            <div className='flex flex-col gap-5 w-full'>
+                <div className='grid grid-cols-3 gap-5 w-full'>
+                    <div className='border border-[#dddddd] bg-white rounded  h-fit py-2 px-4'>
                         <h5 className='font-bold text-[10px]'>Total Employees</h5>
                         <div className='flex justify-between items-center'>
                             <h2 className='font-semibold'>110</h2>
@@ -95,7 +95,7 @@ const Dashboard: FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className='border border-[#dddddd] bg-white rounded w-50 h-fit py-2 px-4'>
+                    <div className='border border-[#dddddd] bg-white rounded h-fit py-2 px-4'>
                         <h5 className='font-bold text-[10px]'>Present</h5>
                         <div className='flex justify-between items-center'>
                             <h2 className='font-semibold'>100</h2>
@@ -104,7 +104,7 @@ const Dashboard: FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className='border border-[#dddddd] bg-white rounded w-50 h-fit py-2 px-4'>
+                    <div className='border border-[#dddddd] bg-white rounded  h-fit py-2 px-4'>
                         <h5 className='font-bold text-[10px]'>Late</h5>
                         <div className='flex justify-between items-center'>
                             <h2 className='font-semibold'>7</h2>
@@ -119,8 +119,8 @@ const Dashboard: FC = () => {
                         <h3 className='font-semibold'>Performance</h3>
                         <PerformanceChart/>
                     </div>
-                    <div className='flex flex-col gap-5'>
-                        <div className='border border-[#dddddd] bg-white rounded w-76 h-20 flex flex-col justify-center py-2 px-4'>
+                    <div className='flex flex-col gap-5 w-full'>
+                        <div className='border border-[#dddddd] bg-white rounded  h-fit flex flex-col justify-center py-2 lg:py-6 px-4 lg:px-6'>
                             <h5 className='font-bold text-[10px]'>Leave</h5>
                             <div className='flex justify-between items-center'>
                                 <h2 className='font-semibold'>3</h2>
@@ -129,15 +129,15 @@ const Dashboard: FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className='bg-white border border-[#ddd] h-52 rounded-md p-5 gap-5 flex flex-col'>
-                            <h2 className='text-xl font-bold '>Projects</h2>
+                        <div className='bg-white border border-[#ddd] h-52 lg:h-full rounded-md p-5 gap-5 flex flex-col justify-center'>
+                            <h2 className='text-xl lg:text-3xl font-bold '>Projects</h2>
                             <div className='flex gap-5 items-center'>
-                                <div className='text-lg bg-[#FEFCE8] p-2 px-3 text-[#EAB308] border border-[#FDE047]'>25</div>
-                                <div className='font-medium'>Total Projects</div>
+                                <div className='text-lg lg:text-2xl bg-[#FEFCE8] p-2 px-3 text-[#EAB308] border border-[#FDE047]'>25</div>
+                                <div className='font-medium lg:text-lg'>Total Projects</div>
                             </div>
                             <div className='flex gap-5 items-center'>
-                                <div className='text-lg bg-[#DCFCE7] p-2 px-3 text-[#22C55E] border border-[#86EFAC]'>10</div>
-                                <div className='font-medium'>Completed Projects</div>
+                                <div className='text-lg lg:text-2xl bg-[#DCFCE7] p-2 px-3 text-[#22C55E] border border-[#86EFAC]'>10</div>
+                                <div className='font-medium lg:text-lg'>Completed Projects</div>
                             </div>
                         </div>
                     </div>
@@ -183,8 +183,8 @@ const Dashboard: FC = () => {
                 </div>
             </div>
 
-            <div className='flex flex-col gap-5'>
-                <div className="w-[350px] h-fit bg-white rounded-md shadow p-4 font-sans">
+            <div className='flex flex-col gap-5 w-fit items-end'>
+                <div className="w-[350px] lg:w-[400px] h-fit bg-white rounded-md shadow p-4 font-sans">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                         <span className="text-lg font-medium text-gray-800">
@@ -237,7 +237,7 @@ const Dashboard: FC = () => {
                         <span className="text-sm text-gray-800 font-medium">{getCurrentTime()}</span>
                     </div>
                 </div>
-                <div className='bg-white border border-[#ddd] rounded-md p-2'>
+                <div className='bg-white border border-[#ddd] rounded-md p-2 w-full'>
                     <h2 className='text-lg font-semibold'>Recent Activity</h2>
                     <div className='flex  gap-5 items-center py-4'>
                         <div className='w-1 h-1 rounded-full bg-[#22C55E]'></div>
