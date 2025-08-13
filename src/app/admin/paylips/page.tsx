@@ -198,42 +198,41 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
                             <div className="relative">
                                 <Controller
-                                    control={control}
-                                    name="employeeName"
-                                    rules={{ required: "Employee is required" }}
-                                    render={({ field }) => (
-                                        <Select
-                                            {...field}
-                                            options={employeeList.map((emp) => ({
-                                                value: emp.employeeCode,
-                                                label: `${emp.name} (${emp.employeeCode})`,
-                                            }))}
-                                            placeholder="Select employee"
-                                            className="text-sm"
-                                            isClearable
-                                            onInputChange={(value, { action }) => {
-                                                if (action === "input-change") {
-                                                    setSearchTerm(value);
-                                                }
-                                            }}
-                                            onChange={(val) => {
-                                                field.onChange(val?.value ?? "");
-                                                handleEmployeeSelect(val);
-                                            }}
-                                            value={
-                                                employeeList.find((emp) => emp.employeeCode === field.value)
-                                                    ? {
-                                                          value: field.value,
-                                                          label:
-                                                              employeeList.find((emp) => emp.employeeCode === field.value)!
-                                                                  .name + ` (${field.value})`,
-                                                      }
-                                                    : null
+                                control={control}
+                                name="employeeCode"
+                                rules={{ required: "Employee is required" }}
+                                render={({ field }) => (
+                                    <Select
+                                    {...field}
+                                    options={employeeList.map(emp => ({
+                                        value: emp.employeeCode,
+                                        label: `${emp.name} (${emp.employeeCode})`,
+                                    }))}
+                                    placeholder="Select employee"
+                                    className="text-sm w-60"
+                                    isClearable
+                                    // This tracks the search input inside the select box
+                                    onInputChange={(value, { action }) => {
+                                        if (action === 'input-change') {
+                                        setSearchTerm(value);
+                                        }
+                                    }}
+                                    onChange={(val: SingleValue<EmployeeOption>) => {
+                                        field.onChange(val?.value ?? '');
+                                        handleEmployeeSelect(val);
+                                    }}
+                                    value={
+                                        employeeList.find(emp => emp.employeeCode === field.value)
+                                        ? {
+                                            value: field.value,
+                                            label: employeeList.find(emp => emp.employeeCode === field.value)!.name + ` (${field.value})`,
                                             }
-                                        />
-                                    )}
+                                        : null
+                                    }
+                                    />
+                                )}
                                 />
-                                {errors.employeeName && <p className="text-red-500 text-xs mt-1">{errors.employeeName.message}</p>}
+                                {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
                             </div>
                         </div>
 
@@ -543,7 +542,7 @@ const Payslip: FC = () => {
                                 </div>
                             </div>
                             <div className="flex gap-3">
-                                <h2 className="text-md font-semibold">₹ {pay.netSalary.toLocaleString()}</h2>
+                                <h2 className="text-md font-semibold">₹ {Number(pay.netSalary || 0).toLocaleString()}</h2>
                                 <button onClick={() => setIsExpand((prevId) => (prevId === pay._id ? null : pay._id))}>
                                     {isExpand === pay._id ? (
                                         <ChevronDown className="text-gray-500 transition-transform duration-300" />
@@ -560,22 +559,22 @@ const Payslip: FC = () => {
                                     <div className="flex flex-col gap-1 pl-2">
                                         <div className="flex justify-between items-center">
                                             <h2 className="text-sm">Basic Salary</h2>
-                                            <p className="text-sm">₹ {pay.basicSalary.toLocaleString()}</p>
+                                            <p className="text-sm">₹ {Number(pay.basicSalary || 0).toLocaleString()}</p>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <h2 className="text-sm">Allowance</h2>
-                                            <p className="text-sm">₹ {pay.allowance.toLocaleString()}</p>
+                                            <p className="text-sm">₹ {Number(pay.allowance || 0).toLocaleString()}</p>
                                         </div>
                                         {pay.bonus && pay.bonus > 0 && (
                                             <div className="flex justify-between items-center">
                                                 <h2 className="text-sm">Bonus</h2>
-                                                <p className="text-sm">₹ {pay.bonus.toLocaleString()}</p>
+                                                <p className="text-sm">₹ {Number(pay.bonus || 0).toLocaleString()}</p>
                                             </div>
                                         )}
                                         {pay.incentive && pay.incentive > 0 && (
                                             <div className="flex justify-between items-center">
                                                 <h2 className="text-sm">Incentive</h2>
-                                                <p className="text-sm">₹ {pay.incentive.toLocaleString()}</p>
+                                                <p className="text-sm">₹ {Number(pay.incentive || 0).toLocaleString()}</p>
                                             </div>
                                         )}
                                     </div>
@@ -586,7 +585,7 @@ const Payslip: FC = () => {
                                     <div className="flex flex-col gap-1 pl-2">
                                         <div className="flex justify-between items-center">
                                             <h2 className="text-sm">Tax (10%)</h2>
-                                            <p className="text-sm">₹ {pay.tax.toLocaleString()}</p>
+                                            <p className="text-sm">₹ {Number(pay.tax || 0).toLocaleString()}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -594,7 +593,7 @@ const Payslip: FC = () => {
                                 <div className="border-t border-gray-300 pt-2">
                                     <div className="flex justify-between items-center font-semibold">
                                         <h2 className="text-sm">Net Salary</h2>
-                                        <p className="text-sm text-blue-600">₹ {pay.netSalary.toLocaleString()}</p>
+                                        <p className="text-sm text-blue-600">₹ {Number(pay.netSalary || 0).toLocaleString()}</p>
                                     </div>
                                 </div>
                             </div>
