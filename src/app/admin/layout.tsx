@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
-
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
 
 
@@ -57,9 +56,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </header>
 
 
-
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
-
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
                     <Link
@@ -104,15 +101,6 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
 
                     <Link
-                        href={"/admin/messenger"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "/admin/messenger" ? "bg-black text-white" : ""
-                        }`}
-                    >
-                        Messenger
-                    </Link>
-
-                    <Link
                         href={"/admin/paylips"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/paylips" ? "bg-black text-white" : ""
@@ -133,12 +121,9 @@ export default function RootLayout({ children }: MainContainerProps) {
                     LogOut
                     </button>
                 </nav>
-
-
                 <div>
                     <DraggableMessenger role="admin"/>
                 </div>
-
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
         </>

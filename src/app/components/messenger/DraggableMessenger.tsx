@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, FC, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import { MessageCircle, X } from "lucide-react";
@@ -9,6 +10,7 @@ import api from '@/app/api/axios';
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
 }
+
 
 interface Message {
   _id: string;
@@ -106,10 +108,12 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
       <button
         onClick={handleToggleOpen}
         className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110 "
+
         style={{ right: 20, bottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
         title="Open Messenger"
       >
         <MessageCircle size={24} />
+
         {hasUnreadMessages && !isOpen && (
           <div className="absolute -top-0 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse">
             <div className="w-full h-full bg-red-500 rounded-full animate-ping"></div>
@@ -138,13 +142,16 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
+
               <Messenger role={role} />
             </div>
           </div>
         </Rnd>
       )}
+
     </div>
   );
 };
 
 export default DraggableMessenger;
+

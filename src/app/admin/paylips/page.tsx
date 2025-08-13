@@ -197,41 +197,43 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
                             <div className="relative">
-                                <Controller
-                                control={control}
-                                name="employeeCode"
-                                rules={{ required: "Employee is required" }}
-                                render={({ field }) => (
-                                    <Select
-                                    {...field}
-                                    options={employeeList.map(emp => ({
-                                        value: emp.employeeCode,
-                                        label: `${emp.name} (${emp.employeeCode})`,
-                                    }))}
-                                    placeholder="Select employee"
-                                    className="text-sm w-60"
-                                    isClearable
-                                    // This tracks the search input inside the select box
-                                    onInputChange={(value, { action }) => {
-                                        if (action === 'input-change') {
-                                        setSearchTerm(value);
-                                        }
-                                    }}
-                                    onChange={(val: SingleValue<EmployeeOption>) => {
-                                        field.onChange(val?.value ?? '');
-                                        handleEmployeeSelect(val);
-                                    }}
-                                    value={
-                                        employeeList.find(emp => emp.employeeCode === field.value)
-                                        ? {
-                                            value: field.value,
-                                            label: employeeList.find(emp => emp.employeeCode === field.value)!.name + ` (${field.value})`,
-                                            }
-                                        : null
-                                    }
-                                    />
-                                )}
-                                />
+
+    <Controller
+      control={control}
+      name="employeeCode"
+      rules={{ required: "Employee is required" }}
+      render={({ field }) => (
+        <Select
+          {...field}
+          options={employeeList.map(emp => ({
+            value: emp.employeeCode,
+            label: `${emp.name} (${emp.employeeCode})`,
+          }))}
+          placeholder="Select employee"
+          className="text-sm w-60"
+          isClearable
+          // This tracks the search input inside the select box
+          onInputChange={(value, { action }) => {
+            if (action === 'input-change') {
+              setSearchTerm(value);
+            }
+          }}
+          onChange={(val: SingleValue<EmployeeOption>) => {
+            field.onChange(val?.value ?? '');
+            handleEmployeeSelect(val);
+          }}
+          value={
+            employeeList.find(emp => emp.employeeCode === field.value)
+              ? {
+                  value: field.value,
+                  label: employeeList.find(emp => emp.employeeCode === field.value)!.name + ` (${field.value})`,
+                }
+              : null
+          }
+        />
+      )}
+    />
+
                                 {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
                             </div>
                         </div>

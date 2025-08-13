@@ -36,7 +36,7 @@ const PerformanceChart = () => {
   };
 
   return (
-    <div style={{ position: 'relative' }} className='w-[250px] h-[250px] lg:w-[350px] lg:h-[350px]' >
+    <div style={{ position: 'relative' }} className='w-[250px] h-[250px] lg:w-[320px] lg:h-[320px]' >
       <Doughnut data={data} options={options} />
       <div style={{
         position: 'absolute',
