@@ -78,6 +78,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   const parsedUser = user ? JSON.parse(user) : null; // Parse user from localStorage
   // console.log(parsedUser);
   const [projects, setProjects] = useState<Project | []>([]);
+  const [tasks, setTasks] = useState<Project | []>([]);
   const {
     register,
     handleSubmit,
@@ -98,6 +99,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       supportNeeded: "",
     },
   });
+  const [currentProject, setCurrentProject] = useState([])
 
   const { fields: completedTasks, append: appendCompleted } = useFieldArray({
     control,
@@ -108,6 +110,15 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     control,
     name: "plannedTasks",
   });
+  useEffect(() => {
+    const fetchTask = async () => {
+      try{
+        const response = await api.get(
+          `/project/${}/user/:userId/tasks`
+        )
+      }
+    }
+  })
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -124,8 +135,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   }, []);
 
   const onSubmit = async (data: DailyReportForm) => {
-
-
     try {
       const token = parsedUser?.token; // Assume token is stored in user object
       if (!token) throw new Error("No authentication token found");
@@ -346,7 +355,11 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                         // placeholder="Describe  task..."
                         className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20"
                       >
-                        <option value="">hyefjdhufjd</option>
+                        {projects.map((item: any) => (
+                          <option key={item._id} value={item._id}>
+                            {item.name}
+                          </option>
+                        ))}
                       </select>
                       {errors.plannedTasks?.[index]?.value && (
                         <p className="text-red-500 text-sm mt-1">
