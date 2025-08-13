@@ -104,7 +104,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   };
 
   return (
-    <div className="relative">
+    <div>
       <button
         onClick={handleToggleOpen}
         className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110 "
