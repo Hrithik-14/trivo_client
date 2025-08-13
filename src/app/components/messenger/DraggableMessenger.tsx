@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState, FC, useEffect } from "react";
@@ -9,6 +10,7 @@ import api from '@/app/api/axios';
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
 }
+
 
 interface Message {
   _id: string;
@@ -24,11 +26,13 @@ interface Message {
   readBy: string[];
 }
 
+
 const SIDEBAR_WIDTH = 300;
 
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
+
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -102,26 +106,31 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   };
 
   return (
-    <div className="relative">
+    <div>
       <button
         onClick={handleToggleOpen}
         className="fixed z-50 w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-110 "
+
         style={{ right: 20, bottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
         title="Open Messenger"
       >
         <MessageCircle size={24} />
+
         {hasUnreadMessages && !isOpen && (
           <div className="absolute -top-0 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse">
             <div className="w-full h-full bg-red-500 rounded-full animate-ping"></div>
           </div>
         )}
+
       </button>
 
       {isOpen && (
         <Rnd
           size={{ width: 400, height: 500 }}
           position={position}
+
           bounds="window"
+
           onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
           enableResizing={false}
           dragHandleClassName="drag-handle"
@@ -138,13 +147,17 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
+
               <Messenger role={role} />
+
             </div>
           </div>
         </Rnd>
       )}
+
     </div>
   );
 };
 
 export default DraggableMessenger;
+

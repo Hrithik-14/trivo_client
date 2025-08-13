@@ -231,7 +231,7 @@ const ProjectDetail: FC<Props> = ({ role }) => {
             <Users size={18} />
             <p className="font-semibold">Team Members</p>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="gap-4">
             {project.members.map((member) => (
                 <div
                 key={member._id}

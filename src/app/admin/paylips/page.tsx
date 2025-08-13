@@ -176,6 +176,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-sm text-gray-600 mb-1">Employee Name</label>
                             <div className="relative">
+
                                 <Controller
                                 control={control}
                                 name="employeeCode"
@@ -211,6 +212,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                                     />
                                 )}
                                 />
+
                                 {errors.employeeCode && <p className="text-red-500 text-xs mt-1">{errors.employeeCode.message}</p>}
                             </div>
                         </div>

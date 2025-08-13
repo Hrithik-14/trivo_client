@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // // pages/notifications.tsx or app/notifications/page.tsx
 // "use client"
 // import React, { useState} from 'react';

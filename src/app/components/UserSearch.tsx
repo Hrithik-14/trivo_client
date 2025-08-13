@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
@@ -46,9 +47,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ initialQuery = '', role, onResu
         } else {
             setResults([]);
         }
-
-        }, 100); 
-
+        }, 300); 
 
         return () => clearTimeout(delayDebounce);
     }, [query, role]);

@@ -7,9 +7,10 @@ import { X, Clock, Plus, FileText, CheckCircle, Info, Calendar, User } from 'luc
 import api from '@/app/api/axios';
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
+// import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
+import Link from 'next/link';
 
 
 type ManagerOption = { value: string; label: string };
@@ -121,7 +122,6 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     <span className="text-red-500 text-xs">{errors.managerId.message}</span>
                   )}
                 </>
-
               )}
             />
             {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
@@ -176,7 +176,6 @@ const Projects: FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
     const [reload, setReload] = useState(false);
-
     useEffect(() => {
         api.get<{ totalPages: number; project: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/admin/getAllProject?page=${page}&limit=2`)
         .then(res => {
@@ -253,7 +252,8 @@ const Projects: FC = () => {
             {/* Render all projects */}
             <div className='flex flex-col gap-4'>
                 {projects.map((project) => (
-                    <Link href={`/admin/Project/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
+               
+                   <Link href={`/admin/Project/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
                         <div className='flex justify-between'>
                             <div>
                                 <h2 className='text-xl font-semibold'>{project.name}</h2>
@@ -290,6 +290,7 @@ const Projects: FC = () => {
                                 ))}
                             </div>
                         </div>
+                      
                     </Link>
                 ))}
             <div className="flex justify-center mt-4 gap-2">

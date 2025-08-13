@@ -363,6 +363,7 @@ const Managers: FC = () => {
   const [ totalPages, setTotalPages ] = useState(1)
 
 
+
   const [ load, setLoading ] = useState(true)
   const [reload, setReload] = useState(false);
   const { loading } = useAdminAuthGuard()
@@ -437,6 +438,7 @@ const Managers: FC = () => {
                 fill
                 className="rounded-full object-cover"
 
+
               />
             ) : (
               <Image
@@ -447,6 +449,7 @@ const Managers: FC = () => {
                 className="rounded-full"
               />
             )}
+
 
             </div>
             <h2>{manager.name}</h2>
