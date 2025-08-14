@@ -48,7 +48,6 @@ useEffect(() => {
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
 
-      // Auto-select first pending report if any
       const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
       if (firstPending) {
         setSelectedReportId(firstPending._id);
@@ -72,7 +71,6 @@ useEffect(() => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update local state with new status
       setReports(prev =>
         prev.map(r => r._id === id ? { ...r, status: data.report?.status || status } : r)
       );
@@ -128,7 +126,6 @@ useEffect(() => {
   return (
     <div className="min-h-screen ">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -142,7 +139,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Employee List */}
           <div className="p-6">
             {reports.length === 0 ? (
               <div className="text-center py-8">
@@ -205,7 +201,6 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Report Details */}
         {selectedReport && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -221,15 +216,12 @@ useEffect(() => {
             </div>
 
             <div className="p-6">
-              {/* Working Project */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Working Project</h3>
                 <p className="text-gray-900 font-medium">{selectedReport.projectId.name}</p>
               </div>
 
-              {/* Report Grid */}
               <div className="grid md:grid-cols-3 gap-6 mb-8">
-                {/* Key Contributions */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Key Contributions</h3>
                   <div className="space-y-2">
@@ -246,7 +238,6 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {/* Key Achievements Today */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Key Achievements Today</h3>
                   <div className="space-y-2">
@@ -258,7 +249,6 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {/* Challenges Faced */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Challenges Faced</h3>
                   <div className="space-y-2">
@@ -330,7 +320,6 @@ useEffect(() => {
                 </button>
               </div>
 
-              {/* Status Message */}
               {selectedReport.status !== 'pending' && (
                 <div className={`mt-4 p-4 rounded-lg ${
                   selectedReport.status === 'accepted' 

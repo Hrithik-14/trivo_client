@@ -112,14 +112,12 @@ const ManagerDashboard = () => {
   const [timer, setTimer] = useState('00:00:00')
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Load userId on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
     const parsed = storedUser ? JSON.parse(storedUser) : null
     setUserId(parsed?.id ?? null)
   }, [])
 
-  // Fetch attendance for today
   const fetchTodayAttendance = async () => {
     if (!userId) return
     try {
@@ -137,20 +135,16 @@ const ManagerDashboard = () => {
     }
   }, [userId])
 
-  // Timer update for working hours (runs live if signed in but not signed out)
   useEffect(() => {
     if (attendance?.signInTime && !attendance.signOutTime) {
-      // Start or reset timer
       if (intervalRef.current) clearInterval(intervalRef.current)
 
-      // Immediately update timer to avoid 1 sec delay
       setTimer(calculateElapsedTime(attendance.signInTime))
 
       intervalRef.current = setInterval(() => {
         setTimer(calculateElapsedTime(attendance.signInTime!))
       }, 1000)
     } else {
-      // Clear timer if not signed in or already signed out
       if (intervalRef.current) clearInterval(intervalRef.current)
       setTimer('00:00:00')
     }
@@ -160,7 +154,6 @@ const ManagerDashboard = () => {
     }
   }, [attendance])
 
-  // Fetch ongoing projects
   useEffect(() => {
     const fetchProject = async () => {
       if (!userId) return
@@ -189,7 +182,7 @@ const ManagerDashboard = () => {
           <Clock className="text-rose-500" />
           <div>
             <h2 className="text-xs text-[#696969] font-semibold">Working hours</h2>
-            <p>{timer}</p> {/* full hh:mm:ss */}
+            <p>{timer}</p>
           </div>
         </div>
 
