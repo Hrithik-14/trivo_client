@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import api from "@/app/api/axios";
 import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface DailyReportForm {
   employeeId: string;
@@ -36,9 +37,9 @@ interface DailyReportForm {
 }
 
 interface Report {
-  id: number;
-  date: string; // Adjust to Date if the API returns a Date object
-  hours: number;
+  _id: number;
+  date: string;
+  effectiveHours: string;
   status: string;
   tasksCompleted: number;
   perfomance: boolean;
@@ -52,7 +53,7 @@ interface Project {
 }
 
 interface Task {
-  name: string;
+  title: string;
   _id: string;
 }
 
@@ -61,6 +62,13 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   const parsedUser = user ? JSON.parse(user) : null;
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+      const storedUser = localStorage.getItem('user')
+      const parsed = storedUser ? JSON.parse(storedUser) : null
+      setUserId(parsed?.id ?? null)
+    }, [])
 
   const {
     register,
@@ -74,7 +82,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       projectStatus: "",
       startTime: "",
       endTime: "",
-      effectiveHours: "30",
       completedTasks: [{ value: "" }],
       plannedTasks: [{ value: "" }],
       perfomance: "",
@@ -82,6 +89,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       supportNeeded: "",
     },
   });
+  
 
   const { fields: completedTasks, append: appendCompleted } = useFieldArray({
     control,
@@ -97,8 +105,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     control,
     name: "currentProject",
   });
-
-  console.log("selectedProjectId:", selectedProjectId);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -121,16 +127,16 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
           const response = await api.get(
             `/project/${selectedProjectId}/user/${parsedUser?.id}/tasks`
           );
-          console.log("Tasks fetched:", response.data);
-          setTasks(response.data.tasks || []);
+          setTasks(response.data.data || []);
+          console.log(response.data.data);
         } catch (error) {
           console.error("Error fetching tasks:", error);
-          setTasks([]); 
+          setTasks([]);
         }
       };
       fetchTasks();
     } else {
-      setTasks([]); 
+      setTasks([]);
     }
   }, [selectedProjectId]);
 
@@ -139,18 +145,17 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       const token = parsedUser?.token;
       if (!token) throw new Error("No authentication token found");
 
-      const response = await api.post(
+      await api.post(
         `report/addReport/${parsedUser?.id}`,
         { ...data, projectId: selectedProjectId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("Daily report submitted successfully:", response.data);
-      alert("Daily report submitted successfully!");
+      toast.success("Daily report submitted successfully!");
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting daily report:", error);
-      alert("Failed to submit daily report. Please try again.");
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -169,6 +174,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-6 space-y-6">
+            {/* Employee ID and Project */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -181,11 +187,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   readOnly
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none cursor-not-allowed text-gray-500"
                 />
-                {errors.employeeId && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.employeeId.message}
-                  </p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -206,14 +207,10 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     </option>
                   ))}
                 </select>
-                {errors.currentProject && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.currentProject.message}
-                  </p>
-                )}
               </div>
             </div>
 
+            {/* Working Hours */}
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <Clock className="text-green-600 mr-2" size={20} />
@@ -221,7 +218,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   Working Hours
                 </h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
                     Start Time
@@ -233,11 +230,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
-                  {errors.startTime && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.startTime.message}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -250,36 +242,11 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
-                  {errors.endTime && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.endTime.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Break Time
-                  </label>
-                  <input
-                    type="number"
-                    {...register("effectiveHours", {
-                      required: "Break time is required",
-                      min: {
-                        value: 0,
-                        message: "Break time cannot be negative",
-                      },
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  {errors.effectiveHours && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.effectiveHours.message}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
 
+            {/* Tasks */}
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <CheckSquare className="text-purple-600 mr-2" size={20} />
@@ -288,24 +255,31 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Completed Tasks Dropdown */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
                     Tasks Completed Today
                   </label>
                   {completedTasks.map((field, index) => (
                     <div key={field.id} className="mb-2">
-                      <textarea
+                      <select
                         {...register(`completedTasks.${index}.value`, {
-                          required: "Task description is required",
+                          required: "Please select a completed task",
                         })}
-                        placeholder="Describe completed task..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20"
-                      />
-                      {errors.completedTasks?.[index]?.value && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.completedTasks[index].value.message}
-                        </p>
-                      )}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-black"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>
+                          {tasks.length === 0
+                            ? "No pending tasks available"
+                            : "Select a task..."}
+                        </option>
+                        {tasks.map((item) => (
+                          <option key={item._id} value={item._id}>
+                            {item.title}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   ))}
                   <button
@@ -323,36 +297,24 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   </label>
                   {plannedTasks.map((field, index) => (
                     <div key={field.id} className="mb-2">
-                      <label
-                        htmlFor={`task-${index}`}
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Task {index + 1}
-                      </label>
                       <select
-                        id={`task-${index}`}
                         {...register(`plannedTasks.${index}.value`, {
-                          required: "Task description is required",
+                          required: "Please select a planned task",
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         defaultValue=""
                       >
                         <option value="" disabled>
                           {tasks.length === 0
-                            ? "No tasks available"
+                            ? "No pending tasks available"
                             : "Select a task..."}
                         </option>
                         {tasks.map((item) => (
                           <option key={item._id} value={item._id}>
-                            {item.name}
+                            {item.title}
                           </option>
                         ))}
                       </select>
-                      {errors.plannedTasks?.[index]?.value && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.plannedTasks[index].value.message}
-                        </p>
-                      )}
                     </div>
                   ))}
                   <button
@@ -366,42 +328,29 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
+            {/* Performance & Challenges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-yellow-50 rounded-lg p-4">
-                <div className="flex items-center mb-4">
-                  <Award className="text-yellow-600 mr-2" size={20} />
-                  <h3 className="text-lg font-medium text-gray-800">
-                    Performance & Feedback
-                  </h3>
-                </div>
+                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                  Performance & Feedback
+                </h3>
                 <textarea
                   {...register("perfomance", {
                     required: "Key achievements are required",
                   })}
-                  placeholder="Describe your key achievements..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-24"
                 />
-                {errors.perfomance && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.perfomance.message}
-                  </p>
-                )}
               </div>
               <div className="bg-red-50 rounded-lg p-4">
-                <div className="flex items-center mb-4">
-                  <AlertCircle className="text-red-600 mr-2" size={20} />
-                  <h3 className="text-lg font-medium text-gray-800">
-                    Challenges & Support
-                  </h3>
-                </div>
+                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                  Challenges & Support
+                </h3>
                 <textarea
                   {...register("challenges")}
-                  placeholder="Describe any challenges..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20 mb-4"
                 />
                 <textarea
                   {...register("supportNeeded")}
-                  placeholder="What support do you need?"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20"
                 />
               </div>
@@ -421,15 +370,22 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     </div>
   );
 };
+
+
+
+
+
+
+
 const DailyReport: FC = () => {
+  const user = localStorage.getItem("user");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reload, setReload] = useState(false);
-  const user = localStorage.getItem("user");
   const [reports, setReports] = useState<Report[]>([]);
-  const parsedUser = user ? JSON.parse(user) : null; // Parse user from localStorage
-  const token = parsedUser?.token; // Assume token is stored in user object
+  const parsedUser = user ? JSON.parse(user) : null;
+  const token = parsedUser?.token;
   if (!token) throw new Error("No authentication token found");
   useEffect(() => {
     const fetchreports = async () => {
@@ -445,50 +401,9 @@ const DailyReport: FC = () => {
       }
     };
     fetchreports();
-  }, []);
+  }, [reload]);
 
-  // const reports = [
-  //   {
-  //     id: 1,
-  //     date: "22/07/2025",
-  //     hours: 7,
-  //     status: "Submitted",
-  //     tasksCompleted: 3,
-  //     perfomance: true,
-  //     nextDayPlanned: true,
-  //     statusColor: "bg-blue-100 text-blue-800",
-  //   },
-  //   {
-  //     id: 2,
-  //     date: "21/07/2025",
-  //     hours: 6.5,
-  //     status: "Approved",
-  //     tasksCompleted: 3,
-  //     perfomance: true,
-  //     nextDayPlanned: true,
-  //     statusColor: "bg-green-100 text-green-800",
-  //   },
-  //   {
-  //     id: 3,
-  //     date: "20/07/2025",
-  //     hours: 8,
-  //     status: "Pending",
-  //     tasksCompleted: 4,
-  //     perfomance: true,
-  //     nextDayPlanned: true,
-  //     statusColor: "bg-yellow-100 text-yellow-800",
-  //   },
-  //   {
-  //     id: 4,
-  //     date: "19/07/2025",
-  //     hours: 7.5,
-  //     status: "Approved",
-  //     tasksCompleted: 2,
-  //     perfomance: true,
-  //     nextDayPlanned: true,
-  //     statusColor: "bg-green-100 text-green-800",
-  //   },
-  // ];
+
   const handleAdd = () => setIsModalOpen(true);
 
   const handleCloseModal = () => {
@@ -506,7 +421,7 @@ const DailyReport: FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {isModalOpen && <CreateDailyReport onClose={handleCloseModal} />}
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
@@ -563,7 +478,7 @@ const DailyReport: FC = () => {
         <div className="space-y-4">
           {filteredReports.map((report) => (
             <div
-              key={report.id}
+              key={report._id}
               className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="p-6">
@@ -579,7 +494,7 @@ const DailyReport: FC = () => {
                       <div className="flex items-center space-x-4 mt-1">
                         <div className="flex items-center text-sm text-gray-500">
                           <Clock className="w-4 h-4 mr-1" />
-                          {report.hours} hours
+                          {report.effectiveHours} hours
                         </div>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${report.statusColor}`}
