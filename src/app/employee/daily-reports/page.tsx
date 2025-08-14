@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -17,6 +18,7 @@ import {
   Filter,
   CheckCircle,
   Target,
+  Swords,
 } from "lucide-react";
 import api from "@/app/api/axios";
 import { useParams } from "next/navigation";
@@ -31,7 +33,7 @@ interface DailyReportForm {
   effectiveHours: string;
   completedTasks: { value: string }[];
   plannedTasks: { value: string }[];
-  perfomance: string;
+  performance: string;
   challenges: string;
   supportNeeded: string;
 }
@@ -41,10 +43,13 @@ interface Report {
   date: string;
   effectiveHours: string;
   status: string;
-  tasksCompleted: number;
-  perfomance: boolean;
-  nextDayPlanned: boolean;
+  completedTasks: Task[];
+  performance: string;
+  plannedTasks: Task[];
   statusColor: string;
+  challenges: string;
+  submitttedBy: string;
+  submittedDetails?: string;
 }
 
 interface Project {
@@ -84,7 +89,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       endTime: "",
       completedTasks: [{ value: "" }],
       plannedTasks: [{ value: "" }],
-      perfomance: "",
+      performance: "",
       challenges: "",
       supportNeeded: "",
     },
@@ -335,7 +340,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                   Performance & Feedback
                 </h3>
                 <textarea
-                  {...register("perfomance", {
+                  {...register("performance", {
                     required: "Key achievements are required",
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-24"
@@ -371,12 +376,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
-
-
-
-
-
-
 const DailyReport: FC = () => {
   const user = localStorage.getItem("user");
   const [searchTerm, setSearchTerm] = useState("");
@@ -384,45 +383,113 @@ const DailyReport: FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reload, setReload] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  // FIXED: Changed to number type to match report._id
+  const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
+
   const parsedUser = user ? JSON.parse(user) : null;
   const token = parsedUser?.token;
-  if (!token) throw new Error("No authentication token found");
+
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Authentication Required</h2>
+          <p className="text-gray-600 mt-2">Please log in to view your reports.</p>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
-    const fetchreports = async () => {
+    const fetchStatuses = async () => {
       try {
-        const response = await api.get(
-          `/report/getReportsByEmployee/${parsedUser?.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setReports(response.data.report);
-        console.log(response.data);
+        const response = await api.get(`/report/getReportsByEmployee/${parsedUser?.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (response.data && response.data.report) {
+          const uniqueStatuses = Array.from(
+            new Set(response.data.report.map((report: Report) => report.status))
+          ) as string[];
+          setStatuses(uniqueStatuses);
+        }
       } catch (error) {
-        console.log(error);
+        console.error("Failed to fetch statuses", error);
+        setError("Failed to load report statuses");
       }
     };
-    fetchreports();
-  }, [reload]);
 
+    if (parsedUser?.id && token) {
+      fetchStatuses();
+    }
+  }, [parsedUser?.id, token]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      if (!parsedUser?.id || !token) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await api.get(
+          `/report/getReportsByEmployee/${parsedUser.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (response.data && response.data.report) {
+          setReports(response.data.report);
+        } else {
+          setReports([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reports:", error);
+        setError("Failed to load reports. Please try again.");
+        setReports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, [reload, parsedUser?.id, token]);
 
   const handleAdd = () => setIsModalOpen(true);
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setReload((prev) => !prev);
   };
 
+  // FIXED: Changed parameter type to number
+  const toggleExpand = (id: number) => {
+    setExpandedReportId(expandedReportId === id ? null : id);
+  };
+
   const filteredReports = reports.filter((report) => {
-    const matchesSearch =
-      report.date.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.status.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "All Status" || report.status === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    return matchesStatus;
   });
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {isModalOpen && <CreateDailyReport onClose={handleCloseModal} />}
+      
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -431,9 +498,7 @@ const DailyReport: FC = () => {
               <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                My Daily Reports
-              </h1>
+              <h1 className="text-xl font-semibold text-gray-900">My Daily Reports</h1>
             </div>
             <button
               onClick={handleAdd}
@@ -446,42 +511,42 @@ const DailyReport: FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className=" flex items-center gap-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            <Search className=" ml-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full  pr-4 py-2 focus:outline-0"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {/* Filters */}
+      <div className="mx-auto py-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
           </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex gap-2">
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option>All Status</option>
-              <option>Submitted</option>
-              <option>Approved</option>
-              <option>Pending</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* Reports List */}
+        {/* Reports */}
         <div className="space-y-4">
           {filteredReports.map((report) => (
             <div
               key={report._id}
               className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
             >
-              <div className="p-6">
+              <div
+                className="p-6 cursor-pointer"
+                onClick={() => toggleExpand(report._id)}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -489,7 +554,7 @@ const DailyReport: FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
-                        Report - {report.date.slice(0, 10)}
+                        Report - {new Date(report.date).toLocaleDateString()}
                       </h3>
                       <div className="flex items-center space-x-4 mt-1">
                         <div className="flex items-center text-sm text-gray-500">
@@ -497,62 +562,64 @@ const DailyReport: FC = () => {
                           {report.effectiveHours} hours
                         </div>
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${report.statusColor}`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            report.status === 'pending' ? 'bg-yellow-100 border border-yellow-300 text-yellow-500' : report.status === 'accepted' ? 'bg-green-100 border border-green-300 text-green-500' : 'bg-red-100 border border-red-300 text-red-500'
+                          }`}
                         >
                           {report.status}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  {/* ADDED: Visual indicator for expand/collapse */}
+                  <div className="flex items-center">
+                    <div 
+                      className={`transform transition-transform duration-200 ${
+                        expandedReportId === report._id ? 'rotate-180' : ''
+                      }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Report Details */}
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 mr-2 text-blue-500" />
-                    {report.tasksCompleted} tasks completed
-                  </div>
-                  {report.perfomance && (
+                {expandedReportId === report._id && (
+                  <div className="mt-4 space-y-2 border-t border-[#ddd] pt-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <CheckCircle className="w-4 h-4 mr-2 text-blue-500" />
+                      {report.completedTasks?.length || 0} tasks completed
+                    </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Target className="w-4 h-4 mr-2 text-green-500" />
-                      Key achievements logged
+                      Key achievements: {report.performance || "No achievements logged"}
                     </div>
-                  )}
-                  {report.nextDayPlanned && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="w-4 h-4 mr-2 text-purple-500" />
-                      Next day planned
+                      Next day planned: {report.plannedTasks ? "Planned" : "Not planned"}
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Swords className="w-4 h-4 mr-2 text-red-500" />
+                      Challenges Faced: {report.challenges}
+                    </div>
+                    
+                  </div>
+                )}
+
               </div>
             </div>
           ))}
         </div>
 
-        {filteredReports.length === 0 && (
+        {filteredReports.length === 0 && !loading && !error && (
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No reports found
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No reports found</h3>
             <p className="text-gray-500">
-              Try adjusting your search or filter criteria.
+              {searchTerm || statusFilter !== "All Status"
+                ? "Try adjusting your search or filter criteria."
+                : "Start by creating your first daily report."}
             </p>
           </div>
         )}
@@ -562,7 +629,3 @@ const DailyReport: FC = () => {
 };
 
 export default DailyReport;
-
-// function useState(arg0: string): [any, any] {
-//     throw new Error('Function not implemented.');
-// }
