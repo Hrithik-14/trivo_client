@@ -111,7 +111,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         Projects
                     </Link>
                     <Link
-                        href={""}
+                        href={"/manager/dailyReport"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "" ? "bg-black text-white" : ""
                         }`}

@@ -3,7 +3,7 @@
 import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from 'lucide-react'
 import React, { useState } from 'react'
 
-const ManagerDailyReport = () => {
+const ManagerReport = () => {
 
     const [ isExpand, setIsExpand ] = useState(false)
 
@@ -73,4 +73,4 @@ const ManagerDailyReport = () => {
     )
 }
 
-export default ManagerDailyReport
+export default ManagerReport
