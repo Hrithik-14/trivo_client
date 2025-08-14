@@ -55,6 +55,7 @@ const Profile = () => {
     const parsed = storedUser ? JSON.parse(storedUser) : null;
     setUserId(parsed?.id ?? null);
   }, [userId]);
+  
 
   useEffect(() => {
     if (!userId) return;
@@ -179,7 +180,6 @@ const Profile = () => {
           </div>
         </div>
       )}
-
       <div className="flex">
         <div className="bg-white rounded-sm shadow-sm p-8 w-full m-8">
           <div className="flex gap-5">

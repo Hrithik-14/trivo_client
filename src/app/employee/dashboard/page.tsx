@@ -187,7 +187,7 @@ const EmployeeDashboard = () => {
         </div>
 
         
-        {userId && attendance && (!attendance.signInTime || !attendance.signOutTime) && (
+        {userId && (
             <MarkAttendanceButton userId={userId} onAttendanceUpdated={fetchTodayAttendance} />
         )}
         

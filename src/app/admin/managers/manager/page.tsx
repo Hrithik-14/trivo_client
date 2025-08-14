@@ -2,7 +2,7 @@
 "use client";
 
 import React, { FC, useEffect, useState } from "react";
-import { Users, Plus, Search, Mail, Map, Phone, X, User, Camera } from "lucide-react";
+import { Users, Plus, Mail, Map, Phone, X, User, Camera } from "lucide-react";
 import Image from "next/image";
 import api from "@/app/api/axios";
 import toast from "react-hot-toast";
@@ -363,7 +363,6 @@ const Managers: FC = () => {
   const [ totalPages, setTotalPages ] = useState(1)
 
 
-
   const [ load, setLoading ] = useState(true)
   const [reload, setReload] = useState(false);
   const { loading } = useAdminAuthGuard()
@@ -437,8 +436,6 @@ const Managers: FC = () => {
                 alt="manager profile"
                 fill
                 className="rounded-full object-cover"
-
-
               />
             ) : (
               <Image

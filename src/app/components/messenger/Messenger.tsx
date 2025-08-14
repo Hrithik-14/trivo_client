@@ -102,7 +102,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   }, []);
 
-  // Function to calculate unread count for a group
   const calculateUnreadCount = (groupId: string, groupMessages: Message[]): number => {
     return groupMessages.filter(message => 
       message.groupId === groupId && 
@@ -111,7 +110,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     ).length;
   };
 
-  // Function to load unread counts for all groups
   const loadUnreadCounts = async () => {
     if (!token || !currentUserId) return;
     
@@ -151,7 +149,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         setMessages(prev => [...prev, msg]);
       }
       
-      // Update groups with new message and unread count
       setGroups(prev => prev.map(group => {
         if (group._id === msg.groupId) {
           const newUnreadCount = msg.senderId._id !== currentUserId ? 
@@ -160,7 +157,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           return { 
             ...group, 
             updatedAt: new Date().toISOString(),
-            unreadCount: selectedGroup?._id === group._id ? 0 : newUnreadCount // Reset if currently viewing
+            unreadCount: selectedGroup?._id === group._id ? 0 : newUnreadCount
           };
         }
         return group;
@@ -179,7 +176,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   }, [token]);
 
-  // Load unread counts after groups are loaded
   useEffect(() => {
     if (groups.length > 0 && currentUserId) {
       loadUnreadCounts();
@@ -291,12 +287,10 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadGroupMessages(group._id);
 
-    // Mark messages as read
     await api.put(`/isRead/group/${group._id}`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    // Reset unread count for selected group
     setGroups(prev => prev.map(g => 
       g._id === group._id ? { ...g, unreadCount: 0 } : g
     ));
