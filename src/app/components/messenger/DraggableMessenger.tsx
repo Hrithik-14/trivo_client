@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+
 import React, { useState, FC, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import { MessageCircle, X } from "lucide-react";
@@ -26,13 +27,11 @@ interface Message {
   readBy: string[];
 }
 
-
 const SIDEBAR_WIDTH = 300;
 
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -121,16 +120,13 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
             <div className="w-full h-full bg-red-500 rounded-full animate-ping"></div>
           </div>
         )}
-
       </button>
 
       {isOpen && (
         <Rnd
           size={{ width: 400, height: 500 }}
           position={position}
-
           bounds="window"
-
           onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
           enableResizing={false}
           dragHandleClassName="drag-handle"
@@ -149,7 +145,6 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
             <div className="flex-1 overflow-hidden">
 
               <Messenger role={role} />
-
             </div>
           </div>
         </Rnd>

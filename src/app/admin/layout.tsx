@@ -16,7 +16,6 @@ interface MainContainerProps {
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
-    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -54,7 +53,8 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </div>
                 </nav>
                 </header>
-                
+
+
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
                     <ul className="flex flex-col gap-1">
@@ -98,6 +98,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Employees
                     </Link>
+
                     <Link
                         href={"/admin/paylips"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
@@ -119,11 +120,9 @@ export default function RootLayout({ children }: MainContainerProps) {
                     LogOut
                     </button>
                 </nav>
-
                 <div>
                     <DraggableMessenger role="admin"/>
                 </div>
-
                 <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
             </div>
         </>

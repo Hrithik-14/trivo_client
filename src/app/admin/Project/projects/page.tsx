@@ -9,8 +9,12 @@ import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
 // import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
+
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
 import Link from 'next/link';
+import UserSearch from '@/app/components/UserSearch';
+
+
 
 
 type ManagerOption = { value: string; label: string };
@@ -122,6 +126,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     <span className="text-red-500 text-xs">{errors.managerId.message}</span>
                   )}
                 </>
+
               )}
             />
             {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
@@ -283,7 +288,7 @@ const Projects: FC = () => {
                         <div className='text-[#696969] flex gap-3 flex-col'>
                             <div className='font-semibold text-xs'>Team Members :</div>
                             <div className='ml-5 flex flex-wrap gap-2'>
-                                {project.members.map((member, index) => (
+                                {project.members.filter((member) => member._id !== project.managerId).map((member, index) => (
                                     <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
                                         {member.name}
                                     </div>

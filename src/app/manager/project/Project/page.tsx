@@ -547,7 +547,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
                     disabled={!isValid || isSubmitting || !selectedProject}
                     className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
                       isValid && selectedProject && !isSubmitting
-                        ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl hover:from-green-600 hover:to-emerald-700 hover:scale-105"
+                        ? "bg-green-500  text-white shadow-lg "
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
@@ -581,6 +581,7 @@ type Project = {
     members: {
       _id: string;
       name: string;
+      role: string;
     }[];
     tasks: string[];
     client: string
@@ -713,7 +714,7 @@ const Projects: FC = () => {
                       <div className='text-[#696969] flex gap-3 flex-col'>
                           <div className='font-semibold text-xs'>Team Members :</div>
                           <div className='ml-5 flex flex-wrap gap-2'>
-                              {project.members.map((member, index) => (
+                              {project.members.filter((member) => member._id !== project.managerId).map((member, index) => (
                                   <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
                                       {member.name}
                                   </div>
