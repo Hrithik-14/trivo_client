@@ -1,11 +1,10 @@
-
 'use client'
+
 import React, { useEffect, useState, useRef } from 'react'
 import api from '@/app/api/axios'
 import PerformanceChart from '@/app/components/PerformanceChart'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
-import EmployeeAttendance from '@/app/components/EmployeeAttendence'
 
 interface Project {
   _id: string
@@ -71,6 +70,7 @@ const MarkAttendanceButton: React.FC<{
       console.log(`Marking attendance: ${type} for user: ${employeeId}`)
       const res = await api.post('/attendance', { employeeId, type })
       console.log('Attendance marked:', res.data)
+      // Notify parent to refresh attendance data
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
@@ -112,12 +112,14 @@ const ManagerDashboard = () => {
   const [timer, setTimer] = useState('00:00:00')
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Load userId on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
     const parsed = storedUser ? JSON.parse(storedUser) : null
     setUserId(parsed?.id ?? null)
   }, [])
 
+  // Fetch attendance for today
   const fetchTodayAttendance = async () => {
     if (!userId) return
     try {
@@ -135,16 +137,20 @@ const ManagerDashboard = () => {
     }
   }, [userId])
 
+  // Timer update for working hours (runs live if signed in but not signed out)
   useEffect(() => {
     if (attendance?.signInTime && !attendance.signOutTime) {
+      // Start or reset timer
       if (intervalRef.current) clearInterval(intervalRef.current)
 
+      // Immediately update timer to avoid 1 sec delay
       setTimer(calculateElapsedTime(attendance.signInTime))
 
       intervalRef.current = setInterval(() => {
         setTimer(calculateElapsedTime(attendance.signInTime!))
       }, 1000)
     } else {
+      // Clear timer if not signed in or already signed out
       if (intervalRef.current) clearInterval(intervalRef.current)
       setTimer('00:00:00')
     }
@@ -154,6 +160,7 @@ const ManagerDashboard = () => {
     }
   }, [attendance])
 
+  // Fetch ongoing projects
   useEffect(() => {
     const fetchProject = async () => {
       if (!userId) return
@@ -182,24 +189,24 @@ const ManagerDashboard = () => {
           <Clock className="text-rose-500" />
           <div>
             <h2 className="text-xs text-[#696969] font-semibold">Working hours</h2>
-            <p>{timer}</p>
+            <p>{timer}</p> {/* full hh:mm:ss */}
           </div>
         </div>
 
-        {userId && attendance && (!attendance.signInTime || !attendance.signOutTime) && (
-            <MarkAttendanceButton userId={userId} onAttendanceUpdated={fetchTodayAttendance} />
-        )}
+        <div>
+          <MarkAttendanceButton userId={userId} onAttendanceUpdated={fetchTodayAttendance} />
+        </div>
       </div>
 
       <div className="flex gap-5">
-        <div className="bg-white p-4 px-8 border border-[#ddd] rounded w-full flex flex-col justify-center">
-          <h2 className="font-semibold text-sm mb-10">Working Hours</h2>
+        <div className="bg-white p-4 border border-[#ddd] rounded w-full">
+          <h2 className="font-semibold text-sm mb-4">Working Hours</h2>
           {userId && <WaveChart userId={userId} />}
         </div>
 
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
-          {userId && <EmployeeAttendance employeeId={userId} />}
+          <PerformanceChart />
         </div>
       </div>
 
@@ -220,3 +227,4 @@ const ManagerDashboard = () => {
 }
 
 export default ManagerDashboard
+

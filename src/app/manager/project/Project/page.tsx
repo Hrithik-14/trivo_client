@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 import ManagersUserSearch from '@/app/components/UsersManager';
+import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
 
 type Projects = {
   _id: string;
@@ -592,12 +593,12 @@ type Project = {
 const Projects: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [ projects, setProject ] = useState<Project[]>([])
-    const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
     const [reload, setReload] = useState(false);
     const [userId, setUserId] = useState(null)
+    const { loading } = useManangerAuthGuard()
     
     useEffect(() => {
         const storedUser = localStorage.getItem('user')
@@ -610,19 +611,18 @@ const Projects: FC = () => {
     setProject([]);
     setTotalPages(0);
     setStats({ total: 0, ongoing: 0, completed: 0 });
-    setLoading(false);
+    
     return;
   }
 
-  setLoading(true);
         api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/manager/${userId}/getProjectByManager?page=${page}&limit=2`)
         .then(res => {
           setProject(res.data.projects); 
           setTotalPages(res.data.totalPages);
           setStats(res.data.stats)
-          setLoading(false);
+          
         })
-        .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
+        .catch(err => {console.error("Error in Fetching project:", err);})
     }, [page, reload, userId])
 
     const handleAdd = () => setIsModalOpen(true);

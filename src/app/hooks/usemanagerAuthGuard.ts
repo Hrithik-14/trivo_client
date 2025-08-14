@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/app/store'
 
-export const useAdminAuthGuard = () => {
+export const useManangerAuthGuard = () => {
     const router = useRouter()
     const user = useSelector((state: RootState) => state.user.user)
     const [loading, setLoading] = useState(true)
@@ -12,7 +12,7 @@ export const useAdminAuthGuard = () => {
     useEffect(() => {
         if (!user) {
         router.replace('/auth/login')
-        } else if (user.role !== 'mananger') {
+        } else if (user.role !== 'manager') {
         router.replace('/')
         } else {
         setLoading(false)

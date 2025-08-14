@@ -196,7 +196,7 @@ const EmployeeDashboard = () => {
       <div className="flex gap-5">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full flex flex-col justify-center">
           <h2 className="font-semibold text-sm mb-10">Working Hours</h2>
-         {userId && <WaveChart userId={userId} />}
+          {userId && <WaveChart userId={userId} />}
         </div>
 
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
