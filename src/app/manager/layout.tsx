@@ -4,9 +4,10 @@
 import React, { useState, useEffect, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Bell } from "lucide-react";
+
 
 import DraggableMessenger from "../components/messenger/DraggableMessenger";
 
@@ -21,7 +22,7 @@ const LiveClock = () => {
       const hours = now.getHours() % 12 || 12;
       const minutes = now.getMinutes().toString().padStart(2, "0");
       const ampm = now.getHours() >= 12 ? "PM" : "AM";
-
+      
       const day = now.getDate().toString().padStart(2, "0");
       const month = (now.getMonth() + 1).toString().padStart(2, "0");
       const year = now.getFullYear();
@@ -32,12 +33,13 @@ const LiveClock = () => {
       setTimes(formatted);
       setDates(formatedDate);
     };
-
+    
     updateTime(); // run once immediately
     const interval = setInterval(updateTime, 1000);
 
     return () => clearInterval(interval);
   }, []);
+    
 
   return (
     <div className=" text-sm flex flex-col justify-end items-end rounded">
@@ -55,6 +57,7 @@ export default function RootLayout({ children }: MainContainerProps) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const router = useRouter()
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -77,96 +80,77 @@ export default function RootLayout({ children }: MainContainerProps) {
   return (
     <>
       <header>
-        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5 z-20">
           <div>
             <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
           </div>
           <div className="flex items-center gap-6">
-            <Bell size={18} />
+              <Link href="/manager/notification" className="cursor-pointer">
+              <Bell size={18} />
+            </Link>
             <LiveClock />
           </div>
         </nav>
       </header>
 
-      <div className="flex pt-13 relative" style={{ height: "100vh" }}>
-        <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
-          <ul className="flex flex-col gap-1">
-          <Link
-            href={"/manager/profile"}
-  
-          >
-            <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {user?.name ? user.name.charAt(0).toUpperCase() : "M"}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-semibold text-sm text-gray-800">
-                  {user?.name || "MINHAJ"}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {user?.employeeCode || "N/A"}
-                </span>
-              </div>
-            </div>
-          </Link>
-            <Link
-              href={"/manager/dashboard"}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "/manager/dashboard" ? "bg-black text-white" : ""
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href={"/manager/project/Project"}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "/manager/project/Project"
-                  ? "bg-black text-white"
-                  : ""
-              }`}
-            >
-              Projects
-            </Link>
-            <Link
-              href={"/manager/dailyReport"}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "" ? "bg-black text-white" : ""
-              }`}
-            >
-              Daily Reports
-            </Link>
-            <Link
-              href={""}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "" ? "bg-black text-white" : ""
-              }`}
-            >
-              Attendance
-            </Link>
-            <Link
-              href={""}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "" ? "bg-black text-white" : ""
-              }`}
-            >
-              Employees
-            </Link>
-            <Link
-              href={""}
-              className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                pathname === "" ? "bg-black text-white" : ""
-              }`}
-            >
-              Employee Reports
-            </Link>
-          </ul>
-          <button
-            onClick={logout}
-            className="py-2 mx-2 text-sm md:text-base border mb-2"
-          >
-            LogOut
-          </button>
-        </nav>
+                <div className="flex pt-13 relative" style={{ height: "100vh" }}>
+
+                <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
+                    <ul className="flex flex-col gap-1">
+                    <Link
+                        href={"/manager/dashboard"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/dashboard" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Dashboard
+                    </Link>
+                    <Link
+                        href={"/manager/project/Project"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/project/Project" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Projects
+                    </Link>
+                    <Link
+                        href={"/manager/dailyreport"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/dailyreport" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Daily Reports
+                    </Link>
+                    <Link
+                        href={""}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Attendance
+                    </Link>
+                    <Link
+                        href={""}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Employees
+                    </Link>
+                    <Link
+                        href={"/manager/employeeReport"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/employeeReport" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Employee Reports
+                    </Link>
+                    
+                    </ul>
+                    <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">
+                    LogOut
+                    </button>
+                </nav>
 
         <div>
           <DraggableMessenger role="manager" />

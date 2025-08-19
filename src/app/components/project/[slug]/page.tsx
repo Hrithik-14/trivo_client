@@ -112,48 +112,69 @@ const [memberData, setMemberData] = useState<{
 const handleExpand = async (memberId: string) => {
   const isExpanded = expandedMemberId === memberId;
 
+  // 🔽 Collapse if already expanded
   if (isExpanded) {
-    setExpandedMemberId(null); // collapse
+    setExpandedMemberId(null);
     return;
   }
 
+ 
   setExpandedMemberId(memberId);
 
-  if (!memberData[memberId]) {
+
+  if (memberData[memberId]) return;
+
+ 
+  setMemberData((prev) => ({
+    ...prev,
+    [memberId]: { tasks: [], reports: [], loading: true },
+  }));
+
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No auth token found in localStorage");
+    }
+
+    const [tasksRes, reportsRes] = await Promise.all([
+      api.get(`/project/${project._id}/user/${memberId}/tasks`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      api.get(`/report/project/${project._id}/submittedBy/${memberId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
+
     setMemberData((prev) => ({
       ...prev,
-      [memberId]: { tasks: [], reports: [], loading: true },
+      [memberId]: {
+        tasks: tasksRes.data?.data || [],
+        reports: reportsRes.data?.reports || [],
+        loading: false,
+      },
     }));
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const [tasksRes, reportsRes] = await Promise.all([
-        api.get(`/project/${project._id}/user/${memberId}/tasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get(`/report/project/${project._id}/submittedBy/${memberId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      setMemberData((prev) => ({
-        ...prev,
-        [memberId]: {
-          tasks: tasksRes.data?.data || [], 
-          reports: reportsRes.data?.reports || [], 
-          loading: false,
-        },
-      }));
-    } catch (error) {
-      console.error("Error fetching member data:", error);
-      setMemberData((prev) => ({
-        ...prev,
-        [memberId]: { tasks: [], reports: [], loading: false },
-      }));
+  } catch (error: any) {
+   
+    if (error.response) {
+      console.error(
+        `API Error [${error.response.status}] for member ${memberId}:`,
+        error.response.data
+      );
+    } else if (error.request) {
+      console.error(`No response for member ${memberId}:`, error.request);
+    } else {
+      console.error("Unexpected Error:", error.message);
     }
+
+  
+    setMemberData((prev) => ({
+      ...prev,
+      [memberId]: { tasks: [], reports: [], loading: false },
+    }));
   }
 };
+
 
 
   return (
