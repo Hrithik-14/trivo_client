@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.1",
     "@reduxjs/toolkit": "^2.8.2",
+    "aos": "^2.3.4",
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
@@ -28,11 +30,13 @@
     "react-rnd": "^10.5.2",
     "react-select": "^5.10.2",
     "recharts": "^3.1.2",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/aos": "^3.0.7",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.19.9",
     "@types/react": "^19",

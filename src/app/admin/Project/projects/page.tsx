@@ -10,40 +10,73 @@ import toast from 'react-hot-toast';
 // import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
-import UserSearch from '@/app/components/UserSearch';
-
-
 
 
 type ManagerOption = { value: string; label: string };
 
-type ProjectFormData = {
-  name: string;
-  startDate: string;
-  endDate: string;
-  client: string;
-  clientEmail: string;
-  description: string;
-  managerId: ManagerOption | null;
-};
+const today = new Date();
+today.setHours(0, 0, 0, 0); 
+
+const projectSchema = z
+  .object({
+    name: z.string().min(1, "Project name is required"),
+    startDate: z.string().refine((val) => {
+      const start = new Date(val);
+      return start >= today;
+    }, "Start date cannot be in the past"),
+    endDate: z.string(),
+    client: z.string().min(1, "Client name is required"),
+    clientEmail: z.string().email("Invalid email address"),
+    managerId:z.object({
+      value: z.string().min(1),
+      label: z.string(),
+    }).refine((data) => data.value && data.label, {
+      message: "Manager is required",
+      path: ["value"],
+    }),
+    description: z.string().min(1, "Project description is required"),
+  })
+  .refine((data) => {
+    if (!data.startDate || !data.endDate) return true;
+    return new Date(data.endDate) > new Date(data.startDate);
+  }, {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
+
+type ProjectFormData = z.infer<typeof projectSchema>;
 
 const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { register, handleSubmit, control, reset, formState: { errors, isValid, isSubmitting } } = useForm<ProjectFormData>({mode: 'onChange',});
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<ProjectFormData>({
+    mode: "onChange",
+    resolver: zodResolver(projectSchema),
+  });
+  const startDate = watch("startDate");
+  const today = new Date().toISOString().split("T")[0];
 
   const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
 
   useEffect(() => {
     const fetchManagers = async () => {
       try {
-        const res = await api.get('/managersdeatil');
+        const res = await api.get("/managersdeatil");
         const options = res.data.map((manager: any) => ({
           value: manager._id,
-          label: manager.name
+          label: manager.name,
         }));
         setManagerOptions(options);
-        
       } catch (err) {
         console.error("Failed to fetch managers:", err);
       }
@@ -52,101 +85,186 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
     fetchManagers();
   }, []);
 
-  const onSubmit = (data: ProjectFormData) => {
+  const onSubmit = async (data: ProjectFormData) => {
     const project = {
       ...data,
       managerId: data.managerId?.value,
     };
 
-    api.post('/admin/addAdminProject', project)
-    toast.success('Project created successfull')
-    onClose()
-
-    reset();
+    try {
+      await api.post("/admin/addAdminProject", project);
+      toast.success("Project created successfully");
+      onClose();
+      reset();
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data?.message || "Failed to create project");
+      } else {
+        toast.error("Failed to create project");
+      }
+    }
   };
 
   return (
-    <div className='fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-2xl text-black">
-        <div className='flex justify-between'>
-          <h2 className='font-bold text-lg'>Add Project</h2>
-          <button onClick={onClose} className='cursor-pointer'>
+        <div className="flex justify-between">
+          <h2 className="font-bold text-lg">Add Project</h2>
+          <button onClick={onClose} className="cursor-pointer">
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3 mt-3'>
-          <label className='flex flex-col gap-1'>
-            <p className='text-xs font-semibold'>Project name</p>
-            <input type="text" {...register("name", { required: "Project name is required" })}  placeholder='Enter project name' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-            {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-3 mt-3"
+        >
+          {/* Project Name */}
+          <label className="flex flex-col gap-1">
+            <p className="text-xs font-semibold">Project name</p>
+            <input
+              type="text"
+              {...register("name")}
+              placeholder="Enter project name"
+              className="w-full h-[38px] border px-3 border-[#ddd] rounded"
+            />
+            {errors.name && (
+              <span className="text-red-500 text-xs">
+                {errors.name.message}
+              </span>
+            )}
           </label>
-          <div className='flex gap-3'>
-            <label className='flex flex-col gap-1 flex-1'>
-              <p className='text-xs font-semibold'>Starting Date</p>
-              <input type="date" {...register("startDate", { required: "Starting date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-              {errors.startDate && <span className="text-red-500 text-xs">{errors.startDate.message}</span>}
+
+          {/* Dates */}
+          <div className="flex gap-3">
+            <label className="flex flex-col gap-1 flex-1">
+              <p className="text-xs font-semibold">Starting Date</p>
+              <input
+                type="date"
+                {...register("startDate",{
+                  validate: value => value >= today || "Start date cannot be in the past"
+                })}
+                min={today}
+                className="w-full border px-3 border-[#ddd] h-[38px] rounded"
+              />
+              {errors.startDate && (
+                <span className="text-red-500 text-xs">
+                  {errors.startDate.message}
+                </span>
+              )}
             </label>
-            <label className='flex flex-col gap-1 flex-1'>
-              <p className='text-xs font-semibold'>Ending Date</p>
-              <input type="date" {...register("endDate", { required: "Ending date is required" })} className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-              {errors.endDate && <span className="text-red-500 text-xs">{errors.endDate.message}</span>}
+            <label className="flex flex-col gap-1 flex-1">
+              <p className="text-xs font-semibold">Ending Date</p>
+              <input
+                type="date"
+                {...register("endDate", {
+                  validate: value => !startDate || value > startDate || "End date must be after start date"
+                })}
+                min={startDate || today}
+                className="w-full border px-3 border-[#ddd] h-[38px] rounded"
+              />
+              {errors.endDate && (
+                <span className="text-red-500 text-xs">
+                  {errors.endDate.message}
+                </span>
+              )}
             </label>
           </div>
-          <div className='flex gap-3'>
-            <label className='flex flex-col gap-1 flex-1'>
-              <p className='text-xs font-semibold'>Client Name</p>
-              <input type="text" {...register("client", { required: "Client name is required" })} placeholder='Client name' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-              {errors.client && <span className="text-red-500 text-xs">{errors.client.message}</span>}
+
+          {/* Client Info */}
+          <div className="flex gap-3">
+            <label className="flex flex-col gap-1 flex-1">
+              <p className="text-xs font-semibold">Client Name</p>
+              <input
+                type="text"
+                {...register("client")}
+                placeholder="Client name"
+                className="w-full border px-3 border-[#ddd] h-[38px] rounded"
+              />
+              {errors.client && (
+                <span className="text-red-500 text-xs">
+                  {errors.client.message}
+                </span>
+              )}
             </label>
-            <label className='flex flex-col gap-1 flex-1'>
-              <p className='text-xs font-semibold'>Client Mail</p>
-              <input type="email" {...register("clientEmail", { required: "Client mail id is required" })} placeholder='Client mail' className='w-full border px-3 border-[#ddd] h-[38px] rounded' />
-              {errors.clientEmail && <span className="text-red-500 text-xs">{errors.clientEmail.message}</span>}
+            <label className="flex flex-col gap-1 flex-1">
+              <p className="text-xs font-semibold">Client Mail</p>
+              <input
+                type="email"
+                {...register("clientEmail")}
+                placeholder="Client mail"
+                className="w-full border px-3 border-[#ddd] h-[38px] rounded"
+              />
+              {errors.clientEmail && (
+                <span className="text-red-500 text-xs">
+                  {errors.clientEmail.message}
+                </span>
+              )}
             </label>
           </div>
-          <label className='flex flex-col gap-1'>
-            <p className='text-xs font-semibold'>Add Manager</p>
+
+          {/* Manager */}
+          <label className="flex flex-col gap-1">
+            <p className="text-xs font-semibold">Add Manager</p>
             <Controller
               control={control}
               name="managerId"
-              rules={{ required: "Manager is required" }}
               render={({ field }) => (
-
                 <>
                   <ManagerProjectSearch
                     role="manager"
                     selectedUser={
                       field.value
-                        ? { _id: field.value.value, name: field.value.label, role: 'manager', employeeCode: '' }
+                        ? {
+                            _id: field.value.value,
+                            name: field.value.label,
+                            role: "manager",
+                            employeeCode: "",
+                          }
                         : null
                     }
-                    onSelect={(user) => field.onChange({ value: user._id, label: user.name })}
+                    onSelect={(user) =>
+                      field.onChange({ value: user._id, label: user.name })
+                    }
                   />
                   {errors.managerId && (
-                    <span className="text-red-500 text-xs">{errors.managerId.message}</span>
+                    <span className="text-red-500 text-xs">
+                      {errors.managerId.message}
+                    </span>
                   )}
                 </>
-
               )}
             />
-            {errors.managerId && <span className="text-red-500 text-xs">{errors.managerId.message}</span>}
           </label>
-          <label className='flex flex-col gap-1'>
-            <p className='text-xs font-semibold'>Description</p>
-            <input type="text" {...register("description", { required: "Project description is required" })} placeholder='Describe project' className='w-full h-[38px] border px-3 border-[#ddd] rounded' />
-            {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
+
+          {/* Description */}
+          <label className="flex flex-col gap-1">
+            <p className="text-xs font-semibold">Description</p>
+            <input
+              type="text"
+              {...register("description")}
+              placeholder="Describe project"
+              className="w-full h-[38px] border px-3 border-[#ddd] rounded"
+            />
+            {errors.description && (
+              <span className="text-red-500 text-xs">
+                {errors.description.message}
+              </span>
+            )}
           </label>
-          <div className='flex justify-end'>
+
+          {/* Submit */}
+          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!isValid}
-              className={`px-4 py-2 rounded  text-white ${
-                isValid ? "bg-[#22C55E] cursor-pointer" : "bg-gray-400 cursor-not-allowed"
+              disabled={!isValid || isSubmitting}
+              className={`px-4 py-2 rounded text-white ${
+                isValid
+                  ? "bg-[#22C55E] cursor-pointer"
+                  : "bg-gray-400 cursor-not-allowed"
               }`}
             >
               {isSubmitting ? "Adding..." : "Add Project"}
             </button>
-
           </div>
         </form>
       </div>

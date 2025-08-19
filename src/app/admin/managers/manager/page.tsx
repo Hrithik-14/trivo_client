@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { FC, useEffect, useState } from "react";
-import { Users, Plus, Mail, Map, Phone, X, User, Camera } from "lucide-react";
+import React, { FC, useState, useEffect } from "react";
+import { Users, Plus, Search, Mail, Map, Phone, X, User, Camera } from "lucide-react";
 import Image from "next/image";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -18,23 +21,58 @@ const jobRoleLabels: { [key: string]: string } = {
 
 const jobRoleEnum = Object.keys(jobRoleLabels);
 
+const managerSchema = z.object({
+  name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
+  designation: z.string().min(1, "Job role is required"),
+  role: z.string(),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  dateOfBirth: z.string().min(1, "date of birth is required"),
+  phoneNumber: z.string().min(1, "mobile number is required").refine(
+    (val) => !val || /^\d{10}$/.test(val),
+    "Phone number must be 10 digits"
+  ),
+  street: z.string().min(1, "street is required"),
+  city: z.string().min(1, "city is required"),
+  state: z.string().min(1, "state is required"),
+  pincode: z.string().min(1, "pincode is required").refine(
+    (val) => !val || /^\d{6}$/.test(val),
+    "Pincode must be 6 digits"
+  ),
+  managerId: z.string().optional(),
+});
+
+type ManagerFormData = z.infer<typeof managerSchema>;
+
 const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [form, setForm] = useState({
-    name: "",
-    designation: "",
-    role: "manager",
-    email: "",
-    dateOfBirth: "",
-    phoneNumber: "",
-    street: "",
-    city: "",
-    state: "",
-    pincode: "",
-    managerId: "",
-  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isValid },
+    setValue,
+    watch
+  } = useForm<ManagerFormData>({
+    resolver: zodResolver(managerSchema),
+    defaultValues: {
+      name: "",
+      designation: "",
+      role: "manager",
+      email: "",
+      dateOfBirth: "",
+      phoneNumber: "",
+      street: "",
+      city: "",
+      state: "",
+      pincode: "",
+      managerId: "",
+    },
+    mode: "onChange"
+  });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,107 +94,48 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!form.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-    if (!form.email.trim()) {
-      toast.error("Email is required");
-      return;
-    }
-    if (!form.designation) {
-      toast.error("Job role is required");
-      return;
-    }
+  const onSubmit = async (data: ManagerFormData) => {
     if (!imageFile) {
       toast.error("Profile image is required");
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    if (form.phoneNumber && !/^\d{10}$/.test(form.phoneNumber)) {
-      toast.error("Phone number must be 10 digits");
-      return;
-    }
-    if (form.pincode && !/^\d{6}$/.test(form.pincode)) {
-      toast.error("Pincode must be 6 digits");
       return;
     }
 
     try {
       setLoading(true);
       const formData = new FormData();
-      const fieldsToSend = {
-        name: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
-        role: form.role,
-        designation: form.designation,
-        phoneNumber: form.phoneNumber || "",
-        dateOfBirth: form.dateOfBirth || "",
-        street: form.street || "",
-        city: form.city || "",
-        state: form.state || "",
-        pincode: form.pincode || "",
-        managerId: form.managerId || "",
-      };
-
-      Object.entries(fieldsToSend).forEach(([key, value]) => {
+      
+      Object.entries(data).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== "") {
           formData.append(key, value);
         }
       });
 
+      // Clean email
+      formData.set("email", data.email.trim().toLowerCase());
+      formData.set("name", data.name.trim());
+
       if (imageFile) {
         formData.append("profileImage", imageFile);
       }
-      for (const pair of formData.entries()) {
-        if (pair[1] instanceof File) {
-          console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
-        } else {
-          console.log(`${pair[0]}: ${pair[1]}`);
-        }
-      }
+
 
       const response = await api.post("/auth/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+      
       toast.success(response.data.message || "Manager registered successfully!");
 
-      setForm({
-        name: "",
-        designation: "",
-        role: "manager",
-        email: "",
-        dateOfBirth: "",
-        phoneNumber: "",
-        street: "",
-        city: "",
-        state: "",
-        pincode: "",
-        managerId: "",
-      });
+      // Reset form and state
+      reset();
       setImageFile(null);
       setImagePreview(null);
       onClose();
     } catch (err: any) {
       console.error("Registration error:", err);
       console.error("Error response:", err?.response);
+      
       let errorMessage = "Something went wrong during registration";
       if (err?.response?.data?.message) {
         errorMessage = err.response.data.message;
@@ -180,7 +159,9 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
             <X size={15} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white p-5 flex gap-10 rounded mt-2">
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-5 flex gap-10 rounded mt-2">
+          {/* Image Upload Section */}
           <div className="w-[400px] h-[250px] relative">
             {imagePreview ? (
               <Image
@@ -209,30 +190,38 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
               <Camera size={20} className="text-gray-600" />
             </label>
           </div>
+
+          {/* Form Fields Section */}
           <div className="w-full flex flex-col gap-2">
             <div className="flex gap-5 items-center text-blue-500 border-b border-[#ddd] pb-2">
               <User size={30} />
               <p className="text-2xl font-semibold">Personal Information</p>
             </div>
+
+            {/* Name and Job Role Row */}
             <div className="flex gap-5 w-full">
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Full name</div>
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Full name</label>
                 <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
+                  {...register("name")}
                   type="text"
-                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                   placeholder="Enter full name"
                 />
-              </label>
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Job Role</div>
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Job Role</label>
                 <select
-                  name="designation"
-                  value={form.designation}
-                  onChange={handleChange}
-                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  {...register("designation")}
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.designation ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                 >
                   <option value="">Select Job Role</option>
                   {jobRoleEnum.map((role) => (
@@ -241,93 +230,120 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
                     </option>
                   ))}
                 </select>
-              </label>
+                {errors.designation && (
+                  <p className="text-red-500 text-xs mt-1">{errors.designation.message}</p>
+                )}
+              </div>
             </div>
+
+            {/* Email, DOB, Phone Row */}
             <div className="flex gap-5">
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Email</div>
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Email</label>
                 <input
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
+                  {...register("email")}
                   type="email"
-                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                   placeholder="Enter email address"
                 />
-              </label>
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Date of Birth</div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Date of Birth</label>
                 <input
-                  name="dateOfBirth"
-                  value={form.dateOfBirth}
-                  onChange={handleChange}
+                  {...register("dateOfBirth")}
                   type="date"
                   className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                 />
-              </label>
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Mobile No.</div>
+                {errors.dateOfBirth && (
+                  <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Mobile No.</label>
                 <input
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  maxLength={10}
-                  onChange={handleChange}
+                  {...register("phoneNumber")}
                   type="text"
-                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  maxLength={10}
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.phoneNumber ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                   placeholder="10 digit mobile number"
                 />
-              </label>
+                {errors.phoneNumber && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>
+                )}
+              </div>
             </div>
-            <h2 className="text-lg font-semibold">Address:</h2>
+
+            {/* Address Section */}
+            <h2 className="text-lg font-semibold mt-4">Address:</h2>
             <div className="flex flex-col gap-2">
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Street</div>
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Street</label>
                 <input
-                  name="street"
-                  value={form.street}
-                  onChange={handleChange}
+                  {...register("street")}
                   type="text"
                   className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   placeholder="Street address"
                 />
-              </label>
+                {errors.street && (
+                  <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>
+                )}
+              </div>
+
               <div className="flex gap-5">
-                <label className="w-full">
-                  <div className="text-xs font-semibold text-[#696969]">City</div>
+                <div className="w-full">
+                  <label className="text-xs font-semibold text-[#696969]">City</label>
                   <input
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
+                    {...register("city")}
                     type="text"
                     className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     placeholder="City"
                   />
-                </label>
-                <label className="w-full">
-                  <div className="text-xs font-semibold text-[#696969]">State</div>
+                  {errors.city && (
+                  <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
+                )}
+                </div>
+
+                <div className="w-full">
+                  <label className="text-xs font-semibold text-[#696969]">State</label>
                   <input
-                    name="state"
-                    value={form.state}
-                    onChange={handleChange}
+                    {...register("state")}
                     type="text"
                     className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     placeholder="State"
                   />
-                </label>
+                  {errors.state && (
+                  <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>
+                )}
+                </div>
               </div>
-              <label className="w-full">
-                <div className="text-xs font-semibold text-[#696969]">Pincode</div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Pincode</label>
                 <input
-                  name="pincode"
-                  value={form.pincode}
-                  onChange={handleChange}
+                  {...register("pincode")}
                   type="text"
                   maxLength={6}
-                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.pincode ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                   placeholder="6 digit pincode"
                 />
-              </label>
+                {errors.pincode && (
+                  <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>
+                )}
+              </div>
             </div>
+
+            {/* Submit Button */}
             <div className="w-full flex justify-end mt-4">
               <button
                 type="submit"
@@ -369,7 +385,7 @@ const Managers: FC = () => {
 
 
   useEffect(() => {
-    api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=3`)
+    api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/managers?page=${page}&limit=9`)
       .then(res => {
         setmanagers(res.data.managers)
         setTotalPages(res.data.totalPages)

@@ -92,30 +92,25 @@ export default function RootLayout({ children }: MainContainerProps) {
         </nav>
       </header>
 
-      <div className="flex pt-13 relative" style={{ height: "100vh" }}>
-        <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
-          <div className="flex flex-col">
-            {/* Profile Section */}
-            <Link
-              href={"/employee/profile"}
-              className={` ${
-                pathname === "/employee/profil" ? "bg-black text-white" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : "M"}
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-sm text-gray-800">
-                    {user?.name || "MINHAJ"}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {user?.employeeCode || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </Link>
+                <div className="flex pt-13 relative" style={{ height: "100vh" }}>
+                <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
+
+                    <div className="flex flex-col">
+                        <Link  href={"/employee/profile"} className="border-b border-[#ddd] mb-6">
+                        <div className="flex items-center gap-3 p-3 rounded-lg">
+                          <div className="w-14 h-14 rounded-full relative overflow-hidden bg-gray-200 flex-shrink-0">
+                            <Image src={user?.profileImage || '/avatar.png'} alt="" fill className="rounded-full object-cover" />
+                          </div>
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-sm text-gray-800">
+                                    {user?.name || 'MINHAJ'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {user?.employeeCode || 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                        </Link>
 
             {/* Navigation Links */}
             <ul className="flex flex-col gap-1">

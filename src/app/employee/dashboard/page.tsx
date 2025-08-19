@@ -2,10 +2,12 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import api from '@/app/api/axios'
-import PerformanceChart from '@/app/components/PerformanceChart'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
 import EmployeeAttendance from '@/app/components/EmployeeAttendence'
+import { useEmployeeAuthGuard } from '@/app/hooks/useEmployeeAuthGuard'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/app/store'
 
 interface Project {
   _id: string
@@ -68,9 +70,7 @@ const MarkAttendanceButton: React.FC<{
         type = 'signOut'
       }
       const employeeId = userId
-      console.log(`Marking attendance: ${type} for user: ${employeeId}`)
       const res = await api.post('/attendance', { employeeId, type })
-      console.log('Attendance marked:', res.data)
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
@@ -85,7 +85,7 @@ const MarkAttendanceButton: React.FC<{
       <button
         onClick={handleMarkAttendance}
         disabled={loading}
-        className="px-4 py-2 rounded bg-green-500 text-white h-full w-30"
+        className="px-4 py-2 rounded bg-green-500 text-white  w-70"
       >
         {loading ? 'Signing in...' : 'Sign In'}
       </button>
@@ -95,7 +95,7 @@ const MarkAttendanceButton: React.FC<{
       <button
         onClick={handleMarkAttendance}
         disabled={loading}
-        className="px-4 py-2 rounded bg-red-500 text-white h-full "
+        className="px-4 py-2 rounded bg-red-500 text-white w-70"
       >
         {loading ? 'SigningOut...' : 'SignOut'}
       </button>
@@ -107,22 +107,19 @@ const MarkAttendanceButton: React.FC<{
 
 const EmployeeDashboard = () => {
   const [ongoing, setOngoing] = useState<Project[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
   const [attendance, setAttendance] = useState<Attendance | null>(null)
   const [timer, setTimer] = useState('00:00:00')
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const { loading } = useEmployeeAuthGuard()
+  const user = useSelector((state: RootState) => state.user.user)
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    const parsed = storedUser ? JSON.parse(storedUser) : null
-    setUserId(parsed?.id ?? null)
-  }, [])
+
 
   const fetchTodayAttendance = async () => {
-    if (!userId) return
+    if (!user?.id) return
     try {
       const today = new Date().toISOString().split('T')[0]
-      const res = await api.get(`/attendance/${userId}/${today}`)
+      const res = await api.get(`/attendance/${user?.id}/${today}`)
       setAttendance(res.data.attendance)
     } catch (error) {
       console.log('Error fetching attendance for today', error)
@@ -130,10 +127,10 @@ const EmployeeDashboard = () => {
   }
 
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       fetchTodayAttendance()
     }
-  }, [userId])
+  }, [user?.id])
 
   useEffect(() => {
     if (attendance?.signInTime && !attendance.signOutTime) {
@@ -156,20 +153,29 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!userId) return
+      if (!user?.id) return
       try {
-        const res = await api.get<Project[]>(`/member/${userId}`)
+        const res = await api.get<Project[]>(`/member/${user?.id}`)
         setOngoing(res.data)
       } catch (error) {
         console.log('Error fetching projects:', error)
       }
     }
     fetchProject()
-  }, [userId])
+  }, [user?.id])
+
+  if (loading) return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project details...</p>
+        </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex gap-5">
+      <div className="flex gap-5 justify-between">
         <div className="p-4 bg-white rounded border border-[#ddd] w-full flex gap-3 items-center px-10">
           <Clock className="text-green-500" />
           <div>
@@ -187,21 +193,19 @@ const EmployeeDashboard = () => {
         </div>
 
         
-        {userId && (
-            <MarkAttendanceButton userId={userId} onAttendanceUpdated={fetchTodayAttendance} />
-        )}
+            <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
         
       </div>
 
       <div className="flex gap-5">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full flex flex-col justify-center">
           <h2 className="font-semibold text-sm mb-10">Working Hours</h2>
-          {userId && <WaveChart userId={userId} />}
+          {user?.id && <WaveChart userId={user?.id} />}
         </div>
 
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
-          {userId && <EmployeeAttendance employeeId={userId} />}
+          {user?.id && <EmployeeAttendance employeeId={user?.id} />}
         </div>
       </div>
 

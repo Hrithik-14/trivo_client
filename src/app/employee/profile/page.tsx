@@ -1,11 +1,14 @@
 'use client'
 
 import api from "@/app/api/axios";
-import { Download, Eye, FileText, Mail, Map, PhoneCall, User, X } from "lucide-react";
+import { Download, Eye, FileText, Filter, Mail, Map, PhoneCall, User, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
 
 type User = {
   _id: string;
@@ -46,25 +49,22 @@ type Payslip = {
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const users = useSelector((state: RootState) => state.user.user)
   const [payslips, setPayslips] = useState<Payslip[]>([]);
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
+  const [filterMonth, setFilterMonth] = useState<string>("");
+  const { loading } = useEmployeeAuthGuard()
+  
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const parsed = storedUser ? JSON.parse(storedUser) : null;
-    setUserId(parsed?.id ?? null);
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
+    if (!users?.id) return;
 
     const fetchUser = async () => {
       try {
-        const res = await api.get(`/users/${userId}`);
+        const res = await api.get(`/users/${users?.id}`);
         setUser(res.data);
 
-        const payslipRes = await api.get(`/payslips/user/${userId}`);
+        const payslipRes = await api.get(`/payslips/user/${users?.id}`);
         console.log(payslipRes.data);
         setPayslips(payslipRes.data);
       } catch (err) {
@@ -73,7 +73,11 @@ const Profile = () => {
     };
 
     fetchUser();
-  }, [userId]);
+  }, [users?.id]);
+
+  const filteredPayslips = filterMonth
+  ? payslips.filter((p) => p.salaryDate.startsWith(filterMonth))
+  : payslips;
 
   const handleOpenInvoice = (p: Payslip) => {
     setSelectedPayslip(p);
@@ -101,6 +105,15 @@ const Profile = () => {
   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
   pdf.save(`Invoice_${selectedPayslip._id}.pdf`);
 };
+
+  if (loading) return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
+      </div>
+  );
 
   return (
     <div>
@@ -232,8 +245,35 @@ const Profile = () => {
       </div>
 
       <div className="m-8 bg-white shadow-sm rounded p-8 flex flex-col gap-3">
-        <h2 className="text-2xl font-bold">Payslips History</h2>
-        {payslips.map((p) => (
+        <div className="flex justify-between">
+          <h2 className="text-2xl font-bold">Payslips History</h2>
+          <div className="inline-flex items-center bg-gray-100 rounded-full p-1 gap-1 mb-2">
+            <div className="flex items-center gap-2 px-4 py-2  text-gray-600 font-medium">
+              <Filter className="w-4 h-4" />
+              <span>Month:</span>
+            </div>
+            <div className="relative">
+              <input
+                type="month"
+                id="month-4"
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="bg-white rounded-full px-4 py-2 border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-gray-700 min-w-[160px]"
+              />
+            </div>
+            {filterMonth && (
+              <button
+                onClick={() => setFilterMonth("")}
+                className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-all duration-200 ml-1"
+                title="Clear filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+        {filteredPayslips.length > 0 ? (
+          filteredPayslips.map((p) => (
           <div key={p._id} className="border border-[#ddd] p-4 rounded flex justify-between">
             <div className="flex gap-3 w-full">
               <FileText size={35} className="p-2 bg-blue-500 text-white rounded" />
@@ -249,7 +289,10 @@ const Profile = () => {
               <Eye />
             </button>
           </div>
-        ))}
+        ))
+        ) : (
+          <p className="w-full text-center">No payslips available</p>
+        )}
       </div>
     </div>
   );

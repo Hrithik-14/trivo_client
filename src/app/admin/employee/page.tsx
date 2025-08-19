@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { FC, useEffect, useState } from "react";
@@ -10,349 +11,378 @@ import { notFound } from "next/navigation";
 import UserSearch from "@/app/components/UserSearch";
 import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 import ManagerSearchDropdown from "@/app/components/ManagerSearch";
+import { useForm, Controller, SubmitHandler  } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 
 const jobRoleLabels: { [key: string]: string } = {
-    frontend: "Frontend Developer",
-    backend: "Backend Developer",
-    tester: "Tester",
-    seniordeveloper: "Senior Developer",
-    designer: "UI/UX Designer",
+  frontend: "Frontend Developer",
+  backend: "Backend Developer",
+  tester: "Tester",
+  seniordeveloper: "Senior Developer",
+  designer: "UI/UX Designer",
 };
 
 const jobRoleEnum = Object.keys(jobRoleLabels);
 
+
+
+// Validation schema with Zod
+const employeeSchema = z.object({
+  name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
+  designation: z.string().min(1, "Job role is required"),
+  role: z.string(),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  dateOfBirth: z.string().optional(),
+  phoneNumber: z.string().optional().refine(
+    (val) => !val || /^\d{10}$/.test(val),
+    "Phone number must be 10 digits"
+  ),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  pincode: z.string().optional().refine(
+    (val) => !val || /^\d{6}$/.test(val),
+    "Pincode must be 6 digits"
+  ),
+  managerId: z.string().min(1, "Manager selection is required"),
+});
+
+type EmployeeFormData = z.infer<typeof employeeSchema>;
+
 const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
-    const [form, setForm] = useState({
-        name: "",
-        designation: "",
-        role: "employee",
-        email: "",
-        dateOfBirth: "",
-        phoneNumber: "",
-        street: "",
-        city: "",
-        state: "",
-        pincode: "",
-        managerId: "",
-    });
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please select an image file");
-            return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("File size must be less than 5MB");
-            return;
-        }
-        setImageFile(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-        }
-    };
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isValid },
+    setValue,
+    watch
+  } = useForm<EmployeeFormData>({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: {
+      name: "",
+      designation: "",
+      role: "employee",
+      email: "",
+      dateOfBirth: "",
+      phoneNumber: "",
+      street: "",
+      city: "",
+      state: "",
+      pincode: "",
+      managerId: "",
+    },
+    mode: "onChange" // Validates on every change
+  });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({
-        ...prev,
-        [name]: value,
-        }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!form.name.trim()) {
-        toast.error("Name is required");
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
         return;
-        }
-        if (!form.email.trim()) {
-        toast.error("Email is required");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size must be less than 5MB");
         return;
-        }
-        if (!form.designation) {
-        toast.error("Job role is required");
-        return;
-        }
-        if (!imageFile) {
-        toast.error("Profile image is required");
-        return;
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(form.email)) {
-        toast.error("Please enter a valid email address");
-        return;
-        }
-        if (form.phoneNumber && !/^\d{10}$/.test(form.phoneNumber)) {
-        toast.error("Phone number must be 10 digits");
-        return;
-        }
-        if (form.pincode && !/^\d{6}$/.test(form.pincode)) {
-        toast.error("Pincode must be 6 digits");
-        return;
-        }
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-        try {
-        setLoading(true);
-        const formData = new FormData();
-        const fieldsToSend = {
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            role: form.role,
-            designation: form.designation,
-            phoneNumber: form.phoneNumber || "",
-            dateOfBirth: form.dateOfBirth || "",
-            street: form.street || "",
-            city: form.city || "",
-            state: form.state || "",
-            pincode: form.pincode || "",
-            managerId: form.managerId || "",
-        };
+  const onSubmit: SubmitHandler<EmployeeFormData> = async (data) => {
+    if (!imageFile) {
+      toast.error("Profile image is required");
+      return;
+    }
 
-        Object.entries(fieldsToSend).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && value !== "") {
-            formData.append(key, value);
-            }
-        });
-
-        if (imageFile) {
-            formData.append("profileImage", imageFile);
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      
+      // Append form data
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") {
+          formData.append(key, value);
         }
-        for (const pair of formData.entries()) {
-            if (pair[1] instanceof File) {
-            console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
-            } else {
-            console.log(`${pair[0]}: ${pair[1]}`);
-            }
-        }
+      });
 
-        const response = await api.post("/auth/register", formData, {
-            headers: {
-            "Content-Type": "multipart/form-data",
-            },
-        });
-        toast.success(response.data.message || "Manager registered successfully!");
+      // Clean email and name
+      formData.set("email", data.email.trim().toLowerCase());
+      formData.set("name", data.name.trim());
 
-        setForm({
-            name: "",
-            designation: "",
-            role: "manager",
-            email: "",
-            dateOfBirth: "",
-            phoneNumber: "",
-            street: "",
-            city: "",
-            state: "",
-            pincode: "",
-            managerId: "",
-        });
-        setImageFile(null);
-        setImagePreview(null);
-        onClose();
-        } catch (err: any) {
-        console.error("Registration error:", err);
-        console.error("Error response:", err?.response);
-        let errorMessage = "Something went wrong during registration";
-        if (err?.response?.data?.message) {
-            errorMessage = err.response.data.message;
-        } else if (err?.response?.data?.error) {
-            errorMessage = err.response.data.error;
-        } else if (err?.message) {
-            errorMessage = err.message;
-        }
-        toast.error(errorMessage);
-        } finally {
-        setLoading(false);
-        }
-    };
+      if (imageFile) {
+        formData.append("profileImage", imageFile);
+      }
 
-    return (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg w-full max-w-4xl p-2 px-10 relative shadow-2xl text-black">
-            <div className="flex justify-between">
-            <h2 className="text-lg font-semibold">Add Manager</h2>
-            <button onClick={onClose} className="cursor-pointer">
-                <X size={15} />
-            </button>
+      // Debug logging
+      for (const pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
+        } else {
+          console.log(`${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      const response = await api.post("/auth/register", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      
+      toast.success(response.data.message || "Employee registered successfully!");
+
+      // Reset form and state
+      reset();
+      setImageFile(null);
+      setImagePreview(null);
+      onClose();
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      console.error("Error response:", err?.response);
+      
+      let errorMessage = "Something went wrong during registration";
+      if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-4xl p-2 px-10 relative shadow-2xl text-black">
+        <div className="flex justify-between">
+          <h2 className="text-lg font-semibold">Add Employee</h2>
+          <button onClick={onClose} className="cursor-pointer">
+            <X size={15} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-5 flex gap-10 rounded mt-2">
+          {/* Image Upload Section */}
+          <div className="w-[400px] h-[250px] relative">
+            {imagePreview ? (
+              <Image
+                src={imagePreview}
+                alt="profile preview"
+                fill
+                className="rounded-full object-cover object-center"
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                No Image
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              id="fileInput"
+              name="profileImage"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <label
+              htmlFor="fileInput"
+              className="absolute bottom-2 right-6 bg-white p-2 rounded-full shadow cursor-pointer hover:bg-gray-100 transition"
+            >
+              <Camera size={20} className="text-gray-600" />
+            </label>
+          </div>
+
+          {/* Form Fields Section */}
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex gap-5 items-center text-blue-500 border-b border-[#ddd] pb-2">
+              <User size={30} />
+              <p className="text-2xl font-semibold">Personal Information</p>
             </div>
-            <form onSubmit={handleSubmit} className="bg-white p-5 flex gap-10 rounded mt-2">
-            <div className="w-[400px] h-[250px] relative">
-                {imagePreview ? (
-                <Image
-                    src={imagePreview}
-                    alt="profile preview"
-                    fill
-                    className="rounded-full object-cover object-center"
-                />
-                ) : (
-                <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
-                    No Image
-                </div>
-                )}
+
+            {/* Name, Job Role, and Manager Row */}
+            <div className="flex gap-5 w-full">
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Full name</label>
                 <input
-                type="file"
-                accept="image/*"
-                id="fileInput"
-                name="profileImage"
-                onChange={handleImageChange}
-                className="hidden"
+                  {...register("name")}
+                  type="text"
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
+                  placeholder="Enter full name"
                 />
-                <label
-                htmlFor="fileInput"
-                className="absolute bottom-2 right-6 bg-white p-2 rounded-full shadow cursor-pointer hover:bg-gray-100 transition"
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Job Role</label>
+                <select
+                  {...register("designation")}
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.designation ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
                 >
-                <Camera size={20} className="text-gray-600" />
-                </label>
+                  <option value="">Select Job Role</option>
+                  {jobRoleEnum.map((role) => (
+                    <option key={role} value={role}>
+                      {jobRoleLabels[role]}
+                    </option>
+                  ))}
+                </select>
+                {errors.designation && (
+                  <p className="text-red-500 text-xs mt-1">{errors.designation.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Manager</label>
+                <Controller
+                  name="managerId"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <ManagerSearchDropdown
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Search and select manager"
+                      />
+                      {errors.managerId && (
+                        <p className="text-red-500 text-xs mt-1">{errors.managerId.message}</p>
+                      )}
+                    </div>
+                  )}
+                />
+              </div>
             </div>
-            <div className="w-full flex flex-col gap-2">
-                <div className="flex gap-5 items-center text-blue-500 border-b border-[#ddd] pb-2">
-                <User size={30} />
-                <p className="text-2xl font-semibold">Personal Information</p>
-                </div>
-                <div className="flex gap-5 w-full">
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Full name</div>
-                    <input
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    type="text"
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    placeholder="Enter full name"
-                    />
-                </label>
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Job Role</div>
-                    <select
-                    name="designation"
-                    value={form.designation}
-                    onChange={handleChange}
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                    <option value="">Select Job Role</option>
-                    {jobRoleEnum.map((role) => (
-                        <option key={role} value={role}>
-                        {jobRoleLabels[role]}
-                        </option>
-                    ))}
-                    </select>
-                </label>
-                <label className="w-full">
-  <div className="text-xs font-semibold text-[#696969]">Manager</div>
-  <ManagerSearchDropdown
-    value={form.managerId}
-    onChange={(userId) => setForm((prev) => ({ ...prev, managerId: userId }))}
-    placeholder="Search and select manager"
-  />
-</label>
-                </div>
-                <div className="flex gap-5">
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Email</div>
-                    <input
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    type="email"
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    placeholder="Enter email address"
-                    />
-                </label>
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Date of Birth</div>
-                    <input
-                    name="dateOfBirth"
-                    value={form.dateOfBirth}
-                    onChange={handleChange}
-                    type="date"
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                </label>
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Mobile No.</div>
-                    <input
-                    name="phoneNumber"
-                    value={form.phoneNumber}
-                    maxLength={10}
-                    onChange={handleChange}
-                    type="text"
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    placeholder="10 digit mobile number"
-                    />
-                </label>
-                </div>
-                <h2 className="text-lg font-semibold">Address:</h2>
-                <div className="flex flex-col gap-2">
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Street</div>
-                    <input
-                    name="street"
-                    value={form.street}
-                    onChange={handleChange}
-                    type="text"
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    placeholder="Street address"
-                    />
-                </label>
-                <div className="flex gap-5">
-                    <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">City</div>
-                    <input
-                        name="city"
-                        value={form.city}
-                        onChange={handleChange}
-                        type="text"
-                        className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        placeholder="City"
-                    />
-                    </label>
-                    <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">State</div>
-                    <input
-                        name="state"
-                        value={form.state}
-                        onChange={handleChange}
-                        type="text"
-                        className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        placeholder="State"
-                    />
-                    </label>
-                </div>
-                <label className="w-full">
-                    <div className="text-xs font-semibold text-[#696969]">Pincode</div>
-                    <input
-                    name="pincode"
-                    value={form.pincode}
-                    onChange={handleChange}
-                    type="text"
-                    maxLength={6}
-                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    placeholder="6 digit pincode"
-                    />
-                </label>
-                </div>
-                <div className="w-full flex justify-end mt-4">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm py-2 px-10 rounded transition-colors"
-                >
-                    {loading ? "Saving..." : "Save Manager"}
-                </button>
-                </div>
+
+            {/* Email, DOB, Phone Row */}
+            <div className="flex gap-5">
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Email</label>
+                <input
+                  {...register("email")}
+                  type="email"
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
+                  placeholder="Enter email address"
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Date of Birth</label>
+                <input
+                  {...register("dateOfBirth")}
+                  type="date"
+                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Mobile No.</label>
+                <input
+                  {...register("phoneNumber")}
+                  type="text"
+                  maxLength={10}
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.phoneNumber ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
+                  placeholder="10 digit mobile number"
+                />
+                {errors.phoneNumber && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>
+                )}
+              </div>
             </div>
-            </form>
-        </div>
-        </div>
-    );
+
+            {/* Address Section */}
+            <h2 className="text-lg font-semibold mt-4">Address:</h2>
+            <div className="flex flex-col gap-2">
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Street</label>
+                <input
+                  {...register("street")}
+                  type="text"
+                  className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div className="flex gap-5">
+                <div className="w-full">
+                  <label className="text-xs font-semibold text-[#696969]">City</label>
+                  <input
+                    {...register("city")}
+                    type="text"
+                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="City"
+                  />
+                </div>
+
+                <div className="w-full">
+                  <label className="text-xs font-semibold text-[#696969]">State</label>
+                  <input
+                    {...register("state")}
+                    type="text"
+                    className="border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="State"
+                  />
+                </div>
+              </div>
+
+              <div className="w-full">
+                <label className="text-xs font-semibold text-[#696969]">Pincode</label>
+                <input
+                  {...register("pincode")}
+                  type="text"
+                  maxLength={6}
+                  className={`border p-2 px-3 rounded-lg w-full border-[#ddd] transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    errors.pincode ? "border-red-500 focus:border-red-500 focus:ring-red-200" : ""
+                  }`}
+                  placeholder="6 digit pincode"
+                />
+                {errors.pincode && (
+                  <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="w-full flex justify-end mt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm py-2 px-10 rounded transition-colors"
+              >
+                {loading ? "Saving..." : "Save Employee"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 
@@ -379,7 +409,7 @@ const Employees: FC = () => {
 
 
     useEffect(() => {
-        api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/employeesdeatil?page=${page}&limit=6`)
+        api.get<{ totalPages: number; managers: User[]; total: number, page: number }>(`/employeesdeatil?page=${page}&limit=9`)
         .then(res => {
             setEmployees(res.data.managers)
             setTotalPages(res.data.totalPages)
