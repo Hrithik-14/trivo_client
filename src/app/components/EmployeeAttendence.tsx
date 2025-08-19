@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import axios from "axios";
 import api from "../api/axios";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -44,15 +43,12 @@ const EmployeeAttendance = ({ employeeId }: Props) => {
         fetchAttendance();
     }, [employeeId]);
 
-    const productive = attendance.present + attendance.late; 
-    const unproductive = attendance.absent + attendance.halfday;
-
     const data = {
         labels: ["Present", "Absent", "Late", "Half Day"],
         datasets: [
         {
             data: [attendance.present, attendance.absent, attendance.late, attendance.halfday],
-            backgroundColor: ["#4CAF50", "#F44336", "#FF9800", "#FFC107"],
+            backgroundColor: ["#4CAF50", "#F44336", "#FFC107", "#FF9800"],
             borderWidth: 0,
             cutout: "70%",
         },

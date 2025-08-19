@@ -53,7 +53,6 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
 
   return (
     <div className="border border-[#ddd] rounded w-full">
-      {/* Search Bar */}
       <div className="flex items-center px-2 py-1 border-b border-[#eee]">
         <Search size={16} className="text-gray-500" />
         <input
@@ -65,7 +64,6 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
         />
       </div>
 
-      {/* User List */}
       <div className="max-h-40 overflow-y-auto">
         {loading ? (
           <p className="text-sm text-gray-500 p-2">Loading...</p>
@@ -75,14 +73,14 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
               key={user._id}
               onClick={() => onSelect(user)}
               className={`px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 ${
-                selectedUser?._id === user._id ? "bg-green-100" : ""
+                selectedUser?._id === user._id ? "" : "bg-green-100"
               }`}
             >
               {user.name} ({user.employeeCode})
             </div>
           ))
         ) : (
-          <p className={`text-sm text-gray-500 ${query ? '' : ''}`}>
+          <p className={`text-sm text-gray-500 ${query ? 'py-2' : ''}`}>
             {query ? "No users found" : ""}
           </p>
         )}
@@ -90,7 +88,7 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
 
       {selectedUser && (
         <div className="bg-gray-50 px-3 py-2 border-t border-[#eee] text-xs text-gray-600">
-          Selected: {selectedUser.name} ({selectedUser.employeeCode})
+          Selected: {selectedUser.name}
         </div>
       )}
     </div>

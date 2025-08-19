@@ -10,6 +10,8 @@ import Link from 'next/link';
 
 import ManagersUserSearch from '@/app/components/UsersManager';
 import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/app/store';
 
 type Projects = {
   _id: string;
@@ -39,7 +41,6 @@ const ProjectSearch: FC<Props> = ({ selectedProject, onSelect, managerId }) => {
       const res = await api.get(`/projectManagerSearch/${managerId}`, {
         params: { query: searchTerm },
       });
-      
       setProjects(res.data || []);
     } catch (err) {
       console.error("Failed to fetch projects:", err);
@@ -49,32 +50,28 @@ const ProjectSearch: FC<Props> = ({ selectedProject, onSelect, managerId }) => {
     }
   };
 
-  useEffect(() => {
-    if (managerId) {
-      fetchProjects();
-    }
-  }, [managerId]);
+useEffect(() => {
+  if (!query.trim()) {
+    setProjects([]); 
+    return;
+  }
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
-    
-    const timeoutId = setTimeout(() => {
-      fetchProjects(value);
-    }, 300);
+  const timeoutId = setTimeout(() => {
+    fetchProjects(query);
+  }, 300);
 
-    return () => clearTimeout(timeoutId);
-  };
+  return () => clearTimeout(timeoutId);
+}, [query, managerId]);
 
   return (
-    <div className="border border-[#ddd] rounded w-full">
+    <div className="border border-[#ddd] rounded w-full h-fit">
       <div className="flex items-center px-2 py-1 border-b border-[#eee]">
         <Search size={16} className="text-gray-500" />
         <input
           type="text"
           placeholder="Search projects..."
           value={query}
-          onChange={handleSearchChange}
+          onChange={(e) => setQuery(e.target.value)}
           className="flex-1 outline-none p-2 text-sm"
         />
       </div>
@@ -95,7 +92,7 @@ const ProjectSearch: FC<Props> = ({ selectedProject, onSelect, managerId }) => {
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500 p-2">
+          <p className={`text-sm text-gray-500 ${query && 'p-2'}`}>
             {query ? "No projects found" : ""}
           </p>
         )}
@@ -145,21 +142,13 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
   });
 
   const [selectedProject, setSelectedProject] = useState<Projects | null>(null);
-  const [managerId, setManagerId] = useState<string | null>(null);
   const [selectedEmployeeIndex, setSelectedEmployeeIndex] = useState<number | null>(null);
   const [addedEmployees, setAddedEmployees] = useState<Set<string>>(new Set());
+  const user = useSelector((state: RootState) => state.user.user)
+  const { loading } = useManangerAuthGuard()
+  const managerId = user?.id
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setManagerId(parsed.id);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
+
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -278,6 +267,16 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
+
+  if (loading) return (
+      <div className="h-full flex items-center justify-center">
+          <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading details...</p>
+          </div>
+      </div>
+  );
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
@@ -288,7 +287,6 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 Project Assign
               </h2>
-              <p className="text-gray-600 mt-1">Add team members and tasks</p>
             </div>
             <button
               onClick={onClose}
@@ -299,7 +297,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
+        <div className="overflow-y-auto max-h-[calc(95vh-120px)] scrollbar-thin">
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-8">
             
             <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
@@ -538,8 +536,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Modern Action Bar */}
-            <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
+            <div>
               <div className="flex justify-end items-center">
 
                 <div className="flex gap-3">
@@ -597,17 +594,14 @@ const Projects: FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
     const [reload, setReload] = useState(false);
-    const [userId, setUserId] = useState(null)
     const { loading } = useManangerAuthGuard()
+    const user = useSelector((state: RootState) => state.user.user)
+
     
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user')
-        const parsed = storedUser ? JSON.parse(storedUser) : null;
-        setUserId(parsed.id); 
-    }, [userId])
+
 
     useEffect(() => {
-          if (!userId || userId === 'null') {
+          if (!user?.id || user?.id === 'null') {
     setProject([]);
     setTotalPages(0);
     setStats({ total: 0, ongoing: 0, completed: 0 });
@@ -615,7 +609,7 @@ const Projects: FC = () => {
     return;
   }
 
-        api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/manager/${userId}/getProjectByManager?page=${page}&limit=2`)
+        api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/manager/${user?.id}/getProjectByManager?page=${page}&limit=2`)
         .then(res => {
           setProject(res.data.projects); 
           setTotalPages(res.data.totalPages);
@@ -623,7 +617,7 @@ const Projects: FC = () => {
           
         })
         .catch(err => {console.error("Error in Fetching project:", err);})
-    }, [page, reload, userId])
+    }, [page, reload, user?.id])
 
     const handleAdd = () => setIsModalOpen(true);
     const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};

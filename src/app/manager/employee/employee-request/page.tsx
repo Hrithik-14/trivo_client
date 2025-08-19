@@ -25,7 +25,7 @@ interface Request {
     employeeId?: Employee;
 }
 
-const ManagerRequest: React.FC = () => {
+const EmployeeRequest: React.FC = () => {
     const [leaveRequests, setLeaveRequests] = useState<Request[]>([]);
     const [regularizationRequests, setRegularizationRequests] = useState<
         Request[]
@@ -40,6 +40,10 @@ const ManagerRequest: React.FC = () => {
     }, []);
 
     const fetchRequests = async () => {
+        if (!user || !user.token) {
+            console.log('Waiting for user token to be available...');
+            return;
+        }
         try {
         setLoading(true);
         const [leaveResponse, regularizationResponse] = await Promise.all([
@@ -84,7 +88,6 @@ const ManagerRequest: React.FC = () => {
         }
     };
 
-    // Format date helper
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -93,104 +96,100 @@ const ManagerRequest: React.FC = () => {
         });
     };
 
-const renderRequestCard = (request: Request, requestType: string) => (
-  <div
-    key={request._id}
-    className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 rounded-lg mb-4"
-  >
-    <div className="flex justify-between items-start">
-      {/* Left Content */}
-      <div className="flex flex-col gap-4 flex-1">
-        {/* Profile and Basic Info */}
-        <div className="flex gap-4 items-start">
-          <div className="relative w-14 h-14 flex-shrink-0">
-            <Image
-              src={request?.employeeId?.profileImage || "/avatar.png"}
-              alt="profile"
-              fill
-              className="rounded-full object-cover object-center border-2 border-gray-100"
-            />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="font-semibold text-gray-900 text-base truncate">
-                {request?.employeeId?.name || "Employee"}
-              </h2>
-              <div className="flex-shrink-0">
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    request.status === "Pending"
-                      ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                      : request.status === "Approve"
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-red-50 text-red-700 border border-red-200"
-                  }`}
-                >
-                  {request.status || "Pending"}
-                </span>
-              </div>
+    const renderRequestCard = (request: Request, requestType: string) => (
+        <div
+            key={request._id}
+            className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 rounded-lg mb-4"
+        >
+            <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-4 flex-1">
+                <div className="flex gap-4 items-start">
+                <div className="relative w-14 h-14 flex-shrink-0">
+                    <Image
+                    src={request?.employeeId?.profileImage || "/avatar.png"}
+                    alt="profile"
+                    fill
+                    className="rounded-full object-cover object-center border-2 border-gray-100"
+                    />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                    <h2 className="font-semibold text-gray-900 text-base truncate">
+                        {request?.employeeId?.name || "Employee"}
+                    </h2>
+                    <div className="flex-shrink-0">
+                        <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            request.status === "Pending"
+                            ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                            : request.status === "Approve"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
+                        }`}
+                        >
+                        {request.status || "Pending"}
+                        </span>
+                    </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 font-medium">
+                    {formatDate(request.date)}
+                    </p>
+                    
+                    {request.leaveType && (
+                    <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        {request.leaveType}
+                        </span>
+                    </div>
+                    )}
+                </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                    Description:
+                </h3>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                    {request.description || "No description provided"}
+                </p>
+                </div>
             </div>
-            
-            <p className="text-sm text-gray-500 font-medium">
-              {formatDate(request.date)}
-            </p>
-            
-            {request.leaveType && (
-              <div className="mt-2">
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                  {request.leaveType}
-                </span>
-              </div>
+
+            {request.status === "Pending" && (
+                <div className="flex flex-col sm:flex-row gap-2 ml-4 flex-shrink-0">
+                <button
+                    onClick={() =>
+                    handleRequestAction(request._id, "Approve", requestType)
+                    }
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                >
+                    <ThumbsUp size={16} />
+                    <span>Approve</span>
+                </button>
+                
+                <button
+                    onClick={() =>
+                    handleRequestAction(request._id, "Reject", requestType)
+                    }
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                >
+                    <ThumbsDown size={16} />
+                    <span>Reject</span>
+                </button>
+                </div>
             )}
-          </div>
+            </div>
         </div>
-
-        {/* Description */}
-        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">
-            Description:
-          </h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {request.description || "No description provided"}
-          </p>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      {request.status === "Pending" && (
-        <div className="flex flex-col sm:flex-row gap-2 ml-4 flex-shrink-0">
-          <button
-            onClick={() =>
-              handleRequestAction(request._id, "Approve", requestType)
-            }
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            <ThumbsUp size={16} />
-            <span>Approve</span>
-          </button>
-          
-          <button
-            onClick={() =>
-              handleRequestAction(request._id, "Reject", requestType)
-            }
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            <ThumbsDown size={16} />
-            <span>Reject</span>
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-);
+    );
 
     if (loading) {
         return (
         <div className="flex flex-col gap-5 ">
             <div className="bg-white p-5 px-5 border border-[#ddd] rounded flex gap-3 items-center">
             <Calendar size={35} className="p-2 bg-blue-500 text-white rounded" />
-            <h2 className="text-xl font-semibold">Managers Request</h2>
+            <h2 className="text-xl font-semibold">Employees Request</h2>
             </div>
             <div className="text-center py-8">Loading requests...</div>
         </div>
@@ -201,7 +200,7 @@ const renderRequestCard = (request: Request, requestType: string) => (
         <div className="flex flex-col gap-5">
         <div className="bg-white p-5 px-5 border border-[#ddd] rounded flex gap-3 items-center">
             <Calendar size={35} className="p-2 bg-blue-500 text-white rounded" />
-            <h2 className="text-xl font-semibold">Managers Request</h2>
+            <h2 className="text-xl font-semibold">Employees Request</h2>
         </div>
 
         <div>
@@ -241,4 +240,4 @@ const renderRequestCard = (request: Request, requestType: string) => (
     );
 };
 
-export default ManagerRequest;
+export default EmployeeRequest;

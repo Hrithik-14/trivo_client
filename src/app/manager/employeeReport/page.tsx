@@ -1,7 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Clock, User, Calendar, Check, X } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, CircleDotDashed } from 'lucide-react';
 import api from '@/app/api/axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/app/store';
+import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
 
 
 type Task = {
@@ -26,16 +29,17 @@ interface Report {
 const EmployeeDailyReport: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [load, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
-  const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+  const user = useSelector((state: RootState) => state.user.user)
+  const { loading } = useManangerAuthGuard()
+
 
 useEffect(() => {
   const fetchReports = async () => {
-    if (!token) {
+    if (!user?.token) {
       setFetchLoading(false);
       return;
     }
@@ -43,7 +47,7 @@ useEffect(() => {
     try {
       setFetchLoading(true);
       const { data } = await api.get(`/report/my?page=${page}&limit=5`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${user?.token}` },
       });
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
@@ -60,7 +64,7 @@ useEffect(() => {
   };
 
   fetchReports();
-}, [token, page]);
+}, [user?.token, page]);
 
 
   const updateStatus = async (id: string, status: 'accepted' | 'rejected') => {
@@ -68,7 +72,7 @@ useEffect(() => {
       setLoading(true);
       const { data } = await api.patch(`/reports/${id}/status`,
         { status },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${user?.token}` } }
       );
       
       setReports(prev =>
@@ -101,27 +105,14 @@ useEffect(() => {
 
   const selectedReport = reports.find(report => report._id === selectedReportId);
 
-  if (fetchLoading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading project details...</p>
-            </div>
-        </div>
-    );
-  }
-
-  if (!token) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+  if (loading) return (
+    <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-          <p className="text-gray-600">Please log in to view reports</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading detail...</p>
         </div>
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="min-h-screen ">
@@ -267,7 +258,7 @@ useEffect(() => {
                     {selectedReport.plannedTasks && selectedReport.plannedTasks.length > 0 ? (
                       selectedReport.plannedTasks.map((task, index) => (
                         <div key={index} className="flex items-start space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CircleDotDashed className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm text-gray-700">{task.title}</span>
                         </div>
                       ))
@@ -280,16 +271,16 @@ useEffect(() => {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => updateStatus(selectedReport._id, 'rejected')}
-                  disabled={loading || selectedReport.status !== 'pending'}
+                  disabled={load || selectedReport.status !== 'pending'}
                   className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
                     selectedReport.status === 'rejected'
                       ? 'bg-red-600 text-white'
-                      : selectedReport.status !== 'pending' || loading
+                      : selectedReport.status !== 'pending' || load
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-red-500 text-white hover:bg-red-600'
                   }`}
                 >
-                  {loading ? (
+                  {load ? (
                     <Clock className="w-4 h-4 animate-spin" />
                   ) : (
                     <X className="w-4 h-4" />
@@ -300,16 +291,16 @@ useEffect(() => {
                 </button>
                 <button
                   onClick={() => updateStatus(selectedReport._id, 'accepted')}
-                  disabled={loading || selectedReport.status !== 'pending'}
+                  disabled={load || selectedReport.status !== 'pending'}
                   className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
                     selectedReport.status === 'accepted'
                       ? 'bg-green-600 text-white'
-                      : selectedReport.status !== 'pending' || loading
+                      : selectedReport.status !== 'pending' || load
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-green-500 text-white hover:bg-green-600'
                   }`}
                 >
-                  {loading ? (
+                  {load ? (
                     <Clock className="w-4 h-4 animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />

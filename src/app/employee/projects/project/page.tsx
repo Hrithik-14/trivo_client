@@ -1,10 +1,12 @@
 'use client'
 
 import React, { FC, useState, useEffect } from 'react';
-import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User, UserPlus, Trash2, Zap, CheckSquare, Building, Target, AlertCircle, UserCheck, Folder, Users } from 'lucide-react';
+import { Clock, FileText, CheckCircle, Info, Calendar, User} from 'lucide-react';
 import api from '@/app/api/axios';
-import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/app/store';
+import { useEmployeeAuthGuard } from '@/app/hooks/useEmployeeAuthGuard';
 
 
 type Project = {
@@ -15,9 +17,9 @@ type Project = {
     endDate: Date,
     managerId: string,
     members: {
-      _id: string;
-      name: string;
-      role: string;
+        _id: string;
+        name: string;
+        role: string;
     }[];
     tasks: string[];
     client: string
@@ -27,45 +29,40 @@ type Project = {
 
 const Projects: FC = () => {
     const [ projects, setProject ] = useState<Project[]>([])
-    const [loading, setLoading] = useState(true);
+    const [load, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
     const [reload, setReload] = useState(false);
-    const [userId, setUserId] = useState(null)
-    
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user')
-        const parsed = storedUser ? JSON.parse(storedUser) : null;
-        setUserId(parsed.id); 
-    }, [userId])
+    const user = useSelector((state: RootState) => state.user.user)
+    const { loading } = useEmployeeAuthGuard()
 
     useEffect(() => {
-          if (!userId || userId === 'null') {
-    setProject([]);
-    setTotalPages(0);
-    setStats({ total: 0, ongoing: 0, completed: 0 });
-    setLoading(false);
-    return;
-  }
+        if (!user?.id || user?.id === 'null') {
+        setProject([]);
+        setTotalPages(0);
+        setStats({ total: 0, ongoing: 0, completed: 0 });
+        setLoading(false);
+        return;
+    }
 
-  setLoading(true);
-        api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${userId}?page=${page}&limit=2`)
+    setLoading(true);
+    api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=2`)
         .then(res => {
-          setProject(res.data.projects); 
-          setTotalPages(res.data.totalPages);
-          setStats(res.data.stats)
-          setLoading(false);
+            setProject(res.data.projects); 
+            setTotalPages(res.data.totalPages);
+            setStats(res.data.stats)
+            setLoading(false);
         })
         .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
-    }, [page, reload, userId])
+    }, [page, reload, user?.id])
 
 
     if (loading) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading project details...</p>
+            <p className="text-gray-600">Loading details...</p>
             </div>
         </div>
     );
@@ -112,45 +109,44 @@ const Projects: FC = () => {
 
             <div className='flex flex-col gap-4'>
                 {projects.map((project) => (
-                  <Link href={`/employee/projects/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
-                      <div className='flex justify-between'>
-                          <div>
-                              <h2 className='text-xl font-semibold'>{project.name}</h2>
-                              <p className='text-sm text-[#696969]'>{project.description}</p>
-                          </div>
-                          <div className={`p-2 text-xs h-fit px-4 rounded-full border ${
-                            project.status === 'ongoing'
-                              ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
-                              : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
-                          }`}>
-                            {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
-                          </div>
-                      </div>
+                    <Link href={`/employee/projects/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
+                        <div className='flex justify-between'>
+                            <div>
+                                <h2 className='text-xl font-semibold'>{project.name}</h2>
+                                <p className='text-sm text-[#696969]'>{project.description}</p>
+                            </div>
+                            <div className={`p-2 text-xs h-fit px-4 rounded-full border ${
+                                project.status === 'ongoing'
+                                ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
+                                : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
+                            }`}>
+                                {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
+                            </div>
+                        </div>
 
-                      <div className='text-[#696969] flex gap-3'>
-                          <Calendar size={15} />
-                          <p className='text-xs'>
-                              {new Date(project.startDate).toDateString()} - {new Date(project.endDate).toDateString()}
-                          </p>
-                      </div>
+                        <div className='text-[#696969] flex gap-3'>
+                            <Calendar size={15} />
+                            <p className='text-xs'>
+                                {new Date(project.startDate).toDateString()} - {new Date(project.endDate).toDateString()}
+                            </p>
+                        </div>
 
-                      <div className='text-[#696969] flex gap-3'>
-                          <User size={15} />
-                          <p className='text-xs'><span className='font-semibold'>Client: </span>{project.client}</p>
-                      </div>
+                        <div className='text-[#696969] flex gap-3'>
+                            <User size={15} />
+                            <p className='text-xs'><span className='font-semibold'>Client: </span>{project.client}</p>
+                        </div>
 
-                      <div className='text-[#696969] flex gap-3 flex-col'>
-                          <div className='font-semibold text-xs'>Team Members :</div>
-                          <div className='ml-5 flex flex-wrap gap-2'>
-                              {project.members.filter((member) => member.role.toLowerCase() !== "manager").map((member, index) => (
-                                  <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
-                                      {member.name}
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                      
-                  </Link>
+                        <div className='text-[#696969] flex gap-3 flex-col'>
+                            <div className='font-semibold text-xs'>Team Members :</div>
+                            <div className='ml-5 flex flex-wrap gap-2'>
+                                {project.members.filter((member) => member.role.toLowerCase() !== "manager").map((member, index) => (
+                                    <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
+                                        {member.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Link>
                 ))}
             <div className="flex justify-center mt-4 gap-2">
                 <button
