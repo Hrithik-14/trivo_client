@@ -22,6 +22,7 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
     const [results, setResults] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [suppressSearch, setSuppressSearch] = useState(false);
 
     const fetchUsers = async (searchText: string) => {
         setLoading(true);
@@ -41,6 +42,12 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
+
+                if (selectedUser && query === selectedUser.name) {
+      setShowDropdown(false);
+      return;
+    }
+
         if (query.trim() !== '') {
             fetchUsers(query);
             setShowDropdown(true);
@@ -51,12 +58,14 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
         }, 300);
 
         return () => clearTimeout(delayDebounce);
-    }, [query, role]);
+    }, [query, role, selectedUser]);
 
     const handleSelect = (user: User) => {
         onSelect?.(user);
         setQuery(user.name);
+        setSuppressSearch(true);
         setShowDropdown(false);
+        setTimeout(() => setSuppressSearch(false), 500);
     };
 
     return (

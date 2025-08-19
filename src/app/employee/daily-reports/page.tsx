@@ -19,10 +19,17 @@ import {
   CheckCircle,
   Target,
   Swords,
+  Rows4,
+  Columns4,
+  Rows,
+  Columns,
 } from "lucide-react";
 import api from "@/app/api/axios";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { RootState } from '@/app/store'
+import { useSelector } from "react-redux";
+import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
 
 interface DailyReportForm {
   employeeId: string;
@@ -63,26 +70,19 @@ interface Task {
 }
 
 const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const user = localStorage.getItem("user");
-  const parsedUser = user ? JSON.parse(user) : null;
+  const user = useSelector((state: RootState) => state.user.user)
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-      const storedUser = localStorage.getItem('user')
-      const parsed = storedUser ? JSON.parse(storedUser) : null
-      setUserId(parsed?.id ?? null)
-    }, [])
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<DailyReportForm>({
     defaultValues: {
-      employeeId: parsedUser?.employeeCode,
+      employeeId: user?.employeeCode,
       currentProject: "",
       projectStatus: "",
       startTime: "",
@@ -115,7 +115,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     const fetchProject = async () => {
       try {
         const response = await api.get(
-          `/getProjectByEmployee/${parsedUser?.id}`
+          `/getProjectByEmployee/${user?.id}`
         );
         setProjects(response.data.projects || []);
       } catch (error) {
@@ -130,7 +130,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       const fetchTasks = async () => {
         try {
           const response = await api.get(
-            `/project/${selectedProjectId}/user/${parsedUser?.id}/tasks`
+            `/project/${selectedProjectId}/user/${user?.id}/tasks`
           );
           setTasks(response.data.data || []);
           console.log(response.data.data);
@@ -147,11 +147,11 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const onSubmit = async (data: DailyReportForm) => {
     try {
-      const token = parsedUser?.token;
+      const token = user?.token;
       if (!token) throw new Error("No authentication token found");
 
       await api.post(
-        `report/addReport/${parsedUser?.id}`,
+        `report/addReport/${user?.id}`,
         { ...data, projectId: selectedProjectId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -166,7 +166,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto scrollbar-thin">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Daily Report</h2>
           <button
@@ -179,7 +179,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-6 space-y-6">
-            {/* Employee ID and Project */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -212,11 +211,15 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     </option>
                   ))}
                 </select>
+                {errors.currentProject && (
+                  <span className="text-red-500 text-xs">
+                    {errors.currentProject.message}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Working Hours */}
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <Clock className="text-green-600 mr-2" size={20} />
                 <h3 className="text-lg font-medium text-gray-800">
@@ -235,6 +238,11 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
+                  {errors.startTime && (
+                    <span className="text-red-500 text-xs">
+                      {errors.startTime.message}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -247,12 +255,16 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
+                  {errors.endTime && (
+                    <span className="text-red-500 text-xs">
+                      {errors.endTime.message}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Tasks */}
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center mb-4">
                 <CheckSquare className="text-purple-600 mr-2" size={20} />
                 <h3 className="text-lg font-medium text-gray-800">
@@ -260,7 +272,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Completed Tasks Dropdown */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">
                     Tasks Completed Today
@@ -285,6 +296,11 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                           </option>
                         ))}
                       </select>
+                      {errors.completedTasks && (
+                        <span className="text-red-500 text-xs">
+                          {errors.completedTasks.message}
+                        </span>
+                      )}
                     </div>
                   ))}
                   <button
@@ -333,30 +349,37 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Performance & Challenges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-yellow-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-lg font-medium text-gray-800 mb-2">
                   Performance & Feedback
                 </h3>
                 <textarea
+                  placeholder="key acheivemnets"
                   {...register("performance", {
                     required: "Key achievements are required",
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-24"
                 />
+                {errors.performance && (
+                <span className="text-red-500 text-xs">
+                  {errors.performance.message}
+                </span>
+              )}
               </div>
-              <div className="bg-red-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-lg font-medium text-gray-800 mb-2">
                   Challenges & Support
                 </h3>
                 <textarea
+                  placeholder="Challenges faced"
                   {...register("challenges")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20 mb-4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-10 mb-4 scrollbar-thin"
                 />
                 <textarea
+                  placeholder="support needed"
                   {...register("supportNeeded")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-20"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-10 scrollbar-thin overflow-auto"
                 />
               </div>
             </div>
@@ -365,9 +388,14 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="flex justify-end p-6 border-t border-gray-200">
             <button
               type="submit"
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md font-medium transition-colors"
+              disabled={isSubmitting || !isValid}
+              className={`px-6 py-2 rounded-md text-white font-medium ${
+                isSubmitting || !isValid
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit Report"}
             </button>
           </div>
         </form>
@@ -377,22 +405,22 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
 };
 
 const DailyReport: FC = () => {
-  const user = localStorage.getItem("user");
+  const user = useSelector((state: RootState) => state.user.user)
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reload, setReload] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [load, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // FIXED: Changed to number type to match report._id
   const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
+  const [showStyle, setShowStyle] = useState(true)
+  const { loading } = useEmployeeAuthGuard()
 
-  const parsedUser = user ? JSON.parse(user) : null;
-  const token = parsedUser?.token;
 
-  if (!token) {
+
+  if (!user?.token) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -406,8 +434,8 @@ const DailyReport: FC = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const response = await api.get(`/report/getReportsByEmployee/${parsedUser?.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await api.get(`/report/getReportsByEmployee/${user?.id}`, {
+          headers: { Authorization: `Bearer ${user?.token}` },
         });
         
         if (response.data && response.data.report) {
@@ -422,22 +450,22 @@ const DailyReport: FC = () => {
       }
     };
 
-    if (parsedUser?.id && token) {
+    if (user?.id && user?.token) {
       fetchStatuses();
     }
-  }, [parsedUser?.id, token]);
+  }, [user?.id, user?.token]);
 
   useEffect(() => {
     const fetchReports = async () => {
-      if (!parsedUser?.id || !token) return;
+      if (!user?.id || !user?.token) return;
 
       try {
         setLoading(true);
         setError(null);
         
         const response = await api.get(
-          `/report/getReportsByEmployee/${parsedUser.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `/report/getReportsByEmployee/${user.id}`,{ headers: { Authorization: `Bearer ${user?.token}` } }
+          
         );
         
         if (response.data && response.data.report) {
@@ -455,7 +483,7 @@ const DailyReport: FC = () => {
     };
 
     fetchReports();
-  }, [reload, parsedUser?.id, token]);
+  }, [reload, user?.id, user?.token]);
 
   const handleAdd = () => setIsModalOpen(true);
   const handleCloseModal = () => {
@@ -463,7 +491,6 @@ const DailyReport: FC = () => {
     setReload((prev) => !prev);
   };
 
-  // FIXED: Changed parameter type to number
   const toggleExpand = (id: number) => {
     setExpandedReportId(expandedReportId === id ? null : id);
   };
@@ -480,7 +507,7 @@ const DailyReport: FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading reports...</p>
+          <p className="text-gray-600 mt-4">Loading details...</p>
         </div>
       </div>
     );
@@ -511,7 +538,6 @@ const DailyReport: FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="mx-auto py-8 max-w-7xl px-4 sm:px-6 lg:px-8">
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -519,7 +545,7 @@ const DailyReport: FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex justify-between gap-4 mb-6">
           <div className="flex gap-2">
             <select
               className="px-4 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -534,14 +560,37 @@ const DailyReport: FC = () => {
               ))}
             </select>
           </div>
+          <div className="bg-[#eaeaea] p-1 rounded-xl inline-flex">
+          <button
+            onClick={() => setShowStyle(false)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              !showStyle 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Columns className="w-4 h-4" />
+            <span className="font-medium text-sm">Grid</span>
+          </button>
+          <button
+            onClick={() => setShowStyle(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              showStyle 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Rows className="w-4 h-4" />
+            <span className="font-medium text-sm">Rows</span>
+          </button>
+        </div>
         </div>
 
-        {/* Reports */}
-        <div className="space-y-4">
+        <div className={` ${showStyle === true ? 'flex flex-col gap-5' : 'grid grid-cols-2 gap-5'}`}>
           {filteredReports.map((report) => (
             <div
               key={report._id}
-              className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+              className={`${report.status === 'rejected' ? 'bg-[#fddbdb]' : 'bg-white'} rounded-lg border h-fit border-gray-200 hover:shadow-md transition-shadow `}
             >
               <div
                 className="p-6 cursor-pointer"
@@ -571,7 +620,6 @@ const DailyReport: FC = () => {
                       </div>
                     </div>
                   </div>
-                  {/* ADDED: Visual indicator for expand/collapse */}
                   <div className="flex items-center">
                     <div 
                       className={`transform transition-transform duration-200 ${
@@ -587,9 +635,16 @@ const DailyReport: FC = () => {
 
                 {expandedReportId === report._id && (
                   <div className="mt-4 space-y-2 border-t border-[#ddd] pt-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 mr-2 text-blue-500" />
-                      {report.completedTasks?.length || 0} tasks completed
+                    <div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 mr-2 text-blue-500" />
+                        {report.completedTasks?.length || 0} tasks completed
+                      </div>
+                      <div className="text-xs ml-10 list-disc text-[#696969]">
+                        {report.completedTasks?.map((t) => (
+                          <li key={t._id}>{t.title}</li>
+                        ))}
+                      </div>
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Target className="w-4 h-4 mr-2 text-green-500" />
@@ -601,7 +656,7 @@ const DailyReport: FC = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Swords className="w-4 h-4 mr-2 text-red-500" />
-                      Challenges Faced: {report.challenges}
+                      Challenges Faced: {report.challenges ? report.challenges : 'No challenges'}
                     </div>
                     
                   </div>

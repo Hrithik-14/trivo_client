@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '@/app/api/axios';
 import toast from 'react-hot-toast';
+import Select from 'react-select';
 
 interface Project {
     _id: string;
@@ -21,6 +22,7 @@ interface Manager {
     _id: string;
     name: string;
     email: string;
+    employeeCode: string;
 }
 
 
@@ -46,6 +48,7 @@ export default function UpdateProjectPage() {
     });
 
     const [errors, setErrors] = useState<Partial<typeof formData>>({});
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -63,12 +66,13 @@ export default function UpdateProjectPage() {
 
             setProject(projectData);
             setManagers(managersData);
+            console.log(projectData.managerId)
 
             setFormData({
             name: projectData.name || '',
             startDate: projectData.startDate ? projectData.startDate.split('T')[0] : '',
             endDate: projectData.endDate ? projectData.endDate.split('T')[0] : '',
-            managerId: projectData.managerId || '',
+            managerId: projectData.managerId._id || '',
             description: projectData.description || '',
             client: projectData.client || '',
             clientEmail: projectData.clientEmail || '',
@@ -211,7 +215,6 @@ export default function UpdateProjectPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Project Name */}
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                     Project Name *
@@ -230,31 +233,34 @@ export default function UpdateProjectPage() {
                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
 
-                {/* Manager */}
                 <div>
                     <label htmlFor="managerId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Project Manager *
+                        Project Manager *
                     </label>
-                    <select
-                    id="managerId"
-                    name="managerId"
-                    value={formData.managerId}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.managerId ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
-                    }`}
-                    >
-                    <option value="">Select a manager</option>
-                    {managers.map((manager) => (
-                        <option key={manager._id} value={manager._id}>
-                        {manager.name} ({manager.email})
-                        </option>
-                    ))}
-                    </select>
+                    <Select
+                        id="managerId"
+                        options={managers.map(manager => ({
+                        value: manager._id,
+                        label: `${manager.name} (${manager.employeeCode})`
+                        }))}
+                        value={managers
+                        .filter(manager => manager._id === formData.managerId)
+                        .map(manager => ({
+                            value: manager._id,
+                            label: `${manager.name} (${manager.employeeCode})`
+                        }))}
+                        onChange={(selectedOption: any) => {
+                        setFormData(prev => ({ ...prev, managerId: selectedOption.value }));
+                        if (errors.managerId) {
+                            setErrors(prev => ({ ...prev, managerId: undefined }));
+                        }
+                        }}
+                        isSearchable
+                        classNamePrefix="react-select"
+                    />
                     {errors.managerId && <p className="mt-1 text-sm text-red-600">{errors.managerId}</p>}
                 </div>
 
-                {/* Start Date */}
                 <div>
                     <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date *
@@ -272,7 +278,6 @@ export default function UpdateProjectPage() {
                     {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>}
                 </div>
 
-                {/* End Date */}
                 <div>
                     <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
                     End Date *
@@ -290,7 +295,6 @@ export default function UpdateProjectPage() {
                     {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>}
                 </div>
 
-                {/* Client Name */}
                 <div>
                     <label htmlFor="client" className="block text-sm font-medium text-gray-700 mb-2">
                     Client Name *
@@ -309,7 +313,6 @@ export default function UpdateProjectPage() {
                     {errors.client && <p className="mt-1 text-sm text-red-600">{errors.client}</p>}
                 </div>
 
-                {/* Client Email */}
                 <div>
                     <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700 mb-2">
                     Client Email *
@@ -329,7 +332,6 @@ export default function UpdateProjectPage() {
                 </div>
                 </div>
 
-                {/* Description */}
                 <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                     Project Description
@@ -345,7 +347,6 @@ export default function UpdateProjectPage() {
                 />
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex gap-4 pt-6">
                 <button
                     type="submit"

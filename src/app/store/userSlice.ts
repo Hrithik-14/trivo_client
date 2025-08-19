@@ -8,6 +8,7 @@ interface User {
   employeeCode: string,
   role: string
   token?: string;
+  profileImage?: string;
 }
 
 interface UserState {
@@ -24,7 +25,6 @@ const userSlice = createSlice({
   reducers: {
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
-      // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(action.payload));
       }

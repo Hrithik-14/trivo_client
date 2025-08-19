@@ -5,6 +5,10 @@ import api from '@/app/api/axios'
 import PerformanceChart from '@/app/components/PerformanceChart'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
+import EmployeeAttendance from '@/app/components/EmployeeAttendence'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/app/store'
+import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard'
 
 interface Project {
   _id: string
@@ -16,6 +20,11 @@ interface Attendance {
   signInTime?: string
   signOutTime?: string
 }
+
+type Props = {
+  userId: string | null;
+  onAttendanceUpdated: () => void;
+};
 
 const calculateElapsedTime = (signInTime: string): string => {
   const todayDateStr = new Date().toISOString().split('T')[0]
@@ -33,10 +42,7 @@ const calculateElapsedTime = (signInTime: string): string => {
   return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
 }
 
-const MarkAttendanceButton: React.FC<{
-  userId: string | null
-  onAttendanceUpdated: () => void
-}> = ({ userId, onAttendanceUpdated }) => {
+const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) => {
   const [loading, setLoading] = useState(false)
   const [attendanceToday, setAttendanceToday] = useState<Attendance | null>(null)
 
@@ -70,7 +76,6 @@ const MarkAttendanceButton: React.FC<{
       console.log(`Marking attendance: ${type} for user: ${employeeId}`)
       const res = await api.post('/attendance', { employeeId, type })
       console.log('Attendance marked:', res.data)
-      // Notify parent to refresh attendance data
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
@@ -107,22 +112,19 @@ const MarkAttendanceButton: React.FC<{
 
 const ManagerDashboard = () => {
   const [ongoing, setOngoing] = useState<Project[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
   const [attendance, setAttendance] = useState<Attendance | null>(null)
   const [timer, setTimer] = useState('00:00:00')
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const user = useSelector((state: RootState) => state.user.user)
+  const { loading } = useManangerAuthGuard()
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    const parsed = storedUser ? JSON.parse(storedUser) : null
-    setUserId(parsed?.id ?? null)
-  }, [])
+
 
   const fetchTodayAttendance = async () => {
-    if (!userId) return
+    if (!user?.id) return
     try {
       const today = new Date().toISOString().split('T')[0]
-      const res = await api.get(`/attendance/${userId}/${today}`)
+      const res = await api.get(`/attendance/${user?.id}/${today}`)
       setAttendance(res.data.attendance)
     } catch (error) {
       console.log('Error fetching attendance for today', error)
@@ -130,10 +132,10 @@ const ManagerDashboard = () => {
   }
 
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       fetchTodayAttendance()
     }
-  }, [userId])
+  }, [user?.id])
 
   useEffect(() => {
     if (attendance?.signInTime && !attendance.signOutTime) {
@@ -156,20 +158,30 @@ const ManagerDashboard = () => {
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!userId) return
+      if (!user?.id) return
       try {
-        const res = await api.get<Project[]>(`/managersongoing/${userId}`)
+        const res = await api.get<Project[]>(`/managersongoing/${user?.id}`)
         setOngoing(res.data)
       } catch (error) {
         console.log('Error fetching projects:', error)
       }
     }
     fetchProject()
-  }, [userId])
+  }, [user?.id])
+
+  
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex gap-5">
+      <div className="flex gap-5 justify-between">
         <div className="p-4 bg-white rounded border border-[#ddd] w-full flex gap-3 items-center px-10">
           <Clock className="text-green-500" />
           <div>
@@ -186,20 +198,18 @@ const ManagerDashboard = () => {
           </div>
         </div>
 
-        <div>
-          <MarkAttendanceButton userId={userId} onAttendanceUpdated={fetchTodayAttendance} />
-        </div>
+        <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
       </div>
 
       <div className="flex gap-5">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full">
           <h2 className="font-semibold text-sm mb-4">Working Hours</h2>
-          {userId && <WaveChart userId={userId} />}
+          {user?.id && <WaveChart userId={user?.id} />}
         </div>
 
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
-          <PerformanceChart />
+          {user?.id && <EmployeeAttendance employeeId={user?.id} />}
         </div>
       </div>
 
