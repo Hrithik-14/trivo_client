@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, ChevronDown, ChevronRight, CircleCheckBig, FileText, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from 'lucide-react'
 import React, { useState } from 'react'
 
 const ManagerDailyReport = () => {

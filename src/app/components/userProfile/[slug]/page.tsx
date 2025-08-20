@@ -160,10 +160,7 @@ const UserProfile: FC<Props> = ({ userId }) => {
                             </div>
                         </div>
                         <div className='flex gap-5'>
-                            <button className='bg-blue-500 text-white rounded p-2 w-full'>
-                                Message
-                            </button>
-                            <Link href={`/admin/profile/edit/${user._id}`} className=' text-[#696969] text-center border border-[#ddd] rounded p-2 w-full'>
+                            <Link href={`/admin/profile/edit/${user._id}`} className=' text-black text-center border hover:bg-[#dadada] border-[#ddd] rounded p-2 w-full'>
                                 Edit Profile
                             </Link>
                             <button
@@ -172,7 +169,7 @@ const UserProfile: FC<Props> = ({ userId }) => {
                                     const updatedUser = await updateIsActive(user._id, !user.isActive);
                                     setUser(updatedUser);
                                 }}
-                                className={`rounded p-2 ${user.isActive ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+                                className={`rounded p-2 px-10 ${user.isActive ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
                             >
                                 {user.isActive ? 'Block' : 'Unblock'}
                             </button>
