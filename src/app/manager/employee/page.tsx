@@ -364,6 +364,8 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
 };
 
 
+
+
 type User = {
     _id: string,
     name: string,
@@ -374,6 +376,7 @@ type User = {
     state: string,
     phoneNumber: string
 }
+
 
 const Employees: FC = () => {
     const user = useSelector((state: RootState) => state.user.user)
@@ -517,10 +520,7 @@ const Employees: FC = () => {
                 </div>
             </div>
             <div className="flex gap-2 justify-between">
-                <button className="bg-blue-500 text-white py-2 text-center rounded w-full hover:bg-blue-600 transition-colors">
-                Message
-                </button>
-                <Link href={`/manager/employee-profile/${employee._id}`} className="text-[#000] border border-[#ddd] py-2 text-center rounded w-full hover:bg-gray-50 transition-colors">
+                <Link href={`/manager/employee-profile/${employee._id}`} className="text-[#000] border border-[#ddd] py-2 text-center rounded w-full hover:bg-[#dadada] transition-colors">
                 Profile
                 </Link>
                 <ul>
