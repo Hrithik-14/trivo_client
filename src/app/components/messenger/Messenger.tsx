@@ -81,7 +81,6 @@ interface Group {
   unreadCount?: number | undefined;
 }
 
-// New interface for personal chat items in the list
 interface PersonalChat {
   _id: string;
   name: string;
@@ -138,7 +137,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  const [showContactsTab, setShowContactsTab] = useState(false); // New state for browsing all contacts
+  const [showContactsTab, setShowContactsTab] = useState(false); 
   const router = useRouter()
   
   
@@ -217,7 +216,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         return;
       }
       
-      // The API now returns all users with conversation data
       const personalChatsData = res.data.map((user: any) => ({
         _id: user._id,
         name: user.name,
@@ -238,13 +236,11 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   };
 
-  // Helper function to add or update personal chat
   const addOrUpdatePersonalChat = (contact: Contact, message?: string, timestamp?: string) => {
     setPersonalChats(prev => {
       const existingIndex = prev.findIndex(chat => chat._id === contact._id);
       
       if (existingIndex !== -1) {
-        // Update existing chat
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -253,7 +249,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         };
         return updated;
       } else {
-        // Add new chat
         const newChat: PersonalChat = {
           _id: contact._id,
           name: contact.name,
@@ -585,7 +580,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadGroupMessages(group._id);
 
-    // Mark group messages as read
     try {
       await api.put(`/isRead/group/${group._id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -626,18 +620,15 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadDirectMessages(contact._id);
 
-    // Mark direct messages as read
     try {
       await api.put(`/isRead/personal/${contact._id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Update personal chats unread count
       setPersonalChats(prev => prev.map(chat => 
         chat._id === contact._id ? { ...chat, unreadCount: 0 } : chat
       ));
 
-      // Update direct messages read status
       setDirectMessages(prev =>
         prev.map(m => {
           const readByAsStrings = (m.readBy || []).map(id => String(id));
