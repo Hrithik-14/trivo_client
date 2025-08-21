@@ -12,6 +12,7 @@ export const useHomeGuard = () => {
     useEffect(() => {
         if (!user) {
         router.replace('/')
+        setLoading(false)
         } else if (user.role === 'admin') {
         router.replace('/admin/dashboard')
         }else if (user.role === 'manager') {
