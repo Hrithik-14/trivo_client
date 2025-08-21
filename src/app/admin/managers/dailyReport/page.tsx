@@ -1,10 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Clock, User, Calendar, Check, X } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
 import api from '@/app/api/axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
 import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from "lucide-react";
+// import React, { FC, useState, useEffect } from "react";
+// import api from "@/app/api/axios";
+// import toast from "react-hot-toast";
+// import { format } from "date-fns";
 
 
 type Task = {
@@ -52,6 +60,7 @@ useEffect(() => {
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
 
+      
       const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
       if (firstPending) {
         setSelectedReportId(firstPending._id);
@@ -122,7 +131,7 @@ useEffect(() => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-5 h-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-gray-900">Employees Daily Report</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Managers Daily Report</h1>
               </div>
               <div className="text-sm text-gray-500">
                 {reports.length} report{reports.length !== 1 ? 's' : ''} found
