@@ -82,7 +82,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    const conversations = conversationsRes.data; // array of users you have chats with
+    const conversations = conversationsRes.data; 
 
     for (const conv of conversations) {
       try {
@@ -91,7 +91,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
         });
 
         const unreadCount = messagesRes.data.filter((message: Message) =>
-          message.senderId._id === conv._id && // sender is the other user
+          message.senderId._id === conv._id &&
           !message.readBy.includes(currentUserId)
         ).length;
 

@@ -81,7 +81,6 @@ interface Group {
   unreadCount?: number | undefined;
 }
 
-// New interface for personal chat items in the list
 interface PersonalChat {
   _id: string;
   name: string;
@@ -138,7 +137,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  const [showContactsTab, setShowContactsTab] = useState(false); // New state for browsing all contacts
+  const [showContactsTab, setShowContactsTab] = useState(false); 
   const router = useRouter()
   
   
@@ -217,7 +216,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         return;
       }
       
-      // The API now returns all users with conversation data
       const personalChatsData = res.data.map((user: any) => ({
         _id: user._id,
         name: user.name,
@@ -238,13 +236,11 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   };
 
-  // Helper function to add or update personal chat
   const addOrUpdatePersonalChat = (contact: Contact, message?: string, timestamp?: string) => {
     setPersonalChats(prev => {
       const existingIndex = prev.findIndex(chat => chat._id === contact._id);
       
       if (existingIndex !== -1) {
-        // Update existing chat
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -253,7 +249,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         };
         return updated;
       } else {
-        // Add new chat
         const newChat: PersonalChat = {
           _id: contact._id,
           name: contact.name,
@@ -301,7 +296,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     );
   };
 
-  // Get all contacts for browsing (excluding current user and existing chats)
   const getBrowsableContacts = (): Contact[] => {
     const existingChatIds = new Set(personalChats.map(chat => chat._id));
     return contacts.filter(contact => 
@@ -319,14 +313,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     setSocket(newSocket);
 
-    // Join user's personal room for direct messages
     newSocket.emit("joinUser", currentUserId);
     
     console.log("Socket connected, joined user room:", currentUserId);
 
     newSocket.on("connect", () => {
       console.log("Socket connected successfully");
-      // Re-join user room on reconnection
       newSocket.emit("joinUser", currentUserId);
     });
 
@@ -357,15 +349,13 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       console.log("Current user:", currentUserId);
       console.log("Selected contact:", selectedContact?._id);
       
-      // Add message to current chat if it's the active one
       if (selectedContact && 
           (msg.senderId._id === selectedContact._id || 
-           msg.recieverId === selectedContact._id)) {
+            msg.recieverId === selectedContact._id)) {
         console.log("Adding message to current direct messages");
         setDirectMessages(prev => [...prev, msg]);
       }
       
-      // Update personal chats list
       setPersonalChats(prev => {
         const senderId = msg.senderId._id;
         const receiverId = msg.recieverId;
@@ -377,15 +367,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           messageContent: msg.content
         });
         
-        // Determine which contact this message is about
         const otherUserId = senderId === currentUserId ? receiverId : senderId;
         
-        // Check if this chat already exists
         const existingChatIndex = prev.findIndex(chat => chat._id === otherUserId);
         
         if (existingChatIndex !== -1) {
           console.log("Updating existing personal chat");
-          // Update existing chat
           const updatedChats = [...prev];
           updatedChats[existingChatIndex] = {
             ...updatedChats[existingChatIndex],
@@ -398,9 +385,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           return updatedChats;
         } else {
           console.log("Creating new personal chat");
-          // Create new chat if it doesn't exist and the message is not from current user
           if (senderId !== currentUserId) {
-            // Find the sender in contacts to get their full info
             const senderContact = contacts.find(c => c._id === senderId);
             console.log("Sender contact found:", senderContact);
             
@@ -595,7 +580,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadGroupMessages(group._id);
 
-    // Mark group messages as read
     try {
       await api.put(`/isRead/group/${group._id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -636,18 +620,15 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadDirectMessages(contact._id);
 
-    // Mark direct messages as read
     try {
       await api.put(`/isRead/personal/${contact._id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Update personal chats unread count
       setPersonalChats(prev => prev.map(chat => 
         chat._id === contact._id ? { ...chat, unreadCount: 0 } : chat
       ));
 
-      // Update direct messages read status
       setDirectMessages(prev =>
         prev.map(m => {
           const readByAsStrings = (m.readBy || []).map(id => String(id));
@@ -977,9 +958,9 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                     </>
                   ) : selectedContact ? (
                     <>
-                      {selectedContact.profileImage ? (
+                      {selectedContact?.profileImage ? (
                         <div className='w-[30px] h-[30px] relative'>
-                          <Image src={selectedContact.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
+                          <Image src={selectedContact?.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
                         </div>
                       ) : (
                         <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-md'>

@@ -132,12 +132,17 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       currentProject: report.currentProject,
       startTime: report.startTime,
       endTime: report.endTime,
-      completedTasks: report.completedTasks.filter(task => task.value !== ""),
-      plannedTasks: report.plannedTasks.filter(task => task.value !== ""),
+      completedTasks: report.completedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
+      plannedTasks: report.plannedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
       performance: report.performance || "",
       challenges: report.challenges || "",
-      supportNeeded: report.supportNeeded || ""
-    }));
+      supportNeeded: report.supportNeeded || "",
+      date: report.date
+    }))
         await api.post(
           `report/addReport/${user?.id}`,
           reportsToSubmit,
@@ -194,7 +199,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
 
                 <div className="space-y-6">
-                  {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -278,7 +282,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     </div>
                   </div>
 
-                  {/* Tasks */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -411,7 +414,7 @@ const TaskFieldArray: FC<TaskFieldArrayProps> = ({ control, tasks, name }) => {
               {tasks.length === 0 ? "No tasks available" : "Select a task..."}
             </option>
             {tasks.map((t) => (
-              <option key={t._id} value={t.title}>
+              <option key={t._id} value={t._id}>
                 {t.title}
               </option>
             ))}
@@ -552,7 +555,6 @@ const DailyReport: FC = () => {
     <div className="min-h-screen">
       {isModalOpen && <CreateDailyReport onClose={handleCloseModal} />}
       
-      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
