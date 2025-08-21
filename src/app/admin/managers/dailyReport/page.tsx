@@ -52,6 +52,7 @@ useEffect(() => {
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
 
+      
       const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
       if (firstPending) {
         setSelectedReportId(firstPending._id);
