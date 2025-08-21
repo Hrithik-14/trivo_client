@@ -30,7 +30,6 @@ import toast from "react-hot-toast";
 import { RootState } from '@/app/store'
 import { useSelector } from "react-redux";
 import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
-// import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
 
 interface DailyReportForm {
   employeeId: string;

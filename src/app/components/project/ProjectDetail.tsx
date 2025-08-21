@@ -37,7 +37,8 @@ interface Project {
 }
 
 type Props = {
-    role: string
+    role?: string
+    slug: string;
 }
 
 
@@ -57,15 +58,14 @@ const calculateDuration = (start?: string, end?: string) => {
     }
 };
 
-const ProjectDetail: FC<Props> = ({ role }) => {
+const ProjectDetail: FC<Props> = ({ role, slug }) => {
     const [project, setProject] = useState<Project | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isActive, setIsActive] = useState<boolean | null>(null);
 
 
-    const params = useParams();
-    const projectId = params.slug as string;
+    const projectId = slug
 
     useEffect(() => {
         const fetchProject = async () => {

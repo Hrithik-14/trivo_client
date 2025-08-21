@@ -1,26 +1,27 @@
 'use client'
 
-import UserProfile from '@/app/components/userProfile/[slug]/page'
-import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard'
+
+import EditProfile from '@/app/components/userProfile/edit/[slug]/page'
+import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard'
 import { useParams } from 'next/navigation'
 import React from 'react'
 
 const Profile = () => {
     const params = useParams()
     const userId = params.slug as string
-    const { loading } = useAdminAuthGuard()
+    const { loading } = useManangerAuthGuard()
 
     if (loading) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading project details...</p>
+            <p className="text-gray-600">Loading details...</p>
             </div>
         </div>
     );
     return (
         <div>
-            <UserProfile userId={userId} />
+            <EditProfile userId={userId} />
         </div>
     )
 }

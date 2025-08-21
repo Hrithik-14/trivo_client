@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
@@ -27,8 +28,18 @@ interface Attendence {
   presentCount: number;
 }
 
+interface Admin {
+  _id: string;
+  name:string
+  employeeCode:string
+}
+
+type Project = {
+  total: number;
+  completed:number
+}
 interface ManagerReport {
-  id: string;
+  _id: string;
   reportId: string;
   date: string;
   managerName: string;
@@ -40,15 +51,14 @@ interface ManagerReport {
   dueDate?: string;
   priority?: "high" | "medium" | "low";
   department?: string;
+  submittedBy: Admin;
 }
 
 const Dashboard: FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { loading } = useAdminAuthGuard();
   const [users, setUsers] = useState([]);
-  const [attendenceCount, setAttendenceCount] = useState<
-    Attendence | undefined
-  >();
+  const [attendenceCount, setAttendenceCount] = useState<Attendence | undefined>();
   const [now, setNow] = useState(moment().format("hh:mm A"));
   const [managerReports, setManagerReports] = useState<ManagerReport[]>([]);
   const [reportsLoading, setReportsLoading] = useState(true);
@@ -56,6 +66,7 @@ const Dashboard: FC = () => {
   const [totalReports, setTotalReports] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const reportsPerPage = 5;
+  const [totalProjects, setTotalProjects] = useState<Project | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,6 +74,20 @@ const Dashboard: FC = () => {
     }, 60000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    //projects fetch cheyyan all projects and completed
+    const fetchData = async () => {
+      try {
+        const response = await api.get("/admin/getAllProject");
+        console.log(response.data.stats);
+        setTotalProjects(response.data.stats)
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -81,6 +106,7 @@ const Dashboard: FC = () => {
     const fetch = async () => {
       try {
         const res = await api.get("/statusAttendence");
+        console.log(res.data);
         setAttendenceCount(res.data);
       } catch (err) {
         console.log(err);
@@ -256,13 +282,13 @@ const Dashboard: FC = () => {
               <h2 className="text-xl lg:text-3xl font-bold">Projects</h2>
               <div className="flex gap-5 items-center">
                 <div className="text-lg lg:text-2xl bg-[#FEFCE8] p-2 px-3 text-[#EAB308] border border-[#FDE047]">
-                  25
+                  {totalProjects?.total}
                 </div>
                 <div className="font-medium lg:text-lg">Total Projects</div>
               </div>
               <div className="flex gap-5 items-center">
                 <div className="text-lg lg:text-2xl bg-[#DCFCE7] p-2 px-3 text-[#22C55E] border border-[#86EFAC]">
-                  10
+                  {totalProjects?.completed}
                 </div>
                 <div className="font-medium lg:text-lg">Completed Projects</div>
               </div>
@@ -275,26 +301,6 @@ const Dashboard: FC = () => {
             <h2 className="text-2xl font-bold text-[#3B82F6]">
               Managers Reports
             </h2>
-            <div className="flex gap-3 items-center">
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="border border-[#ddd] rounded px-3 py-1 text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="overdue">Overdue</option>
-              </select>
-              {/* <button className="flex items-center gap-2 px-3 py-1 bg-[#3B82F6] text-white rounded text-sm hover:bg-[#2563EB]">
-                <Download size={14} />
-                Export
-              </button> */}
-            </div>
           </div>
 
           {reportsLoading ? (
@@ -308,46 +314,32 @@ const Dashboard: FC = () => {
                   <thead>
                     <tr className="border-b border-[#ddd]">
                       <th className="p-3 text-left">#</th>
-                      <th className="p-3 text-left">Report ID</th>
+                      <th className="p-3 text-left">ID</th>
                       <th className="p-3 text-left">Date</th>
                       <th className="p-3 text-left">Manager</th>
-                      <th className="p-3 text-left">Title</th>
                       <th className="p-3 text-left">Status</th>
-                      <th className="p-3 text-left">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {managerReports.length > 0 ? (
                       managerReports.map((report, index) => (
                         <tr
-                          key={report.id}
+                          key={report._id}
                           className="border-t border-[#ddd] hover:bg-gray-50"
                         >
                           <td className="p-3">
                             {(currentPage - 1) * reportsPerPage + index + 1}
                           </td>
                           <td className="p-3 font-mono text-sm">
-                            {report.reportId}
+                            {report.submittedBy?.employeeCode}
                           </td>
                           <td className="p-3">{formatDate(report.date)}</td>
                           <td className="p-3">
                             <div>
                               <div className="font-medium">
-                                {report.managerName}
+                                {report.submittedBy?.name}
                               </div>
-                              {report.department && (
-                                <div className="text-xs text-gray-500">
-                                  {report.department}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="max-w-xs truncate"
-                              title={report.title}
-                            >
-                              {report.title}
+                              
                             </div>
                           </td>
                           <td className="p-3">
@@ -357,22 +349,6 @@ const Dashboard: FC = () => {
                               )} border w-fit text-xs px-3 py-1 rounded-full capitalize`}
                             >
                               {report.status.replace("_", " ")}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex gap-2">
-                              <button
-                                className="p-1 hover:bg-gray-100 rounded"
-                                title="View Report"
-                              >
-                                <Eye size={14} className="text-blue-500" />
-                              </button>
-                              <button
-                                className="p-1 hover:bg-gray-100 rounded"
-                                title="Download Report"
-                              >
-                                <Download size={14} className="text-gray-500" />
-                              </button>
                             </div>
                           </td>
                         </tr>
@@ -412,7 +388,7 @@ const Dashboard: FC = () => {
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       (page) => (
                         <button
-                          key={page}
+                          key={page}  
                           onClick={() => setCurrentPage(page)}
                           className={`px-3 py-1 border rounded ${
                             currentPage === page
@@ -502,7 +478,7 @@ const Dashboard: FC = () => {
             <span className="text-sm text-gray-800 font-medium">{now}</span>
           </div>
         </div>
-        <div className="bg-white border border-[#ddd] rounded-md p-2 w-full">
+        {/* <div className="bg-white border border-[#ddd] rounded-md p-2 w-full">
           <h2 className="text-lg font-semibold">Recent Activity</h2>
           <div className="flex gap-5 items-center py-4">
             <div className="w-1 h-1 rounded-full bg-[#22C55E]"></div>
@@ -511,7 +487,7 @@ const Dashboard: FC = () => {
               <p className="text-xs text-[#696969]">2m ago</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

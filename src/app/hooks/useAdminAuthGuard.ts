@@ -10,6 +10,8 @@ export const useAdminAuthGuard = () => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (user === undefined || user === null) return
+        
         if (!user) {
         router.replace('/auth/login')
         } else if (user.role !== 'admin') {

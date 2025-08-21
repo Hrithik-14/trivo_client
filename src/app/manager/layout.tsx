@@ -6,8 +6,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 import { Bell } from "lucide-react"
-
 import DraggableMessenger from "../components/messenger/DraggableMessenger"
+import { RootState } from "../store"
+import { useSelector } from "react-redux"
 
 
 
@@ -57,14 +58,8 @@ interface MainContainerProps {
 
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
-    const [role, setRole] = useState<string | null>(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const parsed = storedUser ? JSON.parse(storedUser) : null;
-        setRole(parsed?.role || null);
-        console.log(storedUser);
-    }, []);
+    const user = useSelector((state: RootState) => state.user.user)
+    
 
     const logout = () => {
         localStorage.removeItem('token');
@@ -74,7 +69,7 @@ export default function RootLayout({ children }: MainContainerProps) {
     };
     
 
-    if (role !== "manager") return children
+    if (user?.role !== "manager") return children
 
     return (
         <>
@@ -93,6 +88,22 @@ export default function RootLayout({ children }: MainContainerProps) {
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
 
                 <nav className="w-30 md:w-50 border-r border-r-[#dddddd] flex flex-col justify-between p-4 bg-white ">
+                    <div className="flex flex-col">
+                        <Link  href={"/manager/profile"} className="border-b border-[#ddd] mb-6">
+                        <div className="flex items-center gap-3 p-3 rounded-lg">
+                            <div className="w-14 h-14 rounded-full relative overflow-hidden ">
+                                <Image src={user?.profileImage || '/avatar.png'} alt="" fill className="rounded-full object-cover" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-sm text-gray-800">
+                                    {user?.name || 'MINHAJ'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {user?.employeeCode || 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                        </Link>
                     <ul className="flex flex-col gap-1">
                     <Link
                         href={"/manager/dashboard"}
@@ -119,7 +130,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         Daily Reports
                     </Link>
                     <Link
-                        href={""}
+                        href={"/manager/attendance"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "" ? "bg-black text-white" : ""
                         }`}
@@ -127,7 +138,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         Attendance
                     </Link>
                     <Link
-                        href={""}
+                        href={"/manager/employee"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "" ? "bg-black text-white" : ""
                         }`}
@@ -142,8 +153,9 @@ export default function RootLayout({ children }: MainContainerProps) {
                     >
                         Employee Reports
                     </Link>
-                    
                     </ul>
+                </div>
+
                     <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">
                     LogOut
                     </button>
