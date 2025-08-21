@@ -132,12 +132,17 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
       currentProject: report.currentProject,
       startTime: report.startTime,
       endTime: report.endTime,
-      completedTasks: report.completedTasks.filter(task => task.value !== ""),
-      plannedTasks: report.plannedTasks.filter(task => task.value !== ""),
+      completedTasks: report.completedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
+      plannedTasks: report.plannedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
       performance: report.performance || "",
       challenges: report.challenges || "",
-      supportNeeded: report.supportNeeded || ""
-    }));
+      supportNeeded: report.supportNeeded || "",
+      date: report.date
+    }))
         await api.post(
           `report/addReport/${user?.id}`,
           reportsToSubmit,
@@ -411,7 +416,7 @@ const TaskFieldArray: FC<TaskFieldArrayProps> = ({ control, tasks, name }) => {
               {tasks.length === 0 ? "No tasks available" : "Select a task..."}
             </option>
             {tasks.map((t) => (
-              <option key={t._id} value={t.title}>
+              <option key={t._id} value={t._id}>
                 {t.title}
               </option>
             ))}

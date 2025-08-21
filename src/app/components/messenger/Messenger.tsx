@@ -301,7 +301,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     );
   };
 
-  // Get all contacts for browsing (excluding current user and existing chats)
   const getBrowsableContacts = (): Contact[] => {
     const existingChatIds = new Set(personalChats.map(chat => chat._id));
     return contacts.filter(contact => 
@@ -319,14 +318,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     setSocket(newSocket);
 
-    // Join user's personal room for direct messages
     newSocket.emit("joinUser", currentUserId);
     
     console.log("Socket connected, joined user room:", currentUserId);
 
     newSocket.on("connect", () => {
       console.log("Socket connected successfully");
-      // Re-join user room on reconnection
       newSocket.emit("joinUser", currentUserId);
     });
 
@@ -357,15 +354,13 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       console.log("Current user:", currentUserId);
       console.log("Selected contact:", selectedContact?._id);
       
-      // Add message to current chat if it's the active one
       if (selectedContact && 
           (msg.senderId._id === selectedContact._id || 
-           msg.recieverId === selectedContact._id)) {
+            msg.recieverId === selectedContact._id)) {
         console.log("Adding message to current direct messages");
         setDirectMessages(prev => [...prev, msg]);
       }
       
-      // Update personal chats list
       setPersonalChats(prev => {
         const senderId = msg.senderId._id;
         const receiverId = msg.recieverId;
@@ -377,15 +372,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           messageContent: msg.content
         });
         
-        // Determine which contact this message is about
         const otherUserId = senderId === currentUserId ? receiverId : senderId;
         
-        // Check if this chat already exists
         const existingChatIndex = prev.findIndex(chat => chat._id === otherUserId);
         
         if (existingChatIndex !== -1) {
           console.log("Updating existing personal chat");
-          // Update existing chat
           const updatedChats = [...prev];
           updatedChats[existingChatIndex] = {
             ...updatedChats[existingChatIndex],
@@ -398,9 +390,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           return updatedChats;
         } else {
           console.log("Creating new personal chat");
-          // Create new chat if it doesn't exist and the message is not from current user
           if (senderId !== currentUserId) {
-            // Find the sender in contacts to get their full info
             const senderContact = contacts.find(c => c._id === senderId);
             console.log("Sender contact found:", senderContact);
             
@@ -977,9 +967,9 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                     </>
                   ) : selectedContact ? (
                     <>
-                      {selectedContact.profileImage ? (
+                      {selectedContact?.profileImage ? (
                         <div className='w-[30px] h-[30px] relative'>
-                          <Image src={selectedContact.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
+                          <Image src={selectedContact?.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
                         </div>
                       ) : (
                         <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-md'>
