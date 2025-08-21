@@ -202,16 +202,11 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
     
     try {
-      console.log('Loading personal chats with token and userId:', { token: token?.substring(0, 20) + '...', currentUserId });
-      
       const res = await api.get('/chat/conversations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Personal chats API response:', res.data);
-      
       if (!res.data || res.data.length === 0) {
-        console.log('No personal chats found from API');
         setPersonalChats([]);
         return;
       }
@@ -228,7 +223,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         profileImage: user.profileImage
       }));
       
-      console.log('Processed personal chats:', personalChatsData);
       setPersonalChats(personalChatsData);
     } catch (error: any) {
       console.error("Failed to load personal chats - full error:", error);
@@ -611,7 +605,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       return;
     }
 
-    console.log("Selecting contact:", contact);
     
     setSelectedContact(contact);
     setSelectedGroup(null);

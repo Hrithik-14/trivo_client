@@ -27,7 +27,7 @@ export default function RootLayout({ children }: MainContainerProps) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         toast.success('Logged out successfully!');
-        window.location.href = '/auth/login';
+        window.location.href = '/';
     };
     
 
