@@ -118,7 +118,6 @@ export default function RootLayout({ children }: MainContainerProps) {
                         </div>
                         </Link>
 
-                        {/* Navigation Links */}
                         <ul className="flex flex-col gap-1">
                         <Link
                             href={"/employee/dashboard"}
