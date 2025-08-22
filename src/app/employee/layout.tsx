@@ -71,7 +71,7 @@ export default function RootLayout({ children }: MainContainerProps) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     toast.success("Logged out successfully!");
-    window.location.href = "/auth/login";
+    window.location.href = "/";
   };
 
   if (role !== "employee") return children;
@@ -111,59 +111,48 @@ export default function RootLayout({ children }: MainContainerProps) {
                             </div>
                         </div>
                         </Link>
+                        <ul className="flex flex-col gap-1">
+                        <Link
+                            href={"/employee/dashboard"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/dashboard" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
+                            href={"/employee/projects/project"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/projects/project" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Projects
+                        </Link>
+                        <Link
+                            href={"/employee/daily-reports"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/daily-reports" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Daily Reports
+                        </Link>
+                        <Link
+                            href={"/employee/attendance"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/attendance" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Attendance
+                        </Link>
+                        
+                        </ul>
+                    </div>
+                    
 
-            {/* Navigation Links */}
-            <ul className="flex flex-col gap-1">
-              <Link
-                href={"/employee/dashboard"}
-                className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                  pathname === "/employee/dashboard"
-                    ? "bg-black text-white"
-                    : ""
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href={"/employee/projects/project"}
-                className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                  pathname === "/employee/projects/project"
-                    ? "bg-black text-white"
-                    : ""
-                }`}
-              >
-                Projects
-              </Link>
-              <Link
-                href={"/employee/daily-reports"}
-                className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                  pathname === "/employee/daily-reports"
-                    ? "bg-black text-white"
-                    : ""
-                }`}
-              >
-                Daily Reports
-              </Link>
-              <Link
-                href={"/employee/attendance"}
-                className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                  pathname === "/employee/attendance"
-                    ? "bg-black text-white"
-                    : ""
-                }`}
-              >
-                Attendance
-              </Link>
-            </ul>
-          </div>
-
-          <button
-            onClick={logout}
-            className="py-2 mx-2 text-sm md:text-base border mb-2"
-          >
-            LogOut
-          </button>
-        </nav>
+                    <button onClick={logout} className="py-2 mx-2 text-sm md:text-base border mb-2">
+                    LogOut
+                    </button>
+                </nav>
 
         <div>
           <DraggableMessenger role="employee" />
