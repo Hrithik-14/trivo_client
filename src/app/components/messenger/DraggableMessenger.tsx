@@ -79,6 +79,29 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
         }
       }
 
+      const conversationsRes = await api.get('/chat/conversations', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const conversations = conversationsRes.data; 
+
+    for (const conv of conversations) {
+      try {
+        const messagesRes = await api.get(`/chat/${conv._id}/messages`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const unreadCount = messagesRes.data.filter((message: Message) =>
+          message.senderId._id === conv._id &&
+          !message.readBy.includes(currentUserId)
+        ).length;
+
+        totalUnreadCount += unreadCount;
+      } catch (error) {
+        console.error(`Failed to check personal messages for user ${conv._id}`, error);
+      }
+    }
+
       setHasUnreadMessages(totalUnreadCount > 0);
     } catch (error) {
       console.error("Failed to check unread messages", error);

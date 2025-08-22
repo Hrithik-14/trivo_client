@@ -43,9 +43,9 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
 
-                if (selectedUser && query === selectedUser.name) {
-      setShowDropdown(false);
-      return;
+    if (selectedUser && query === selectedUser.name) {
+        setShowDropdown(false);
+        return;
     }
 
         if (query.trim() !== '') {

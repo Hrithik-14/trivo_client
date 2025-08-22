@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from "lucide-react";

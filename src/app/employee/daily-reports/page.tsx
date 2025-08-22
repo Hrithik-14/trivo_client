@@ -23,6 +23,7 @@ import {
   Columns4,
   Rows,
   Columns,
+  Trash2,
 } from "lucide-react";
 import api from "@/app/api/axios";
 import { useParams } from "next/navigation";
@@ -30,6 +31,7 @@ import toast from "react-hot-toast";
 import { RootState } from '@/app/store'
 import { useSelector } from "react-redux";
 import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
+import { motion } from "framer-motion";
 
 interface DailyReportForm {
   employeeId: string;
@@ -37,26 +39,16 @@ interface DailyReportForm {
   projectStatus: string;
   startTime: string;
   endTime: string;
-  effectiveHours: string;
   completedTasks: { value: string }[];
   plannedTasks: { value: string }[];
   performance: string;
   challenges: string;
   supportNeeded: string;
+  date: string
 }
 
-interface Report {
-  _id: number;
-  date: string;
-  effectiveHours: string;
-  status: string;
-  completedTasks: Task[];
-  performance: string;
-  plannedTasks: Task[];
-  statusColor: string;
-  challenges: string;
-  submitttedBy: string;
-  submittedDetails?: string;
+interface MultipleDailyReportsForm {
+  reports: DailyReportForm[];
 }
 
 interface Project {
@@ -69,347 +61,383 @@ interface Task {
   _id: string;
 }
 
+interface Report { _id: number; date: Date; effectiveHours: string; status: string; completedTasks: Task[]; performance: string; plannedTasks: Task[]; statusColor: string; challenges: string; submitttedBy: string; submittedDetails?: string; }
+
 const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const user = useSelector((state: RootState) => state.user.user)
+  const user = useSelector((state: RootState) => state.user.user);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [userId, setUserId] = useState<string | null>(null)
-
-  useEffect(() => {
-      const storedUser = localStorage.getItem('user')
-      const parsed = storedUser ? JSON.parse(storedUser) : null
-      setUserId(parsed?.id ?? null)
-    }, [])
-
+  const [tasks, setTasks] = useState<{ [key: number]: Task[] }>({});
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<DailyReportForm>({
+    formState: { errors },
+  } = useForm<MultipleDailyReportsForm>({
     defaultValues: {
-      employeeId: user?.employeeCode,
-      currentProject: "",
-      projectStatus: "",
-      startTime: "",
-      endTime: "",
-      completedTasks: [{ value: "" }],
-      plannedTasks: [{ value: "" }],
-      performance: "",
-      challenges: "",
-      supportNeeded: "",
+      reports: [
+        {
+          employeeId: user?.employeeCode || "",
+          currentProject: "",
+          projectStatus: "",
+          startTime: "",
+          endTime: "",
+          completedTasks: [{ value: "" }],
+          plannedTasks: [{ value: "" }],
+          performance: "",
+          challenges: "",
+          supportNeeded: "",
+          date: new Date().toISOString().split("T")[0],
+        },
+      ],
     },
   });
-  
 
-  const { fields: completedTasks, append: appendCompleted } = useFieldArray({
+  const { fields: reportFields, append: appendReport, remove: removeReport } = useFieldArray({
     control,
-    name: "completedTasks",
-  });
-
-  const { fields: plannedTasks, append: appendPlanned } = useFieldArray({
-    control,
-    name: "plannedTasks",
-  });
-
-  const selectedProjectId = useWatch({
-    control,
-    name: "currentProject",
+    name: "reports",
   });
 
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await api.get(
-          `/getProjectByEmployee/${user?.id}`
-        );
+        const response = await api.get(`/getProjectByEmployee/${user?.id}`);
         setProjects(response.data.projects || []);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
     fetchProject();
-  }, []);
+  }, [user?.id]);
 
-  useEffect(() => {
-    if (selectedProjectId) {
-      const fetchTasks = async () => {
-        try {
-          const response = await api.get(
-            `/project/${selectedProjectId}/user/${user?.id}/tasks`
-          );
-          setTasks(response.data.data || []);
-          console.log(response.data.data);
-        } catch (error) {
-          console.error("Error fetching tasks:", error);
-          setTasks([]);
-        }
-      };
-      fetchTasks();
-    } else {
-      setTasks([]);
+  const handleProjectChange = async (projectId: string, index: number) => {
+    if (!projectId) return setTasks((prev) => ({ ...prev, [index]: [] }));
+    try {
+      const response = await api.get(
+        `/project/${projectId}/user/${user?.id}/tasks`
+      );
+      setTasks((prev) => ({ ...prev, [index]: response.data.data || [] }));
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks((prev) => ({ ...prev, [index]: [] }));
     }
-  }, [selectedProjectId]);
+  };
 
-  const onSubmit = async (data: DailyReportForm) => {
+  const onSubmit = async (data: MultipleDailyReportsForm) => {
     try {
       const token = user?.token;
       if (!token) throw new Error("No authentication token found");
 
-      await api.post(
-        `report/addReport/${user?.id}`,
-        { ...data, projectId: selectedProjectId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const reportsToSubmit = data.reports.map(report => ({
+      currentProject: report.currentProject,
+      startTime: report.startTime,
+      endTime: report.endTime,
+      completedTasks: report.completedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
+      plannedTasks: report.plannedTasks
+        .filter(task => task.value !== "")
+        .map(task => task.value),
+      performance: report.performance || "",
+      challenges: report.challenges || "",
+      supportNeeded: report.supportNeeded || "",
+      date: report.date
+    }))
+        await api.post(
+          `report/addReport/${user?.id}`,
+          reportsToSubmit,
+          { headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } }
+        );
+      
 
-      toast.success("Daily report submitted successfully!");
+      toast.success("All daily reports submitted successfully!");
       onClose();
     } catch (error: any) {
       console.error("Error submitting daily report:", error);
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Failed to submit report");
     }
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto scrollbar-thin">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Daily Report</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Create Daily Report</h2>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-2 transition-colors"
           >
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="p-6 space-y-6">
-            {/* Employee ID and Project */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Employee ID
-                </label>
-                <input
-                  {...register("employeeId", {
-                    required: "Employee ID is required",
-                  })}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none cursor-not-allowed text-gray-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Current Project
-                </label>
-                <select
-                  {...register("currentProject", {
-                    required: "Current project is required",
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                >
-                  <option value="" disabled>
-                    Select a project...
-                  </option>
-                  {projects.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.currentProject && (
-                  <span className="text-red-500 text-xs">
-                    {errors.currentProject.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center mb-4">
-                <Clock className="text-green-600 mr-2" size={20} />
-                <h3 className="text-lg font-medium text-gray-800">
-                  Working Hours
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    {...register("startTime", {
-                      required: "Start time is required",
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  {errors.startTime && (
-                    <span className="text-red-500 text-xs">
-                      {errors.startTime.message}
-                    </span>
+          <div className="p-6 space-y-8">
+            {reportFields.map((report, index) => (
+              <div key={report.id} className="border border-gray-200 rounded-xl p-6 bg-gray-50 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <h3 className="font-semibold text-xl text-gray-800">Daily Report #{index + 1}</h3>
+                  </div>
+                  {reportFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeReport(index)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-2 transition-colors"
+                    >
+                      <Trash2 size={20} />
+                    </button>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    End Time
-                  </label>
-                  <input
-                    type="time"
-                    {...register("endTime", {
-                      required: "End time is required",
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  {errors.endTime && (
-                    <span className="text-red-500 text-xs">
-                      {errors.endTime.message}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center mb-4">
-                <CheckSquare className="text-purple-600 mr-2" size={20} />
-                <h3 className="text-lg font-medium text-gray-800">
-                  Tasks & Activities
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Completed Tasks Dropdown */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Tasks Completed Today
-                  </label>
-                  {completedTasks.map((field, index) => (
-                    <div key={field.id} className="mb-2">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Employee ID
+                      </label>
+                      <input
+                        {...register(`reports.${index}.employeeId`)}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Current Project
+                      </label>
                       <select
-                        {...register(`completedTasks.${index}.value`, {
-                          required: "Please select a completed task",
+                        {...register(`reports.${index}.currentProject`, {
+                          required: "Project is required",
+                          onChange: (e) => handleProjectChange(e.target.value, index),
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-black"
-                        defaultValue=""
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       >
-                        <option value="" disabled>
-                          {tasks.length === 0
-                            ? "No pending tasks available"
-                            : "Select a task..."}
-                        </option>
-                        {tasks.map((item) => (
-                          <option key={item._id} value={item._id}>
-                            {item.title}
+                        <option value="">Select a project...</option>
+                        {projects.map((p) => (
+                          <option key={p._id} value={p._id}>
+                            {p.name}
                           </option>
                         ))}
                       </select>
-                      {errors.completedTasks && (
-                        <span className="text-red-500 text-xs">
-                          {errors.completedTasks.message}
-                        </span>
+                      {errors.reports?.[index]?.currentProject && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertCircle size={16} className="mr-1" />
+                          {errors.reports[index]?.currentProject?.message}
+                        </p>
                       )}
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => appendCompleted({ value: "" })}
-                    className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
-                  >
-                    <Plus size={16} className="mr-1" /> Add Task
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Planned Tasks for Tomorrow
-                  </label>
-                  {plannedTasks.map((field, index) => (
-                    <div key={field.id} className="mb-2">
-                      <select
-                        {...register(`plannedTasks.${index}.value`, {
-                          required: "Please select a planned task",
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        defaultValue=""
-                      >
-                        <option value="" disabled>
-                          {tasks.length === 0
-                            ? "No pending tasks available"
-                            : "Select a task..."}
-                        </option>
-                        {tasks.map((item) => (
-                          <option key={item._id} value={item._id}>
-                            {item.title}
-                          </option>
-                        ))}
-                      </select>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+                      <input 
+                      type="date"
+                      {...register(`reports.${index}.date`)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:outline-none"
+                      />
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => appendPlanned({ value: "" })}
-                    className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
-                  >
-                    <Plus size={16} className="mr-1" /> Add Task
-                  </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Start Time
+                      </label>
+                      <input
+                        type="time"
+                        {...register(`reports.${index}.startTime`, { required: "Start time is required" })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                      {errors.reports?.[index]?.startTime && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertCircle size={16} className="mr-1" />
+                          {errors.reports[index]?.startTime?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        End Time
+                      </label>
+                      <input
+                        type="time"
+                        {...register(`reports.${index}.endTime`, { required: "End time is required" })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                      {errors.reports?.[index]?.endTime && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertCircle size={16} className="mr-1" />
+                          {errors.reports[index]?.endTime?.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Tasks Completed
+                      </label>
+                      <TaskFieldArray
+                        control={control}
+                        tasks={tasks[index] || []}
+                        name={`reports.${index}.completedTasks`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Planned Tasks
+                      </label>
+                      <TaskFieldArray
+                        control={control}
+                        tasks={tasks[index] || []}
+                        name={`reports.${index}.plannedTasks`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 flex gap-5 ">
+                    <div className="w-full h-[100%] ">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Performance & Key Achievements
+                      </label>
+                      <textarea
+                        {...register(`reports.${index}.performance`)}
+                        placeholder="Describe your key achievements"
+                        rows={3}
+                        className="w-full px-4 py-3 min-h-57 border h-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Challenges Faced
+                        </label>
+                        <textarea
+                          {...register(`reports.${index}.challenges`)}
+                          placeholder="Describe any challenges..."
+                          rows={3}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Support Needed
+                        </label>
+                        <textarea
+                          {...register(`reports.${index}.supportNeeded`)}
+                          placeholder="Describe any support you need"
+                          rows={3}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
 
-            {/* Performance & Challenges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-gray-800 mb-2">
-                  Performance & Feedback
-                </h3>
-                <textarea
-                  placeholder="key acheivemnets"
-                  {...register("performance", {
-                    required: "Key achievements are required",
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-24"
-                />
-                {errors.performance && (
-                <span className="text-red-500 text-xs">
-                  {errors.performance.message}
-                </span>
-              )}
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-gray-800 mb-2">
-                  Challenges & Support
-                </h3>
-                <textarea
-                  placeholder="Challenges faced"
-                  {...register("challenges")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-10 mb-4 scrollbar-thin"
-                />
-                <textarea
-                  placeholder="support needed"
-                  {...register("supportNeeded")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-10 scrollbar-thin overflow-auto"
-                />
-              </div>
+            <div>
+              <button
+                type="button"
+                onClick={() =>
+                  appendReport({
+                    employeeId: user?.employeeCode || "",
+                    currentProject: "",
+                    projectStatus: "",
+                    startTime: "",
+                    endTime: "",
+                    completedTasks: [{ value: "" }],
+                    plannedTasks: [{ value: "" }],
+                    performance: "",
+                    challenges: "",
+                    supportNeeded: "",
+                    date: new Date().toISOString().split("T")[0],
+                  })
+                }
+                className="inline-flex items-center px-6 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
+              >
+                <Plus size={20} className="mr-2" />
+                Add Another Report
+              </button>
             </div>
           </div>
 
-          <div className="flex justify-end p-6 border-t border-gray-200">
-            <button
-              type="submit"
-              disabled={isSubmitting || !isValid}
-              className={`px-6 py-2 rounded-md text-white font-medium ${
-                isSubmitting || !isValid
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Report"}
-            </button>
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+            <div className="flex justify-end space-x-4">
+              <button
+                type="submit"
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 flex items-center space-x-2"
+              >
+                <span>Submit Reports</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
+    </div>
+  );
+};
+
+
+interface TaskFieldArrayProps {
+  control: any;
+  tasks: Task[];
+  name: string;
+}
+
+const TaskFieldArray: FC<TaskFieldArrayProps> = ({ control, tasks, name }) => {
+  const { fields, append, remove } = useFieldArray({ control, name });
+
+  return (
+    <div className="space-y-3">
+      {fields.map((field, idx) => (
+        <div key={field.id} className="flex items-center space-x-2">
+          <select
+            {...control.register(`${name}.${idx}.value`, { required: true })}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              {tasks.length === 0 ? "No tasks available" : "Select a task..."}
+            </option>
+            {tasks.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
+          {fields.length > 1 && (
+            <button
+              type="button"
+              onClick={() => remove(idx)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-2 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => append({ value: "" })}
+        className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+      >
+        <Plus size={16} className="mr-1" />
+        Add Task
+      </button>
     </div>
   );
 };
@@ -527,7 +555,6 @@ const DailyReport: FC = () => {
     <div className="min-h-screen">
       {isModalOpen && <CreateDailyReport onClose={handleCloseModal} />}
       
-      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -571,29 +598,36 @@ const DailyReport: FC = () => {
             </select>
           </div>
           <div className="bg-[#eaeaea] p-1 rounded-xl inline-flex">
-          <button
-            onClick={() => setShowStyle(false)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              !showStyle 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Columns className="w-4 h-4" />
-            <span className="font-medium text-sm">Grid</span>
-          </button>
-          <button
-            onClick={() => setShowStyle(true)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              showStyle 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Rows className="w-4 h-4" />
-            <span className="font-medium text-sm">Rows</span>
-          </button>
-        </div>
+            <motion.button
+              onClick={() => setShowStyle(false)}
+              animate={{
+                backgroundColor: !showStyle ? "#fff" : "#eaeaea",
+                color: !showStyle ? "#2563eb" : "#4b5563",
+                scale: !showStyle ? 1.05 : 1,
+                boxShadow: !showStyle ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              <Columns className="w-4 h-4" />
+              <span className="font-medium text-sm">Grid</span>
+            </motion.button>
+
+            <motion.button
+              onClick={() => setShowStyle(true)}
+              animate={{
+                backgroundColor: showStyle ? "#fff" : "#eaeaea",
+                color: showStyle ? "#2563eb" : "#4b5563",
+                scale: showStyle ? 1.05 : 1,
+                boxShadow: showStyle ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              <Rows className="w-4 h-4" />
+              <span className="font-medium text-sm">Rows</span>
+            </motion.button>
+          </div>
         </div>
 
         <div className={` ${showStyle === true ? 'flex flex-col gap-5' : 'grid grid-cols-2 gap-5'}`}>

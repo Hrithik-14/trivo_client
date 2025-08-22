@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use client'
@@ -63,6 +64,7 @@ interface DirectMessage {
     employeeCode: string;
   };
   recieverId: string;
+  readBy?: string[];
 }
 
 interface Group {
@@ -79,7 +81,6 @@ interface Group {
   unreadCount?: number | undefined;
 }
 
-// New interface for personal chat items in the list
 interface PersonalChat {
   _id: string;
   name: string;
@@ -136,9 +137,10 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  const [showContactsTab, setShowContactsTab] = useState(false); // New state for browsing all contacts
+  const [showContactsTab, setShowContactsTab] = useState(false); 
   const router = useRouter()
-
+  
+  
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     setToken(storedToken);
@@ -158,6 +160,14 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       message.groupId === groupId && 
       message.senderId._id !== currentUserId && 
       !message.readBy.includes(currentUserId)
+    ).length;
+  };
+
+  const calculateDirectUnreadCount = (contactId: string, directMessages: DirectMessage[]): number => {
+    return directMessages.filter(message => 
+      message.senderId._id === contactId && 
+      message.recieverId === currentUserId &&
+      (!message.readBy || !message.readBy.includes(currentUserId))
     ).length;
   };
 
@@ -206,47 +216,17 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         return;
       }
       
-      const personalChatsData = await Promise.all(
-        res.data.map(async (contact: Contact) => {
-          try {
-            const messagesRes = await api.get(`/chat/${contact._id}/messages`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            const messages = messagesRes.data || [];
-            const lastMessage = messages[messages.length - 1];
-            
-            const unreadCount = messages.filter((msg: DirectMessage) => 
-              msg.senderId._id !== currentUserId
-            ).length;
-            
-            return {
-              _id: contact._id,
-              name: contact.name,
-              employeeCode: contact.employeeCode,
-              email: contact.email,
-              lastMessage: lastMessage?.content || 'Start a conversation',
-              lastMessageTime: lastMessage?.createdAt || contact.createdAt,
-              unreadCount: 0,
-              type: 'personal' as const,
-              profileImage: contact.profileImage
-            };
-          } catch (error) {
-            console.error(`Failed to load messages for contact ${contact._id}:`, error);
-            return {
-              _id: contact._id,
-              name: contact.name,
-              employeeCode: contact.employeeCode,
-              email: contact.email,
-              lastMessage: 'Start a conversation',
-              lastMessageTime: contact.createdAt || new Date().toISOString(),
-              unreadCount: 0,
-              type: 'personal' as const,
-              profileImage: contact.profileImage
-            };
-          }
-        })
-      );
+      const personalChatsData = res.data.map((user: any) => ({
+        _id: user._id,
+        name: user.name,
+        employeeCode: user.employeeCode,
+        email: user.email,
+        lastMessage: user.lastMessage || 'Start a conversation',
+        lastMessageTime: user.lastMessageTime || user.createdAt,
+        unreadCount: user.unreadCount || 0,
+        type: 'personal' as const,
+        profileImage: user.profileImage
+      }));
       
       console.log('Processed personal chats:', personalChatsData);
       setPersonalChats(personalChatsData);
@@ -256,13 +236,11 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   };
 
-  // Helper function to add or update personal chat
   const addOrUpdatePersonalChat = (contact: Contact, message?: string, timestamp?: string) => {
     setPersonalChats(prev => {
       const existingIndex = prev.findIndex(chat => chat._id === contact._id);
       
       if (existingIndex !== -1) {
-        // Update existing chat
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -271,7 +249,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         };
         return updated;
       } else {
-        // Add new chat
         const newChat: PersonalChat = {
           _id: contact._id,
           name: contact.name,
@@ -319,7 +296,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     );
   };
 
-  // Get all contacts for browsing (excluding current user and existing chats)
   const getBrowsableContacts = (): Contact[] => {
     const existingChatIds = new Set(personalChats.map(chat => chat._id));
     return contacts.filter(contact => 
@@ -337,14 +313,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     setSocket(newSocket);
 
-    // Join user's personal room for direct messages
     newSocket.emit("joinUser", currentUserId);
     
     console.log("Socket connected, joined user room:", currentUserId);
 
     newSocket.on("connect", () => {
       console.log("Socket connected successfully");
-      // Re-join user room on reconnection
       newSocket.emit("joinUser", currentUserId);
     });
 
@@ -375,15 +349,13 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       console.log("Current user:", currentUserId);
       console.log("Selected contact:", selectedContact?._id);
       
-      // Add message to current chat if it's the active one
       if (selectedContact && 
           (msg.senderId._id === selectedContact._id || 
-           msg.recieverId === selectedContact._id)) {
+            msg.recieverId === selectedContact._id)) {
         console.log("Adding message to current direct messages");
         setDirectMessages(prev => [...prev, msg]);
       }
       
-      // Update personal chats list
       setPersonalChats(prev => {
         const senderId = msg.senderId._id;
         const receiverId = msg.recieverId;
@@ -395,15 +367,12 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           messageContent: msg.content
         });
         
-        // Determine which contact this message is about
         const otherUserId = senderId === currentUserId ? receiverId : senderId;
         
-        // Check if this chat already exists
         const existingChatIndex = prev.findIndex(chat => chat._id === otherUserId);
         
         if (existingChatIndex !== -1) {
           console.log("Updating existing personal chat");
-          // Update existing chat
           const updatedChats = [...prev];
           updatedChats[existingChatIndex] = {
             ...updatedChats[existingChatIndex],
@@ -416,9 +385,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           return updatedChats;
         } else {
           console.log("Creating new personal chat");
-          // Create new chat if it doesn't exist and the message is not from current user
           if (senderId !== currentUserId) {
-            // Find the sender in contacts to get their full info
             const senderContact = contacts.find(c => c._id === senderId);
             console.log("Sender contact found:", senderContact);
             
@@ -437,7 +404,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
               console.log("Adding new personal chat:", newPersonalChat);
               return [...prev, newPersonalChat];
             } else {
-              // If sender contact not found in contacts, create a basic one
               console.log("Sender not found in contacts, creating basic contact");
               const newPersonalChat: PersonalChat = {
                 _id: senderId,
@@ -470,7 +436,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       console.log("Cleaning up socket connection");
       newSocket.disconnect();
     };
-  }, [token, currentUserId, contacts]); // Removed selectedGroup and selectedContact from dependencies
+  }, [token, currentUserId, contacts]);
 
   useEffect(() => {
     if (token) {
@@ -633,14 +599,13 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         })
       );
     } catch (error) {
-      console.error("Failed to mark messages as read", error);
+      console.error("Failed to mark group messages as read", error);
     }
 
     socket?.emit("joinGroup", group._id);
   };
 
   const handleSelectContact = async (contact: Contact) => {
-    // Prevent selecting self
     if (contact._id === currentUserId) {
       toast.error("You cannot message yourself");
       return;
@@ -655,17 +620,35 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
     await loadDirectMessages(contact._id);
 
-    // Join the direct chat room for real-time messaging
+    try {
+      await api.put(`/isRead/personal/${contact._id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setPersonalChats(prev => prev.map(chat => 
+        chat._id === contact._id ? { ...chat, unreadCount: 0 } : chat
+      ));
+
+      setDirectMessages(prev =>
+        prev.map(m => {
+          const readByAsStrings = (m.readBy || []).map(id => String(id));
+          if (m.senderId._id === contact._id && !readByAsStrings.includes(currentUserId)) {
+            return { ...m, readBy: [...readByAsStrings, currentUserId] };
+          }
+          return m;
+        })
+      );
+    } catch (error) {
+      console.error("Failed to mark direct messages as read", error);
+    }
+
     console.log("Joining direct chat room for:", contact._id);
     socket?.emit("joinDirectChat", { 
       userId: currentUserId, 
       contactId: contact._id 
     });
 
-    // Add to personal chats if not already there
     addOrUpdatePersonalChat(contact);
-
-    // Switch back to main chat list from contacts tab
     setShowContactsTab(false);
   };
 
@@ -678,11 +661,9 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         await handleSelectGroup(group);
       }
     } else {
-      // For personal chats, we need to find or create the contact object
       let contact = contacts.find(c => c._id === chatItem._id);
       
       if (!contact) {
-        // If contact not found in contacts list, create it from chat item
         contact = {
           _id: chatItem._id,
           name: chatItem.name,
@@ -739,7 +720,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           createdAt: new Date().toISOString()
         });
 
-        // Update personal chats list
         addOrUpdatePersonalChat(selectedContact, messageText, new Date().toISOString());
       }
 
@@ -760,7 +740,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     (chat.employeeCode && chat.employeeCode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Filter out current user from modal contacts
   const filteredModalContacts = contacts.filter(contact =>
     (
       contact.name.toLowerCase().includes(contactSearchQuery.toLowerCase()) ||
@@ -770,7 +749,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     contact._id !== currentUserId
   );
 
-  // Filter browsable contacts for the contacts tab
   const browsableContacts = getBrowsableContacts();
   const filteredBrowsableContacts = browsableContacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -783,29 +761,28 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       {activeArea === 'list' && (
         <div className="w-full h-full overflow-y-auto scrollbar-thin bg-white rounded-md flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
               {role === 'admin' && (
-                <button 
-                  onClick={() => setShowGroupModal(true)}
-                  className="h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center gap-2 px-4 justify-center text-white transition-colors"
-                >
-                  <Plus size={15} />
-                  <p>Create Group</p>
-                </button>
+                <div className="flex items-center justify-between mb-4">
+                    <button 
+                      onClick={() => setShowGroupModal(true)}
+                      className="h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center gap-2 px-4 justify-center text-white transition-colors"
+                    >
+                      <Plus size={15} />
+                      <p>Create Group</p>
+                    </button>
+                  <button 
+                    onClick={() => setShowContactsTab(!showContactsTab)}
+                    className={`h-8 rounded-full flex items-center gap-2 px-4 justify-center transition-colors ${
+                      showContactsTab 
+                      ? 'bg-gray-500 hover:bg-gray-600 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                      >
+                    <Users size={15} />
+                    <p>{showContactsTab ? 'Back to Chats' : 'Browse Contacts'}</p>
+                  </button>
+                </div>
               )}
-              
-              <button 
-                onClick={() => setShowContactsTab(!showContactsTab)}
-                className={`h-8 rounded-full flex items-center gap-2 px-4 justify-center transition-colors ${
-                  showContactsTab 
-                    ? 'bg-gray-500 hover:bg-gray-600 text-white' 
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                <Users size={15} />
-                <p>{showContactsTab ? 'Back to Chats' : 'Browse Contacts'}</p>
-              </button>
-            </div>
             
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={13} />
@@ -821,7 +798,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
 
           <div className="flex-1">
             {showContactsTab ? (
-              // Browse all contacts tab
               filteredBrowsableContacts.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
                   <p>No contacts found to start new conversations</p>
@@ -863,7 +839,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                 ))
               )
             ) : (
-              // Regular chat list
               filteredChats.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
                   <p>No chats found</p>
@@ -983,9 +958,9 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                     </>
                   ) : selectedContact ? (
                     <>
-                      {selectedContact.profileImage ? (
+                      {selectedContact?.profileImage ? (
                         <div className='w-[30px] h-[30px] relative'>
-                          <Image src={selectedContact.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
+                          <Image src={selectedContact?.profileImage} alt='Contact profile' fill className='rounded-full object-cover object-center' />
                         </div>
                       ) : (
                         <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-md'>
@@ -1007,7 +982,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                     </button>
                     {groupList && 
                       <ul className='bg-white border border-[#ddd] absolute top-25 right-0 w-40 max-h-50 overflow-y-auto scrollbar-thin z-10 shadow-lg'>
-                        <li className='border-b p-2 border-[#ddd] text-xs font-semibold bg-gray-50'>{selectedGroup.createdBy.name}</li>
+                        <li className='border-b p-2 border-[#ddd] text-xs font-semibold bg-gray-50' onClick={() => handleSelectContact(selectedGroup.createdBy)}>{selectedGroup.createdBy.name}</li>
                         {selectedGroup.members
                           .filter(m => m._id !== currentUserId)
                           .map(m => (

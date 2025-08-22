@@ -8,6 +8,7 @@ import { RootState } from "@/app/store";
 import { Calendar, Clock, Columns, Plus, Rows } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
 interface Report {
     id: string;
@@ -322,29 +323,36 @@ const ManagerReport = () => {
             </select>
           </div>
           <div className="bg-[#eaeaea] p-1 rounded-xl inline-flex">
-          <button
-            onClick={() => setShowStyle(false)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              !showStyle  
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Columns className="w-4 h-4" />
-            <span className="font-medium text-sm">Grid</span>
-          </button>
-          <button
-            onClick={() => setShowStyle(true)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              showStyle 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Rows className="w-4 h-4" />
-            <span className="font-medium text-sm">Rows</span>
-          </button>
-        </div>
+            <motion.button
+              onClick={() => setShowStyle(false)}
+              animate={{
+                backgroundColor: !showStyle ? "#fff" : "#eaeaea",
+                color: !showStyle ? "#2563eb" : "#4b5563",
+                scale: !showStyle ? 1.05 : 1,
+                boxShadow: !showStyle ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              <Columns className="w-4 h-4" />
+              <span className="font-medium text-sm">Grid</span>
+            </motion.button>
+
+            <motion.button
+              onClick={() => setShowStyle(true)}
+              animate={{
+                backgroundColor: showStyle ? "#fff" : "#eaeaea",
+                color: showStyle ? "#2563eb" : "#4b5563",
+                scale: showStyle ? 1.05 : 1,
+                boxShadow: showStyle ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              <Rows className="w-4 h-4" />
+              <span className="font-medium text-sm">Rows</span>
+            </motion.button>
+          </div>
         </div>
 
             <div className={`space-y-4 ${showStyle === true ? '' : 'grid grid-cols-2 gap-5'}`}>
