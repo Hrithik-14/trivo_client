@@ -463,6 +463,7 @@ const Managers: FC = () => {
               />
             )}
 
+
             </div>
             <h2>{manager.name}</h2>
           </div>

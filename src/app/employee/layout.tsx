@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use client'
+"use client";
 
-import React, { useState, useEffect, ReactNode } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import toast from "react-hot-toast"
-import { Bell } from "lucide-react"
-import DraggableMessenger from "../components/messenger/DraggableMessenger"
-
+import React, { useState, useEffect, ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
+import { Bell } from "lucide-react";
+import DraggableMessenger from "../components/messenger/DraggableMessenger";
 
 const LiveClock = () => {
   const [dates, setDates] = useState<string>("");
@@ -19,26 +18,24 @@ const LiveClock = () => {
     const updateTime = () => {
       const now = new Date();
 
-        const hours = now.getHours() % 12 || 12;
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+      const hours = now.getHours() % 12 || 12;
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = now.getHours() >= 12 ? "PM" : "AM";
 
       const day = now.getDate().toString().padStart(2, "0");
       const month = (now.getMonth() + 1).toString().padStart(2, "0");
       const year = now.getFullYear();
       const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
 
+      const formatted = `${hours}:${minutes} ${ampm} `;
 
-        const formatted = `${hours}:${minutes} ${ampm} `
+      const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
+      setTimes(formatted);
+      setDates(formatedDate);
+    };
 
-        const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
-        setTimes(formatted);
-        setDates(formatedDate);
-        };
-
-
-        updateTime();
-        const interval = setInterval(updateTime, 1000);
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -55,25 +52,20 @@ interface MainContainerProps {
   children: ReactNode;
 }
 
-
-
 export default function RootLayout({ children }: MainContainerProps) {
-    const pathname = usePathname();
-    const [role, setRole] = useState<string | null>(null);
-    const [user, setUser] = useState<any>(null);
+  const pathname = usePathname();
+  const [role, setRole] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const parsed = storedUser ? JSON.parse(storedUser) : null;
-        setRole(parsed?.role || null);
-
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const parsed = storedUser ? JSON.parse(storedUser) : null;
+    setRole(parsed?.role || null);
 
     setUser(parsed);
 
-        console.log(storedUser);
-    }, []);
+    console.log(storedUser);
+  }, []);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -92,7 +84,9 @@ export default function RootLayout({ children }: MainContainerProps) {
             <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
           </div>
           <div className="flex items-center gap-6">
-            <Bell size={18} />
+            <Link href="/employee/notification" className="cursor-pointer">
+              <Bell size={18} />
+            </Link>
             <LiveClock />
           </div>
         </nav>
@@ -117,7 +111,6 @@ export default function RootLayout({ children }: MainContainerProps) {
                             </div>
                         </div>
                         </Link>
-
                         <ul className="flex flex-col gap-1">
                         <Link
                             href={"/employee/dashboard"}
@@ -161,16 +154,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </button>
                 </nav>
 
+        <div>
+          <DraggableMessenger role="employee" />
+        </div>
 
-                <div>
-                    <DraggableMessenger role="employee"/>
-                </div>
-
-                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
-            </div>
-        </>
-    )
-
-
+        <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">
+          {children}
+        </main>
+      </div>
+    </>
+  );
 }
-

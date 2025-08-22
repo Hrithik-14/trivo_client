@@ -1,4 +1,5 @@
-'use client'
+
+"use client";
 
 import React, { useState, useEffect, ReactNode } from "react"
 import Image from "next/image"
@@ -14,47 +15,46 @@ import { useSelector } from "react-redux"
 
 
 const LiveClock = () => {
-    const [dates, setDates] = useState<string>('');
-    const [times, setTimes] = useState<string>('');
+  const [dates, setDates] = useState<string>("");
+  const [times, setTimes] = useState<string>("");
 
-    useEffect(() => {
-        const updateTime = () => {
-        const now = new Date();
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
 
-        const hours = now.getHours() % 12 || 12;
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+      const hours = now.getHours() % 12 || 12;
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = now.getHours() >= 12 ? "PM" : "AM";
+      
+      const day = now.getDate().toString().padStart(2, "0");
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const year = now.getFullYear();
+      const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
+      const formatted = `${hours}:${minutes} ${ampm} `;
 
-        const day = now.getDate().toString().padStart(2, '0');
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const year = now.getFullYear();
-        const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
-        const formatted = `${hours}:${minutes} ${ampm} `
+      const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
+      setTimes(formatted);
+      setDates(formatedDate);
+    };
+    
+    updateTime(); // run once immediately
+    const interval = setInterval(updateTime, 1000);
 
-        const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
-        setTimes(formatted);
-        setDates(formatedDate);
-        };
+    return () => clearInterval(interval);
+  }, []);
+    
 
-        updateTime(); // run once immediately
-        const interval = setInterval(updateTime, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    return (
-        <div className=" text-sm flex flex-col justify-end items-end rounded">
-            <p>{times}</p>
-            <p>{dates}</p>
-        </div>
-    );
+  return (
+    <div className=" text-sm flex flex-col justify-end items-end rounded">
+      <p>{times}</p>
+      <p>{dates}</p>
+    </div>
+  );
 };
 
 interface MainContainerProps {
-    children: ReactNode;
+  children: ReactNode;
 }
-
-
 
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
@@ -71,19 +71,21 @@ export default function RootLayout({ children }: MainContainerProps) {
 
     if (user?.role !== "manager") return children
 
-    return (
-        <>
-            <header>
-                <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
-                    <div>
-                    <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <Bell size={18} />
-                        <LiveClock />
-                    </div>
-                </nav>
-                </header>
+  return (
+    <>
+      <header>
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5 z-20">
+          <div>
+            <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
+          </div>
+          <div className="flex items-center gap-6">
+              <Link href="/manager/notification" className="cursor-pointer">
+              <Bell size={18} />
+            </Link>
+            <LiveClock />
+          </div>
+        </nav>
+      </header>
 
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
 
@@ -161,13 +163,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </button>
                 </nav>
 
-                <div>
-                    <DraggableMessenger role="manager"/>
-                </div>
+        <div>
+          <DraggableMessenger role="manager" />
+        </div>
 
-
-                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
-            </div>
-        </>
-    )
+        <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">
+          {children}
+        </main>
+      </div>
+    </>
+  );
 }
