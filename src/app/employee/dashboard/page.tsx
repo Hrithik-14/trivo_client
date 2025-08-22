@@ -36,6 +36,23 @@ const calculateElapsedTime = (signInTime: string): string => {
   return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
 }
 
+const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
+  const todayDateStr = new Date().toISOString().split('T')[0]
+  const signInDate = new Date(`${todayDateStr}T${signInTime}`)
+  const signOutDate = new Date(`${todayDateStr}T${signOutTime}`)
+
+  let diffMs = signOutDate.getTime() - signInDate.getTime()
+  if (diffMs < 0) diffMs = 0
+
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const hrs = Math.floor(totalSeconds / 3600)
+  const mins = Math.floor((totalSeconds % 3600) / 60)
+  const secs = totalSeconds % 60
+
+  return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
+}
+
+
 const MarkAttendanceButton: React.FC<{
   userId: string | null
   onAttendanceUpdated: () => void
@@ -132,24 +149,30 @@ const EmployeeDashboard = () => {
     }
   }, [user?.id])
 
-  useEffect(() => {
-    if (attendance?.signInTime && !attendance.signOutTime) {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+useEffect(() => {
+  if (attendance?.signInTime && !attendance.signOutTime) {
+    if (intervalRef.current) clearInterval(intervalRef.current)
 
-      setTimer(calculateElapsedTime(attendance.signInTime))
+    setTimer(calculateElapsedTime(attendance.signInTime))
 
-      intervalRef.current = setInterval(() => {
-        setTimer(calculateElapsedTime(attendance.signInTime!))
-      }, 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      setTimer('00:00:00')
-    }
+    intervalRef.current = setInterval(() => {
+      setTimer(calculateElapsedTime(attendance.signInTime!))
+    }, 1000)
+  } else if (attendance?.signInTime && attendance?.signOutTime) {
+    if (intervalRef.current) clearInterval(intervalRef.current)
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [attendance])
+    setTimer(calculateWorkedTime(attendance.signInTime, attendance.signOutTime))
+  } else {
+    // No sign-in yet
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    setTimer('00:00:00')
+  }
+
+  return () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+  }
+}, [attendance])
+
 
   useEffect(() => {
     const fetchProject = async () => {
