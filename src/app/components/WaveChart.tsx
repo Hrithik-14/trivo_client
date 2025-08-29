@@ -27,7 +27,8 @@ const WaveChart: React.FC<WaveChartProps> = ({ userId }) => {
     const fetchData = async () => {
       try {
         const res = await api.get(`/attendance/${userId}`);
-        setData(res.data);
+        const latestFive = res.data.slice(-5);
+        setData(latestFive);
         console.log(res.data);
       } catch (err) {
         console.error(err);

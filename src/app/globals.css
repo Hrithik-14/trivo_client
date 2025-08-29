@@ -23,3 +23,28 @@
   scrollbar-width:none;
   scrollbar-color: #ddd transparent;
 }
+
+.rhap_container {
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.rhap_controls-section {
+  justify-content: flex-start !important;
+}
+
+.rhap_progress-bar {
+  height: 3px !important;
+  border-radius: 2px;
+}
+
+.rhap_progress-indicator {
+  width: 20px !important;
+  height: 10px !important;
+  top: -3px !important;
+}
+
+.rhap_current-time,
+.rhap_time {
+  font-size: 12px !important;
+}

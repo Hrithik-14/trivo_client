@@ -51,7 +51,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             description,
         });
 
-        setMessage("✅ Manager report submitted successfully!");
+        setMessage("Manager report submitted successfully!");
         setStartTime("");
         setEndTime("");
         setDescription("");
@@ -63,7 +63,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         }, 500);
         
         } catch (error: any) {
-        setMessage(❌ ${error.response?.data?.message || "Error submitting report"});
+        setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
         } finally {
         setLoading(false);
         }
@@ -211,8 +211,8 @@ const ManagerReport = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const response = await api.get(/report/getReportsByEmployee/${user?.id}, {
-          headers: { Authorization: Bearer ${user?.token} },
+        const response = await api.get(`/report/getReportsByEmployee/${user?.id}`, {
+          headers: { Authorization:` Bearer ${user?.token}` },
         });
         
         if (response.data && response.data.report) {
@@ -246,8 +246,8 @@ const ManagerReport = () => {
     
     try {
 
-      const response = await api.get(/report/getReportsByEmployee/${user?.id},
-        { headers: { Authorization: Bearer ${user?.token} } }
+      const response = await api.get(`/report/getReportsByEmployee/${user?.id}`,
+        { headers: { Authorization: `Bearer ${user?.token}` } }
       );
 
       setReports(Array.isArray(response.data.report) ? response.data.report : []);
@@ -354,7 +354,7 @@ const ManagerReport = () => {
           </div>
         </div>
 
-            <div className={space-y-4 ${showStyle === true ? '' : 'grid grid-cols-2 gap-5'}}>
+            <div className={`space-y-4 ${showStyle === true ? '' : 'grid grid-cols-2 gap-5'}`}>
                 {filteredReports.length > 0 ? (
                   filteredReports.map((report, index) => (
                     <div key={report.id || index} className="p-6 bg-white hover:bg-gray-50 rounded border border-[#ddd] h-fit">
