@@ -94,6 +94,7 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
       console.log(`Marking attendance: ${type} for user: ${employeeId}`)
       const res = await api.post('/attendance', { employeeId, type })
       console.log('Attendance marked:', res.data)
+      // Notify parent to refresh attendance data
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
