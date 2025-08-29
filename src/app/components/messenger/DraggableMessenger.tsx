@@ -146,7 +146,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
 
       {isOpen && (
         <Rnd
-          size={{ width: 400, height: 500 }}
+          size={{ width: 500, height: 600 }}
           position={position}
           bounds="window"
           onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
@@ -155,7 +155,7 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
           className="fixed z-50 bg-white rounded-lg shadow-2xl"
         >
           <div className="flex flex-col h-full">
-            <div className="drag-handle bg-blue-500 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
+            <div className="drag-handle bg-blue-400 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
               <h3 className="font-semibold text-sm">Messenger</h3>
               <button
                 onClick={() => setIsOpen(false)}
