@@ -1,4 +1,5 @@
-'use client'
+
+"use client";
 
 import React, { useState, useEffect, ReactNode } from "react"
 import Image from "next/image"
@@ -14,47 +15,46 @@ import { useSelector } from "react-redux"
 
 
 const LiveClock = () => {
-    const [dates, setDates] = useState<string>('');
-    const [times, setTimes] = useState<string>('');
+  const [dates, setDates] = useState<string>("");
+  const [times, setTimes] = useState<string>("");
 
-    useEffect(() => {
-        const updateTime = () => {
-        const now = new Date();
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
 
-        const hours = now.getHours() % 12 || 12;
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+      const hours = now.getHours() % 12 || 12;
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = now.getHours() >= 12 ? "PM" : "AM";
+      
+      const day = now.getDate().toString().padStart(2, "0");
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const year = now.getFullYear();
+      const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
+      const formatted = `${hours}:${minutes} ${ampm} `;
 
-        const day = now.getDate().toString().padStart(2, '0');
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const year = now.getFullYear();
-        const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
-        const formatted = `${hours}:${minutes} ${ampm} `
+      const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
+      setTimes(formatted);
+      setDates(formatedDate);
+    };
+    
+    updateTime(); // run once immediately
+    const interval = setInterval(updateTime, 1000);
 
-        const formatedDate = ` ${day}/${month}/${year}, ${weekday}`;
-        setTimes(formatted);
-        setDates(formatedDate);
-        };
+    return () => clearInterval(interval);
+  }, []);
+    
 
-        updateTime(); // run once immediately
-        const interval = setInterval(updateTime, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    return (
-        <div className=" text-sm flex flex-col justify-end items-end rounded">
-            <p>{times}</p>
-            <p>{dates}</p>
-        </div>
-    );
+  return (
+    <div className=" text-sm flex flex-col justify-end items-end rounded">
+      <p>{times}</p>
+      <p>{dates}</p>
+    </div>
+  );
 };
 
 interface MainContainerProps {
-    children: ReactNode;
+  children: ReactNode;
 }
-
-
 
 export default function RootLayout({ children }: MainContainerProps) {
     const pathname = usePathname();
@@ -65,25 +65,27 @@ export default function RootLayout({ children }: MainContainerProps) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         toast.success('Logged out successfully!');
-        window.location.href = '/auth/login';
+        window.location.href = '/';
     };
     
 
     if (user?.role !== "manager") return children
 
-    return (
-        <>
-            <header>
-                <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
-                    <div>
-                    <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <Bell size={18} />
-                        <LiveClock />
-                    </div>
-                </nav>
-                </header>
+  return (
+    <>
+      <header>
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5 z-20">
+          <div>
+            <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
+          </div>
+          <div className="flex items-center gap-6">
+              <Link href="/manager/notification" className="cursor-pointer">
+              <Bell size={18} />
+            </Link>
+            <LiveClock />
+          </div>
+        </nav>
+      </header>
 
                 <div className="flex pt-13 relative" style={{ height: "100vh" }}>
 
@@ -107,7 +109,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     <ul className="flex flex-col gap-1">
                     <Link
                         href={"/manager/dashboard"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/dashboard" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -115,7 +117,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/project/Project"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/project/Project" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -123,7 +125,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/dailyreport"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/dailyreport" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -131,23 +133,23 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/attendance"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/attendance" ? "bg-black text-white" : ""
                         }`}
                     >
                         Attendance
                     </Link>
                     <Link
                         href={"/manager/employee"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/employee" ? "bg-black text-white" : ""
                         }`}
                     >
                         Employees
                     </Link>
                     <Link
                         href={"/manager/employeeReport"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/employeeReport" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -161,13 +163,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </button>
                 </nav>
 
-                <div>
-                    <DraggableMessenger role="manager"/>
-                </div>
+        <div>
+          <DraggableMessenger role="manager" />
+        </div>
 
-
-                <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">{children}</main>
-            </div>
-        </>
-    )
+        <main className="flex-1 p-6 overflow-auto bg-[#f3f3f3] scrollbar-thin">
+          {children}
+        </main>
+      </div>
+    </>
+  );
 }

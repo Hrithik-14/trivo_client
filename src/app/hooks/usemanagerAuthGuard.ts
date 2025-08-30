@@ -20,5 +20,5 @@ export const useManangerAuthGuard = () => {
         }
     }, [user, router])
 
-    return { loading }
+    return { loading }
 }

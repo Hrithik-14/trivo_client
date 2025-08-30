@@ -2,11 +2,11 @@
 "use client";
 
 import React, { FC, useState, useEffect } from "react";
-import { ChevronDown, User, Building2, Clock, Users } from "lucide-react";
+import { ChevronDown, User, Building2, Clock, Users, Plus,  UserPlus, Trash2, Zap, CheckSquare, Building, Target, AlertCircle, UserCheck, Folder, X, FileText } from "lucide-react";
 import Image from "next/image";
 import { differenceInDays, parseISO } from "date-fns";
 import api from "@/app/api/axios";
-import { notFound, useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import mongoose from 'mongoose'
 
@@ -47,6 +47,16 @@ interface Project {
   isActive: boolean;
 }
 
+interface Contact {
+    _id: string;
+    name: string;
+    email: string;
+    employeeCode: string;
+    createdBy: string;
+    createdAt: string;
+    profileImage?: string;
+}
+
 type Props = {
   role?: string;
   slug: string;
@@ -66,6 +76,8 @@ const calculateDuration = (start?: string, end?: string) => {
     return { months: 0, days: 0 };
   }
 };
+
+const SIDEBAR_WIDTH = 300
 
 const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [project, setProject] = useState<Project | null>(null);
