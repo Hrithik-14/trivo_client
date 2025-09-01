@@ -457,16 +457,7 @@ const DailyReport: FC = () => {
 
 
 
-  if (!user?.token) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600">Authentication Required</h2>
-          <p className="text-gray-600 mt-2">Please log in to view your reports.</p>
-        </div>
-      </div>
-    );
-  }
+
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -538,6 +529,17 @@ const DailyReport: FC = () => {
 
     return matchesStatus;
   });
+
+    if (!user?.token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Authentication Required</h2>
+          <p className="text-gray-600 mt-2">Please log in to view your reports.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
