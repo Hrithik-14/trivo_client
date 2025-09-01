@@ -550,7 +550,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     const [isActive, setIsActive] = useState<boolean | null>(null);
     const user = useSelector((state: RootState) => state.user.user)
     const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-    
+    const [reload, setReload] = useState(false);
     const [showMessenger, setShowMessenger] = useState(false);
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
@@ -571,7 +571,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
         };
 
         fetchProject();
-    }, [projectId]);
+    }, [projectId, reload]);
 
     const handleActiveChange = async (newStatus: boolean) => {
         try {
@@ -614,8 +614,8 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
         setShowMessenger(true);
     };
 
-        const handleAdd = () => setIsModalOpen(true);
-    const handleCloseModal = () => {setIsModalOpen(false)};
+    const handleAdd = () => setIsModalOpen(true);
+    const handleCloseModal = () => {setIsModalOpen(false); setReload((prev) => !prev)};
 
     if (loading) return (
         <div className="h-full flex items-center justify-center">
