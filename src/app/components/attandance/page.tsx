@@ -73,14 +73,6 @@ interface DayResponse {
   des?: LeaveDes;
 }
 
-interface RegularisationRequest {
-  date: string;
-  signInTime: string;
-  signOutTime: string;
-  reason: string;
-  document?: File;
-}
-
 interface SimpleCalendarProps {
   selectedDate: Date | null;
   onDateChange: (date: Date) => void;
@@ -92,6 +84,16 @@ interface SimpleCalendarProps {
 interface TileProps {
   date: Date;
   view: string;
+}
+
+interface LeaveCount {
+  sickCount: number;
+  PaternityCount: number;
+  MaternityCount: number;
+  CasualCount: number;
+  PrivilegeCount: number;
+  CompOffCount: number;
+  CompOffHave: number;
 }
 
 type ValuePiece = Date | null;
@@ -200,7 +202,6 @@ const AttendancePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"calendar" | "leave" | "regularisation">("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [attendanceData, setAttendanceData] = useState<Record<string, AttendanceRecord>>({});
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -212,21 +213,17 @@ const AttendancePage: React.FC = () => {
     leaveDate: null,
     description: "",
   });
-  const [regularisationForm, setRegularisationForm] = useState<RegularisationRequest>({
-    date: "",
-    signInTime: "",
-    signOutTime: "",
-    reason: "",
-  });
   const [leaveHistory, setLeaveHistory] = useState<LeaveDes[]>([]);
   const [regularisationHistory, setRegularisationHistory] = useState<LeaveDes[]>([]);
 
   const user = useSelector((state: RootState) => state.user.user);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [day, setDay] = useState<DayResponse | null>(null);
+
+  const [leaveCount, setLeaveCount] = useState<LeaveCount | null>(null) 
   
   const leaveTypes = [
-    "Casual", "Sick", "Personal", "Maternity", "Paternity", "Privilege", "Regularization", "CompOff"
+    "Casual", "Sick", "Maternity", "Paternity", "Privilege", "Regularization", "CompOff"
   ];
 
   useEffect(() => {
@@ -254,6 +251,23 @@ const AttendancePage: React.FC = () => {
 
     fetchAttendanceData();
   }, [user?.token]);
+
+
+  useEffect(() => {
+    const fetchTotalLeaveCount = async () => {
+      try {
+        const res = await api.get('/get-my-leave-count', {
+          headers: {
+            Authorization: `Bearer ${user?.token}`
+          }
+        })
+        setLeaveCount(res.data)
+      } catch (err) {
+        console.error('Error in fetching leave count:', error);
+      }
+    }
+    fetchTotalLeaveCount()
+  }, [user?.token])
 
   useEffect(() => {
     const loadAttendanceData = () => {
@@ -580,10 +594,47 @@ const AttendancePage: React.FC = () => {
   const renderLeaveSection = () => (
     <div className="space-y-6">
       <div className="flex justify-between">
-        <div>
-          <p className="w-fit flex flex-col items-center">
-            <div className="text-4xl">0/8</div>
-            <span>Total Sick Leave</span>
+         <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.sickCount == 8 ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.sickCount}/<span className="text-[#696969]">8</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total Sick <br/> Leave</span>
+          </p>
+          
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.PaternityCount == 12 ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.PaternityCount}/<span className="text-[#696969]">12</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total Paternity <br/> Leave</span>
+          </p>
+          
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.MaternityCount == 90 ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.MaternityCount}/<span className="text-[#696969]">90</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total Maternity <br/> Leave</span>
+          </p>
+          
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.CasualCount == 6 ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.CasualCount}/<span className="text-[#696969]">6</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total Casual <br/> Leave</span>
+          </p>
+          
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.PrivilegeCount == 15 ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.PrivilegeCount}/<span className="text-[#696969]">15</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total Privilege <br/> Leave</span>
+          </p>
+          
+          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className={`text-4xl font-bold mb-2 ${leaveCount?.CompOffCount == leaveCount?.CompOffHave ? 'text-red-500' : 'text-green-500'}`}>
+              {leaveCount?.CompOffCount}/<span className="text-[#696969]">{leaveCount?.CompOffHave}</span>
+            </div>
+            <span className="text-[#696969] font-semibold text-sm text-center">Total CompOff <br/> Leave</span>
           </p>
         </div>
         <button
@@ -663,10 +714,7 @@ const AttendancePage: React.FC = () => {
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
                 >
                   {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Submitting...
-                    </>
+                    'Submitting...'
                   ) : (
                     "Submit Leave Application"
                   )}
@@ -691,7 +739,6 @@ const AttendancePage: React.FC = () => {
                     leave.leaveType === "Paternity" ? "text-indigo-700 bg-indigo-100 border border-indigo-300" :
                     leave.leaveType === "Privilege" ? "text-purple-700 bg-purple-100 border border-purple-300" :
                     leave.leaveType === "Regularization" ? "text-yellow-700 bg-yellow-100 border border-yellow-300" :
-                    leave.leaveType === "Personal" ? "text-green-700 bg-green-100 border border-green-300" :
                     "text-gray-700 bg-gray-100 border border-gray-300"
                   }`}>
                     {leave.leaveType}

@@ -78,7 +78,6 @@ export const AudioPlayer: FC<AudioPlayerProps> = ({ fileUrl, fileName }) => {
     <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-3 max-w-sm min-w-40">
       <audio ref={audioRef} src={fileUrl} preload="metadata" />
       
-      {/* Play/Pause Button */}
       <button
         onClick={togglePlayPause}
         disabled={isLoading}
