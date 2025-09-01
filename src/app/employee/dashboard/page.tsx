@@ -8,6 +8,7 @@ import EmployeeAttendance from '@/app/components/EmployeeAttendence'
 import { useEmployeeAuthGuard } from '@/app/hooks/useEmployeeAuthGuard'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/app/store'
+import UpcomingHoliday from '@/app/components/upcomingHoliday/page'
 
 interface Project {
   _id: string
@@ -163,7 +164,6 @@ useEffect(() => {
 
     setTimer(calculateWorkedTime(attendance.signInTime, attendance.signOutTime))
   } else {
-    // No sign-in yet
     if (intervalRef.current) clearInterval(intervalRef.current)
     setTimer('00:00:00')
   }
@@ -188,7 +188,7 @@ useEffect(() => {
   }, [user?.id])
 
   if (loading) return (
-    <div className="h-full flex items-center justify-center">
+    <div className="h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading project details...</p>
@@ -214,10 +214,7 @@ useEffect(() => {
             <p>{timer}</p>
           </div>
         </div>
-
-        
             <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
-        
       </div>
 
       <div className="flex gap-5">
@@ -229,6 +226,9 @@ useEffect(() => {
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
           {user?.id && <EmployeeAttendance employeeId={user?.id} />}
+        </div>
+        <div>
+          <UpcomingHoliday/>
         </div>
       </div>
 

@@ -5,11 +5,14 @@
 import api from '@/app/api/axios';
 import React, { useState, useEffect, useRef, FC, ChangeEvent  } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Search, Plus, Users, Send, MessageCircle, ArrowLeft, Camera, User } from 'lucide-react';
+import { Search, Plus, Users, Send, MessageCircle, ArrowLeft, Camera, User, Paperclip, Download } from 'lucide-react';
 import { format, isToday, isYesterday, differenceInDays } from 'date-fns';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import PdfModal from './pdfModal';
+import { saveAs } from "file-saver";
+import { AudioPlayer } from './audioPlayer';
+
 
 function getDateLabel(dateString: string) {
   const date = new Date(dateString);
@@ -28,6 +31,9 @@ function getDateLabel(dateString: string) {
   }
 }
 
+
+type MessageLike = string | { content?: string; file?: { name?: string } };
+
 interface Contact {
   _id: string;
   name: string;
@@ -36,6 +42,12 @@ interface Contact {
   employeeCode: string;
   createdAt: string;
   profileImage?: string;
+}
+
+interface Files {
+  url: string;
+  name: string;
+  type: string;
 }
 
 interface Message {
@@ -51,6 +63,8 @@ interface Message {
   groupId?: string;
   recieverId?: string;
   readBy: string[];
+  file: Files;
+  type: "text" | "image" | "video" | "audio" | "document"
 }
 
 interface DirectMessage {
@@ -62,9 +76,12 @@ interface DirectMessage {
     name: string;
     email: string;
     employeeCode: string;
+    profileImage?: string;
   };
   recieverId: string;
   readBy?: string[];
+  type: string;
+  file: Files;
 }
 
 interface Group {
@@ -76,7 +93,7 @@ interface Group {
   updatedAt: string;
   messages?: Message[];
   groupImage: string;
-  lastMessageId: { content: string; id: string; } | null;
+  lastMessageId: { content: string; id: string; file: File } | null;
   content: string;
   unreadCount?: number | undefined;
 }
@@ -86,7 +103,7 @@ interface PersonalChat {
   name: string;
   employeeCode: string;
   email: string;
-  lastMessage?: string;
+  lastMessage?: MessageLike;
   lastMessageTime?: string;
   unreadCount?: number;
   type: 'personal';
@@ -97,7 +114,7 @@ interface ChatItem {
   _id: string;
   name: string;
   type: 'group' | 'personal';
-  lastMessage?: string;
+  lastMessage?: MessageLike;
   lastMessageTime: string;
   unreadCount?: number;
   groupImage?: string;
@@ -109,9 +126,24 @@ interface ChatItem {
 
 interface MessengerProps {
   role: "admin" | "manager" | "employee";
+  initialContact?: Contact;
 }
 
-const Messenger: FC<MessengerProps> = ({ role }) => {
+
+const getLastMessageText = (lastMessage?: MessageLike, type?: 'group' | 'personal'): string => {
+  if (!lastMessage) {
+    return type === 'personal' ? 'Start a conversation' : 'No messages yet';
+  }
+
+  if (typeof lastMessage === 'string') {
+    return lastMessage;
+  }
+
+  return lastMessage.content || lastMessage.file?.name || (type === 'personal' ? 'Start a conversation' : 'No messages yet');
+};
+
+
+const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [personalChats, setPersonalChats] = useState<PersonalChat[]>([]);
@@ -121,6 +153,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<Contact[]>([]);
   const [messageText, setMessageText] = useState("");
+  const [file, setFile] = useState(null)
   const [searchQuery, setSearchQuery] = useState("");
   const [contactSearchQuery, setContactSearchQuery] = useState("");
   const [token, setToken] = useState<string | null>(null);
@@ -131,14 +164,18 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [groupList, setGroupList] = useState(false);
-  let lastDateLabel: string | null = null;
+  const lastDateLabel: string | null = null;
   const [activeArea, setActiveArea] = useState('list');
   const [chatType, setChatType] = useState<'group' | 'direct'>('group');
   const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [showContactsTab, setShowContactsTab] = useState(false); 
-  const router = useRouter()
+    const [previewUrl, setpreviewUrl] = useState<{
+    url: string;
+    name?: string;
+    type: "image" | "video";
+  } | null>(null);
   
   
   useEffect(() => {
@@ -154,6 +191,69 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       }
     }
   }, []);
+
+
+useEffect(() => {
+  if (initialContact && token && currentUserId) {
+    console.log('Initial contact provided:', initialContact);
+    console.log('Contacts loaded:', contacts.length);
+    console.log('Current user ID:', currentUserId);
+    
+    const timer = setTimeout(() => {
+      setActiveArea('chat');
+      setChatType('direct');
+      
+      const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+      console.log('Selecting contact:', contact);
+      
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      
+      if (contact._id !== currentUserId) {
+        loadDirectMessages(contact._id);
+        
+        addOrUpdatePersonalChat(contact);
+        
+        if (socket) {
+          console.log("Joining direct chat room for:", contact._id);
+          socket.emit("joinDirectChat", { 
+            userId: currentUserId, 
+            contactId: contact._id 
+          });
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }
+}, [initialContact, token, currentUserId, contacts.length, socket]);
+
+useEffect(() => {
+  if (initialContact && contacts.length > 0 && !selectedContact && !selectedGroup) {
+    console.log('Contacts loaded after initialContact was set, trying to select contact');
+    const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+    if (contact && contact._id !== currentUserId) {
+      setActiveArea('chat');
+      setChatType('direct');
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      loadDirectMessages(contact._id);
+      addOrUpdatePersonalChat(contact);
+    }
+  }
+}, [contacts.length, initialContact, selectedContact, selectedGroup, currentUserId]);
+
+  const handleFileChange =(e: any) => {
+    if (e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
+  }
+
+  const handleDownload = () => {
+    if (previewUrl?.url) {
+      saveAs(previewUrl?.url)
+    }
+  }
 
   const calculateUnreadCount = (groupId: string, groupMessages: Message[]): number => {
     return groupMessages.filter(message => 
@@ -211,17 +311,32 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         return;
       }
       
-      const personalChatsData = res.data.map((user: any) => ({
-        _id: user._id,
-        name: user.name,
-        employeeCode: user.employeeCode,
-        email: user.email,
-        lastMessage: user.lastMessage || 'Start a conversation',
-        lastMessageTime: user.lastMessageTime || user.createdAt,
-        unreadCount: user.unreadCount || 0,
-        type: 'personal' as const,
-        profileImage: user.profileImage
-      }));
+      const personalChatsData = res.data.map((user: any) => {
+          let lastMessageContent = "Start a conversation";
+
+          if (user.lastMessage) {
+            if (typeof user.lastMessage === "string") {
+              lastMessageContent = user.lastMessage;
+            } else {
+              lastMessageContent =
+                user.lastMessage.content ||
+                user.lastMessage.file?.name ||
+                "Start a conversation";
+            }
+          }
+
+        return {
+          _id: user._id,
+          name: user.name,
+          employeeCode: user.employeeCode,
+          email: user.email,
+          lastMessage: lastMessageContent,
+          lastMessageTime: user.lastMessageTime || user.createdAt,
+          unreadCount: user.unreadCount || 0,
+          type: 'personal' as const,
+          profileImage: user.profileImage
+        }
+      });
       
       setPersonalChats(personalChatsData);
     } catch (error: any) {
@@ -230,15 +345,26 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     }
   };
 
-  const addOrUpdatePersonalChat = (contact: Contact, message?: string, timestamp?: string) => {
+  const addOrUpdatePersonalChat = (contact: Contact, message?: MessageLike, timestamp?: string) => {
     setPersonalChats(prev => {
       const existingIndex = prev.findIndex(chat => chat._id === contact._id);
       
+        let lastMessageContent = "Start a conversation";
+
+        if (message) {
+          if (typeof message === "string") {
+            lastMessageContent = message;
+          } else if (typeof message === "object") {
+            lastMessageContent =
+              message.content || message.file?.name || "Start a conversation";
+          }
+        }
+
       if (existingIndex !== -1) {
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
-          lastMessage: message || updated[existingIndex].lastMessage,
+          lastMessage:lastMessageContent,
           lastMessageTime: timestamp || updated[existingIndex].lastMessageTime,
         };
         return updated;
@@ -248,7 +374,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
           name: contact.name,
           employeeCode: contact.employeeCode,
           email: contact.email,
-          lastMessage: message || 'Start a conversation',
+          lastMessage: lastMessageContent,
           lastMessageTime: timestamp || new Date().toISOString(),
           unreadCount: 0,
           type: 'personal',
@@ -264,7 +390,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       _id: group._id,
       name: group.name,
       type: 'group' as const,
-      lastMessage: group.lastMessageId?.content || 'No messages yet',
+      lastMessage: group.lastMessageId?.content || group.lastMessageId?.file?.name || 'No messages yet',
       lastMessageTime: group.updatedAt || group.createdAt,
       unreadCount: group.unreadCount,
       groupImage: group.groupImage,
@@ -339,14 +465,10 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
     });
 
     newSocket.on("newDirectMessage", (msg: DirectMessage) => {
-      console.log("Received new direct message:", msg);
-      console.log("Current user:", currentUserId);
-      console.log("Selected contact:", selectedContact?._id);
       
       if (selectedContact && 
           (msg.senderId._id === selectedContact._id || 
             msg.recieverId === selectedContact._id)) {
-        console.log("Adding message to current direct messages");
         setDirectMessages(prev => [...prev, msg]);
       }
       
@@ -673,14 +795,19 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
   };
 
   const sendMessage = async () => {
-    if (!messageText.trim() || !token) return;
+    if (!messageText.trim() && !file) return;
 
     try {
+      const formData = new FormData();
+      formData.append("senderId", currentUserId);
+      if (messageText.trim()) formData.append("content", messageText);
+      if (file) formData.append("file", file);
+
       if (chatType === 'group' && selectedGroup) {
         const res = await api.post(
           `/group/${selectedGroup._id}/messages`,
-          { content: messageText, senderId: currentUserId },
-          { headers: { Authorization: `Bearer ${token}` } }
+          formData,
+          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data", } }
         );
 
         const newMessage = res.data;
@@ -689,14 +816,14 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         console.log("Sending group message via socket");
         socket?.emit("sendMessage", {
           groupId: selectedGroup._id,
-          content: messageText
+          ...newMessage
         });
       } else if (chatType === 'direct' && selectedContact) {
         console.log("Sending direct message to:", selectedContact._id);
         
         const res = await api.post(
           `/chat/${selectedContact._id}/messages`,
-          { senderId: currentUserId, content: messageText },
+          formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -708,15 +835,15 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
         console.log("Emitting sendDirectMessage via socket");
         socket?.emit("sendDirectMessage", {
           recieverId: selectedContact._id,
-          senderId: currentUserId,
-          content: messageText,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          ...newMessage
         });
 
         addOrUpdatePersonalChat(selectedContact, messageText, new Date().toISOString());
       }
 
       setMessageText("");
+      setFile(null)
     } catch (err) {
       console.error("Failed to send message", err);
       toast.error("Failed to send message");
@@ -892,18 +1019,6 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                             {chatItem.type === 'group' && <Users size={12} className="text-gray-500" />}
                             {chatItem.type === 'personal' && <User size={12} className="text-gray-500" />}
                           </h3>
-                          <h4
-                            className={`text-sm ${
-                              chatItem.unreadCount && chatItem.unreadCount > 0
-                                ? 'text-gray-900 font-medium'
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {chatItem.lastMessage ||
-                              (chatItem.type === 'personal'
-                                ? 'Start a conversation'
-                                : 'No messages yet')}
-                          </h4>
                         </div>
                       </div>
                       <div className="text-xs text-gray-400 flex flex-col items-end">
@@ -926,7 +1041,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
       {activeArea === 'chat' && (
         <div className="flex-1 flex flex-col h-full overflow-y-auto scrollbar-thin">
           {(selectedGroup || selectedContact) ? (
-            <div className='bg-white rounded-lg overflow-y-auto h-[500px] flex flex-col'>
+            <div className='bg-white rounded-lg overflow-y-auto h-full flex flex-col'>
               <div className="bg-white px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                 <div className='flex items-center gap-2'>
                   <button onClick={() => setActiveArea('list')}>
@@ -990,87 +1105,189 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                 )}
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4 scrollbar-thin space-y-4">
-                {chatType === 'group' ? (
-                  messages.map((message) => {
-                    const dateLabel = getDateLabel(message.createdAt);
-                    const showLabel = dateLabel !== lastDateLabel;
-                    lastDateLabel = dateLabel;
-                    return (
-                      <div
-                        key={message._id}
-                        className={`flex flex-col  ${message.senderId._id === currentUserId ? 'items-end' : 'items-start'}`}
-                      >
-                        {showLabel && (
-                          <div className="text-center w-full text-xs text-gray-500 mb-2">
-                            {dateLabel}
-                          </div>
-                        )}
-                        <div className="flex items-start gap-2">
-                          {message.senderId._id !== currentUserId && (
-                            <div className='w-[30px] h-[30px] relative'>
-                              <Image src={message.senderId.profileImage || '/avatar.png'} alt='' fill className='rounded-full object-cover object-center' />
-                            </div>
-                          )}
-                          <div className={`min-w-25 max-w-50 px-3 py-2 rounded-lg break-words leading-none ${message.senderId._id === currentUserId ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
-                            <div className={`text-xs font-semibold mb-1 ${message.senderId._id === currentUserId ? 'hidden': 'block'}`}>{message.senderId.name}</div>
-                            <div className='text-sm'>{message.content}</div>
-                            <div className={`text-[8px] mt-1 text-end ${
-                              message.senderId._id === currentUserId ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })
+<div className="flex-1 overflow-y-auto p-4 scrollbar-thin space-y-4">
+  {(chatType === "group" ? messages : directMessages).map((message, index) => {
+    const dateLabel = getDateLabel(message.createdAt);
+    const prevDateLabel =
+      index > 0 ? getDateLabel((chatType === "group" ? messages : directMessages)[index - 1].createdAt) : null;
+    const showLabel = dateLabel !== prevDateLabel;
+
+    const isCurrentUser = message.senderId._id === currentUserId;
+    const senderName = message.senderId?.name;
+    const senderAvatar = message.senderId?.profileImage;
+
+    return (
+      <div
+        key={message._id}
+        className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"}`}
+      >
+        {/* Date separator */}
+        {showLabel && (
+          <div className="text-center w-full text-xs text-gray-400 mb-3 font-medium">
+            {dateLabel}
+          </div>
+        )}
+
+        <div className="flex items-end gap-3 max-w-[85%]">
+          {/* Avatar (for others only) */}
+          {!isCurrentUser && (
+            <div className="w-8 h-8 relative flex-shrink-0 mb-1">
+              {chatType === "group" || chatType === "direct" ? (
+                senderAvatar ? (
+                  <Image
+                    src={senderAvatar}
+                    alt=""
+                    fill
+                    className="rounded-full object-cover object-center ring-2 ring-white shadow-sm"
+                  />
                 ) : (
-                  directMessages.map((message) => {
-                    const dateLabel = getDateLabel(message.createdAt);
-                    const showLabel = dateLabel !== lastDateLabel;
-                    lastDateLabel = dateLabel;
-                    const isCurrentUser = message.senderId._id === currentUserId;
-                    return (
-                      <div
-                        key={message._id}
-                        className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}
-                      >
-                        {showLabel && (
-                          <div className="text-center w-full text-xs text-gray-500 mb-2">
-                            {dateLabel}
-                          </div>
-                        )}
-                        <div className="flex items-start gap-2">
-                          {!isCurrentUser && (
-                            <div className='w-[30px] h-[30px] relative'>
-                              {selectedContact?.profileImage ? (
-                                <Image src={selectedContact.profileImage} alt='' fill className='rounded-full object-cover object-center' />
-                              ) : (
-                                <div className='w-[30px] h-[30px] bg-[#f1f1f1] flex items-center justify-center font-semibold rounded-full text-sm'>
-                                  {selectedContact?.name.slice(0, 1).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <div className={`min-w-25 max-w-50 px-3 py-2 rounded-lg break-words leading-none ${isCurrentUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
-                            <div className='text-sm'>{message.content}</div>
-                            <div className={`text-[8px] mt-1 text-end ${
-                              isCurrentUser ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
-                <div ref={messagesEndRef} />
+                  <div className="w-8 h-8 bg-gray-200 flex items-center justify-center rounded-full text-xs font-semibold">
+                    {senderName?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )
+              ) : null}
+            </div>
+          )}
+
+          {/* Message Bubble */}
+          <div
+            className={`relative group animate-in slide-in-from-bottom-2 duration-200
+              ${
+                isCurrentUser
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-blue-500/25"
+                  : "bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-lg border border-gray-100"
+              } px-4 py-3 min-w-[120px] max-w-[300px] backdrop-blur-sm`}
+          >
+            {/* Bubble corner */}
+            <div
+              className={`absolute w-3 h-3 ${
+                isCurrentUser
+                  ? "bg-gray-100 -bottom-0 -right-0 rounded-bl-full"
+                  : "bg-gray-100 -bottom-0 -left-0 rounded-br-full border-l border-b border-gray-100"
+              }`}
+            ></div>
+
+            {/* Sender name (only in group chat and not self) */}
+            {chatType === "group" && !isCurrentUser && (
+              <div className="text-xs font-semibold mb-2 text-blue-600 opacity-80">
+                {senderName}
               </div>
-              
-              <div className="bg-white p-4 border-t border-gray-200">
+            )}
+
+            {/* Message Content */}
+            {message.type === "text" && (
+              <div className="text-sm leading-relaxed font-medium">
+                {message.content}
+              </div>
+            )}
+
+            {message.type === "image" && message.file?.url && (
+              <div className="w-40 h-40 overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+                <Image
+                  src={message.file.url}
+                  alt={message.file.name || "Image"}
+                  width={160}
+                  height={160}
+                  className="object-cover object-center h-full cursor-pointer hover:scale-105 transition-transform duration-200"
+                  onClick={() =>
+                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "image", })
+                  }
+                />
+              </div>
+            )}
+
+            {message.type === "audio" && message.file?.url && (
+              <div>
+                <AudioPlayer
+                  fileUrl={message.file?.url}
+                  fileName={message.file?.name}
+                />
+              </div>
+            )}
+
+            {message.type === "video" && message.file?.url && (
+              <div className="rounded-xl overflow-hidden shadow-md">
+                <video
+                  src={message.file?.url}
+                  onClick={() =>
+                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "video", })
+                  }
+                  className="rounded-xl cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
+                />
+              </div>
+            )}
+
+            {message.type === "document" && message.file?.url && (
+              <div className="bg-gray-50/50 rounded-xl p-3">
+                <PdfModal
+                  fileUrl={message.file?.url}
+                  fileName={message.file?.name}
+                />
+              </div>
+            )}
+
+            {/* Timestamp */}
+            <div
+              className={`text-[10px] mt-2 text-right font-medium ${
+                isCurrentUser ? "text-blue-100/80" : "text-gray-400"
+              } group-hover:opacity-100 transition-opacity duration-200`}
+            >
+              {new Date(message.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+
+  {/* Preview Modal (shared for all file types) */}
+  {previewUrl?.url && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50">
+      <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
+        {previewUrl.url.match(/\.(mp4|webm|ogg)$/i) ? (
+          <video
+            src={previewUrl.url}
+            controls
+            autoPlay
+            className="rounded-2xl object-contain max-h-[70vh] w-auto"
+          />
+        ) : (
+          <Image
+            src={previewUrl.url}
+            alt="Preview"
+            width={500}
+            height={500}
+            className="rounded-2xl object-contain max-h-[70vh] w-auto"
+          />
+        )}
+        <button
+          onClick={handleDownload}
+          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
+        >
+          <Download size={18} />
+        </button>
+        <button
+          onClick={() => setpreviewUrl(null)}
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
+        >
+          <Plus className="rotate-45" />
+        </button>
+      </div>
+    </div>
+  )}
+
+  <div ref={messagesEndRef} />
+</div>
+
+                  <div className="bg-white p-4 border-t border-gray-200">
                 <div className="flex items-center space-x-2">
+                  <label className="cursor-pointer p-2 rounded-full hover:bg-gray-100">
+                    <input type="file" className="hidden" onChange={handleFileChange} />
+                    <Paperclip size={18} />
+                  </label>
                   <input
                     type="text"
                     value={messageText}
@@ -1081,7 +1298,7 @@ const Messenger: FC<MessengerProps> = ({ role }) => {
                   />
                   <button
                     onClick={sendMessage}
-                    disabled={!messageText.trim()}
+                    disabled={!messageText.trim() && !file}
                     className="w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 rounded-full flex items-center justify-center text-white transition-colors"
                   >
                     <Send size={15} />

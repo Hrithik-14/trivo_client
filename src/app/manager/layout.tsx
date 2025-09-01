@@ -108,7 +108,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     <ul className="flex flex-col gap-1">
                     <Link
                         href={"/manager/dashboard"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/dashboard" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -116,7 +116,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/project/Project"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/project/Project" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -124,7 +124,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/dailyreport"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/dailyreport" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -132,7 +132,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/attendance"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/attendance" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -140,7 +140,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/employee"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/employee" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -148,7 +148,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/manager/employeeReport"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/manager/employeeReport" ? "bg-black text-white" : ""
                         }`}
                     >

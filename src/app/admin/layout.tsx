@@ -59,7 +59,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     <ul className="flex flex-col gap-1">
                     <Link
                         href={"/admin/dashboard"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/dashboard" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/admin/Project/projects"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/Project/projects" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/admin/managers/manager"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/managers/manager" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -83,7 +83,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/admin/managers/dailyReport"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/managers/dailyReport" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -91,16 +91,23 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/admin/employee"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/employee" ? "bg-black text-white" : ""
                         }`}
                     >
                         Employees
                     </Link>
-
+                    <Link
+                        href={"/admin/todays-leave"}
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/admin/todays-leave" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Leave Status
+                    </Link>
                     <Link
                         href={"/admin/paylips"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/paylips" ? "bg-black text-white" : ""
                         }`}
                     >
@@ -108,7 +115,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     </Link>
                     <Link
                         href={"/admin/mail"}
-                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                         pathname === "/admin/mail" ? "bg-black text-white" : ""
                         }`}
                     >

@@ -51,7 +51,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             description,
         });
 
-        setMessage("✅ Manager report submitted successfully!");
+        setMessage("Manager report submitted successfully!");
         setStartTime("");
         setEndTime("");
         setDescription("");
@@ -63,7 +63,11 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         }, 500);
         
         } catch (error: any) {
+<<<<<<< HEAD
         setMessage(`❌ ${error.response?.data?.message || "Error submitting report"}`);
+=======
+        setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
+>>>>>>> 70b35fd4167249b68ade5c4553ad8d0ca41f3acb
         } finally {
         setLoading(false);
         }
@@ -212,7 +216,8 @@ const ManagerReport = () => {
     const fetchStatuses = async () => {
       try {
         const response = await api.get(`/report/getReportsByEmployee/${user?.id}`, {
-          headers: { Authorization: `Bearer ${user?.token}` },
+
+          headers: { Authorization:` Bearer ${user?.token}` },
         });
         
         if (response.data && response.data.report) {
@@ -247,7 +252,7 @@ const ManagerReport = () => {
     try {
 
       const response = await api.get(`/report/getReportsByEmployee/${user?.id}`,
-        { headers: { Authorization: `Bearer ${user?.token} `} }
+        { headers: { Authorization: `Bearer ${user?.token}` } }
       );
 
       setReports(Array.isArray(response.data.report) ? response.data.report : []);

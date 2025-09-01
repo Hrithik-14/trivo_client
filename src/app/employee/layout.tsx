@@ -114,7 +114,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         <ul className="flex flex-col gap-1">
                         <Link
                             href={"/employee/dashboard"}
-                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                             pathname === "/employee/dashboard" ? "bg-black text-white" : ""
                             }`}
                         >
@@ -122,7 +122,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         </Link>
                         <Link
                             href={"/employee/projects/project"}
-                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                             pathname === "/employee/projects/project" ? "bg-black text-white" : ""
                             }`}
                         >
@@ -130,7 +130,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         </Link>
                         <Link
                             href={"/employee/daily-reports"}
-                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                             pathname === "/employee/daily-reports" ? "bg-black text-white" : ""
                             }`}
                         >
@@ -138,7 +138,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                         </Link>
                         <Link
                             href={"/employee/attendance"}
-                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                             pathname === "/employee/attendance" ? "bg-black text-white" : ""
                             }`}
                         >

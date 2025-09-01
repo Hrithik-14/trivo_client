@@ -20,6 +20,7 @@ import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 import api from "@/app/api/axios";
 import dayjs from "dayjs";
 import moment from "moment";
+import MyCalendar from "../calendar/page";
 
 interface Attendence {
   lateCount: number;
@@ -49,8 +50,6 @@ interface ManagerReport {
   description?: string;
   submittedAt?: string;
   dueDate?: string;
-  priority?: "high" | "medium" | "low";
-  department?: string;
   submittedBy: Admin;
 }
 
@@ -77,7 +76,6 @@ const Dashboard: FC = () => {
   }, []);
 
   useEffect(() => {
-    //projects fetch cheyyan all projects and completed
     const fetchData = async () => {
       try {
         const response = await api.get("/admin/getAllProject");
@@ -116,7 +114,6 @@ const Dashboard: FC = () => {
   }, []);
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  // Fetch Manager Reports
   useEffect(() => {
     const fetchManagerReports = async () => {
       setReportsLoading(true);
@@ -135,7 +132,6 @@ const Dashboard: FC = () => {
         setTotalReports(res.data.total || 0);
       } catch (err) {
         console.error("Error fetching manager reports:", err);
-        // Fallback to empty array if API fails
         setManagerReports([]);
         setTotalReports(0);
       } finally {
@@ -242,7 +238,7 @@ const Dashboard: FC = () => {
             </div>
           </div>
           <div className="border border-[#dddddd] bg-white rounded h-fit py-2 px-4">
-            <h5 className="font-bold text-[10px]">Present</h5>
+            <h5 className="font-bold text-[10px]">Today&apos;s Present</h5>
             <div className="flex justify-between items-center">
               <h2 className="font-semibold">
                 {attendenceCount?.presentCount || 0}
@@ -253,7 +249,7 @@ const Dashboard: FC = () => {
             </div>
           </div>
           <div className="border border-[#dddddd] bg-white rounded h-fit py-2 px-4">
-            <h5 className="font-bold text-[10px]">Late</h5>
+            <h5 className="font-bold text-[10px]">Today&apos;s Late</h5>
             <div className="flex justify-between items-center">
               <h2 className="font-semibold">{attendenceCount?.lateCount}</h2>
               <div className="p-2 bg-[#FEF9C3] text-[#EAB308] w-fit rounded-full">
@@ -270,7 +266,7 @@ const Dashboard: FC = () => {
           </div>
           <div className="flex flex-col gap-5 w-full">
             <div className="border border-[#dddddd] bg-white rounded h-fit flex flex-col justify-center py-2 lg:py-6 px-4 lg:px-6">
-              <h5 className="font-bold text-[10px]">Leave</h5>
+              <h5 className="font-bold text-[10px]">Today&apos;s Leave</h5>
               <div className="flex justify-between items-center">
                 <h2 className="font-semibold">{attendenceCount?.leaveCount}</h2>
                 <div className="p-2 bg-[#FEE2E2] text-[#EF4444] w-fit rounded-full">
@@ -281,13 +277,13 @@ const Dashboard: FC = () => {
             <div className="bg-white border border-[#ddd] h-52 lg:h-full rounded-md p-5 gap-5 flex flex-col justify-center">
               <h2 className="text-xl lg:text-3xl font-bold">Projects</h2>
               <div className="flex gap-5 items-center">
-                <div className="text-lg lg:text-2xl bg-[#FEFCE8] p-2 px-3 text-[#EAB308] border border-[#FDE047]">
+                <div className="text-lg lg:text-2xl bg-[#FEFCE8] w-13 text-center p-2 px-3 text-[#EAB308] border border-[#FDE047]">
                   {totalProjects?.total}
                 </div>
                 <div className="font-medium lg:text-lg">Total Projects</div>
               </div>
               <div className="flex gap-5 items-center">
-                <div className="text-lg lg:text-2xl bg-[#DCFCE7] p-2 px-3 text-[#22C55E] border border-[#86EFAC]">
+                <div className="text-lg lg:text-2xl bg-[#DCFCE7] w-13 text-center p-2 px-3 text-[#22C55E] border border-[#86EFAC]">
                   {totalProjects?.completed}
                 </div>
                 <div className="font-medium lg:text-lg">Completed Projects</div>
@@ -416,79 +412,8 @@ const Dashboard: FC = () => {
           )}
         </div>
       </div>
+      <MyCalendar />
 
-      <div className="flex flex-col gap-5 w-fit items-end">
-        <div className="w-[350px] lg:w-[400px] h-fit bg-white rounded-md shadow p-4 font-sans">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-medium text-gray-800">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </span>
-              <ChevronRight className="w-4 h-4 text-blue-500" />
-            </div>
-            <div className="flex gap-1">
-              <button
-                onClick={() => navigateMonth(-1)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <ChevronLeft className="w-4 h-4 text-blue-500" />
-              </button>
-              <button
-                onClick={() => navigateMonth(1)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <ChevronRight className="w-4 h-4 text-blue-500" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {dayNames.map((day) => (
-              <div
-                key={day}
-                className="text-xs text-gray-400 text-center py-1 font-medium"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 mb-4 flex-1">
-            {days.map((day, index) => (
-              <div
-                key={index}
-                className={`
-                  h-8 flex items-center justify-center text-sm cursor-pointer rounded
-                  ${day === null ? "" : "hover:bg-gray-100"}
-                  ${
-                    day && isCurrentMonth && day === todayDate
-                      ? "bg-blue-500 text-white font-medium"
-                      : "text-gray-800"
-                  }
-                  ${day === null ? "text-transparent" : ""}
-                `}
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-            <span className="text-sm text-gray-600 font-medium">Time</span>
-            <span className="text-sm text-gray-800 font-medium">{now}</span>
-          </div>
-        </div>
-        {/* <div className="bg-white border border-[#ddd] rounded-md p-2 w-full">
-          <h2 className="text-lg font-semibold">Recent Activity</h2>
-          <div className="flex gap-5 items-center py-4">
-            <div className="w-1 h-1 rounded-full bg-[#22C55E]"></div>
-            <div>
-              <h4 className="text-sm">Team meeting</h4>
-              <p className="text-xs text-[#696969]">2m ago</p>
-            </div>
-          </div>
-        </div> */}
-      </div>
     </div>
   );
 };
