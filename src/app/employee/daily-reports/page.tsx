@@ -1,6 +1,4 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-/* eslint-disable react-hooks/exhaustive-deps */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -44,6 +42,7 @@ interface DailyReportForm {
   performance: string;
   challenges: string;
   supportNeeded: string;
+  status: string
   date: string
 }
 
@@ -127,7 +126,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     try {
       const token = user?.token;
       if (!token) throw new Error("No authentication token found");
-
       const reportsToSubmit = data.reports.map(report => ({
       currentProject: report.currentProject,
       startTime: report.startTime,
@@ -365,6 +363,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     challenges: "",
                     supportNeeded: "",
                     date: new Date().toISOString().split("T")[0],
+                    status: "",
                   })
                 }
                 className="inline-flex items-center px-6 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
@@ -458,16 +457,7 @@ const DailyReport: FC = () => {
 
 
 
-  if (!user?.token) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600">Authentication Required</h2>
-          <p className="text-gray-600 mt-2">Please log in to view your reports.</p>
-        </div>
-      </div>
-    );
-  }
+
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -476,7 +466,7 @@ const DailyReport: FC = () => {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
         
-        if (response.data && response.data.report) {
+        if (response.data?.report) {
           const uniqueStatuses = Array.from(
             new Set(response.data.report.map((report: Report) => report.status))
           ) as string[];
@@ -539,6 +529,17 @@ const DailyReport: FC = () => {
 
     return matchesStatus;
   });
+
+    if (!user?.token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">Authentication Required</h2>
+          <p className="text-gray-600 mt-2">Please log in to view your reports.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

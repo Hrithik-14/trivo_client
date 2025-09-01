@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import api from '@/app/api/axios'
-import PerformanceChart from '@/app/components/PerformanceChart'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
 import EmployeeAttendance from '@/app/components/EmployeeAttendence'

@@ -63,6 +63,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         }, 500);
         
         } catch (error: any) {
+
         setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
         } finally {
         setLoading(false);
@@ -212,6 +213,7 @@ const ManagerReport = () => {
     const fetchStatuses = async () => {
       try {
         const response = await api.get(`/report/getReportsByEmployee/${user?.id}`, {
+
           headers: { Authorization:` Bearer ${user?.token}` },
         });
         
