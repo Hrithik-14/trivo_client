@@ -63,11 +63,8 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         }, 500);
         
         } catch (error: any) {
-<<<<<<< HEAD
-        setMessage(`❌ ${error.response?.data?.message || "Error submitting report"}`);
-=======
+
         setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
->>>>>>> 70b35fd4167249b68ade5c4553ad8d0ca41f3acb
         } finally {
         setLoading(false);
         }
