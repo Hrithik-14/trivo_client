@@ -42,6 +42,7 @@ interface DailyReportForm {
   performance: string;
   challenges: string;
   supportNeeded: string;
+  status: string
   date: string
 }
 
@@ -362,6 +363,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                     challenges: "",
                     supportNeeded: "",
                     date: new Date().toISOString().split("T")[0],
+                    status: "",
                   })
                 }
                 className="inline-flex items-center px-6 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
