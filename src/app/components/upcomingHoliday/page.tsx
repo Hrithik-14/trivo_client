@@ -30,7 +30,6 @@ const UpcomingHoliday = () => {
         fetchHoliday()
     }, [user?.token])
 
-    // 🔹 Filter and sort holidays first
     const upcomingHolidays = days
         .filter((day) => new Date(day.date) >= new Date(new Date().setHours(0, 0, 0, 0)))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

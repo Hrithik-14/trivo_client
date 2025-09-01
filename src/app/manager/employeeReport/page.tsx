@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, CircleDotDashed } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
 import api from '@/app/api/axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
-import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
+
 
 
 type Task = {
@@ -19,7 +20,7 @@ interface Report {
   submittedBy: { name: string; email: string };
   projectId: { name: string };
   effectiveHours: string;
-  challenges: string;
+  descriptions: string;
   completedTasks?: Task[];
   performance?: string;
   plannedTasks?: Task[];
@@ -35,10 +36,13 @@ const EmployeeDailyReport: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const user = useSelector((state: RootState) => state.user.user)
-  const { loading } = useManangerAuthGuard()
+  const { loading } = useAdminAuthGuard()
+  const [filterDate, setFilterDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
 
-useEffect(() => {
+
   const fetchReports = async () => {
     if (!user?.token) {
       setFetchLoading(false);
@@ -47,13 +51,19 @@ useEffect(() => {
 
     try {
       setFetchLoading(true);
-      const { data } = await api.get(`/report/my?page=${page}&limit=5`, {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
+      const { data } = await api.get(
+        `/report/my?page=${page}&limit=5&date=${filterDate}`,
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
 
-      const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
+      const firstPending = data.reports?.find(
+        (r: Report) => r.status === "pending"
+      );
       if (firstPending) {
         setSelectedReportId(firstPending._id);
       }
@@ -64,8 +74,10 @@ useEffect(() => {
     }
   };
 
+useEffect(() => {
   fetchReports();
-}, [user?.token, page]);
+}, [user?.token, page, filterDate]);
+
 
 
   const updateStatus = async (id: string, status: 'accepted' | 'rejected') => {
@@ -123,23 +135,43 @@ useEffect(() => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-5 h-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-gray-900">Employees Daily Report</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Managers Daily Report</h1>
               </div>
               <div className="text-sm text-gray-500">
                 {reports.length} report{reports.length !== 1 ? 's' : ''} found
               </div>
             </div>
+            <div className="flex items-center justify-between mt-4 px-6">
+              <div className="flex items-center space-x-2">
+                <label htmlFor="filterDate" className="text-sm text-gray-700 font-medium">
+                  Filter by Date:
+                </label>
+                <input
+                  id="filterDate"
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
           </div>
 
           <div className="p-6">
-            {reports.length === 0 ? (
+            {fetchLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-500">Loading reports...</p>
+              </div>
+            ) : reports.length === 0 ? (
               <div className="text-center py-8">
                 <User className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">No reports found</p>
+                <p className="text-gray-500">No reports found for {filterDate}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {reports.map((report) => (
+                {reports?.map((report) => (
                   <div
                     key={report._id}
                     className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -156,7 +188,7 @@ useEffect(() => {
                           Daily Report - {report.submittedBy.name}
                         </span>
                         <div className="text-sm text-gray-500">
-                          {report.projectId.name}
+                          {report.projectId?.name}
                         </div>
                       </div>
                     </div>
@@ -210,73 +242,28 @@ useEffect(() => {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Working Project</h3>
-                <p className="text-gray-900 font-medium">{selectedReport.projectId.name}</p>
+                <p className="text-gray-900 font-medium">{selectedReport.projectId?.name}</p>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Key Contributions</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Description</h3>
                   <div className="space-y-2">
-                    {selectedReport.completedTasks && selectedReport.completedTasks.length > 0 ? (
-                      selectedReport.completedTasks.map((task, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{task.title}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No contributions listed</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Key Achievements Today</h3>
-                  <div className="space-y-2">
-                    {selectedReport.performance && selectedReport.performance.length > 0 ? (
-                      <p>{selectedReport.performance}</p>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No achievements listed</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Challenges Faced</h3>
-                  <div className="space-y-2">
-                    {selectedReport.challenges ? (
-                      <div className="text-sm text-gray-700">{selectedReport.challenges}</div>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No challenges reported</p>
-                    )}
+                    {selectedReport.descriptions}
                   </div>
                 </div>
               </div>
 
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Tomorrow&apos;s Planned Tasks</h3>
-                  <div className="space-y-2">
-                    {selectedReport.plannedTasks && selectedReport.plannedTasks.length > 0 ? (
-                      selectedReport.plannedTasks.map((task, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <CircleDotDashed className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{task.title}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No contributions listed</p>
-                    )}
-                  </div>
-              </div>
+              
 
               <div className="flex justify-end space-x-3">
                 <button
-                  onClick={() => updateStatus(selectedReport._id, 'rejected')}
-                  disabled={load || selectedReport.status !== 'pending'}
+                  onClick={() => updateStatus(selectedReport?._id, 'rejected')}
+                  disabled={load || selectedReport?.status !== 'pending'}
                   className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
-                    selectedReport.status === 'rejected'
+                    selectedReport?.status === 'rejected'
                       ? 'bg-red-600 text-white'
-                      : selectedReport.status !== 'pending' || load
+                      : selectedReport?.status !== 'pending' || load
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-red-500 text-white hover:bg-red-600'
                   }`}
@@ -339,5 +326,4 @@ useEffect(() => {
     </div>
   );
 };
-
 export default EmployeeDailyReport;
