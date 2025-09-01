@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react"
@@ -65,7 +64,7 @@ export default function RootLayout({ children }: MainContainerProps) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         toast.success('Logged out successfully!');
-        window.location.href = '/auth/login';
+        window.location.href = '/';
     };
     
 
@@ -124,17 +123,17 @@ export default function RootLayout({ children }: MainContainerProps) {
                         Projects
                     </Link>
                     <Link
-                        href={"/manager/dailyreport"}
+                        href={"/manager/dailyReport"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "/manager/dailyreport" ? "bg-black text-white" : ""
+                        pathname === "/manager/dailyReport" ? "bg-black text-white" : ""
                         }`}
                     >
                         Daily Reports
                     </Link>
                     <Link
-                        href={""}
+                        href={"/manager/attendance"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
+                        pathname === "/manager/attendance" ? "bg-black text-white" : ""
                         }`}
                     >
                         Attendance
@@ -142,7 +141,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                     <Link
                         href={"/manager/employee"}
                         className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
-                        pathname === "" ? "bg-black text-white" : ""
+                        pathname === "/manager/employee" ? "bg-black text-white" : ""
                         }`}
                     >
                         Employees
@@ -154,6 +153,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                         }`}
                     >
                         Employee Reports
+                    </Link>
+                                        <Link
+                        href={"/manager/event"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/event" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Events
                     </Link>
                     </ul>
                 </div>

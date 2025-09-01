@@ -1,247 +1,305 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+'use client'
+import React, { useEffect, useState } from 'react';
+import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
+import api from '@/app/api/axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/app/store';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
 
-import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from "lucide-react";
-import React, { FC, useState, useEffect } from "react";
-import api from "@/app/api/axios";
-import toast from "react-hot-toast";
-import { format } from "date-fns";
+// import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from "lucide-react";
+// import React, { FC, useState, useEffect } from "react";
+// import api from "@/app/api/axios";
+// import toast from "react-hot-toast";
+// import { format } from "date-fns";
 
-interface Task {
+
+type Task = {
   _id: string;
   title: string;
-}
+};
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-}
 
 interface Report {
   _id: string;
-  date: string; // ISO string from Date
-  submittedBy: User;
-  submittedTo: User;
-  projectId: Project;
-  completedTasks: Task[];
-  plannedTasks: Task[];
-  descriptions: string;
-  startTime: string;
-  endTime: string;
+  submittedBy: { name: string; email: string };
+  projectId: { name: string };
   effectiveHours: string;
-  performance: string;
-  challenges: string;
-  supportNeeded: string;
-  status: "pending" | "accepted" | "rejected";
+  descriptions: string;
+  completedTasks?: Task[];
+  performance?: string;
+  plannedTasks?: Task[];
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt?: string;
 }
 
-const ManagerReport: FC = () => {
-  const [isExpand, setIsExpand] = useState<string | null>(null);
+const ManagerReport: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [load, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const user = useSelector((state: RootState) => state.user.user)
+  const { loading } = useAdminAuthGuard()
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get(`/report/my?page=${page}&limit=10`);
-        setReports(res.data.reports);
-        setTotalPages(res.data.totalPages);
-      } catch (err: any) {
-        console.error("Error fetching reports:", err);
-        toast.error(err.response?.data?.message || "Failed to fetch reports");
-      } finally {
-        setLoading(false);
+
+useEffect(() => {
+  const fetchReports = async () => {
+    if (!user?.token) {
+      setFetchLoading(false);
+      return;
+    }
+
+    try {
+      setFetchLoading(true);
+      const { data } = await api.get(`/report/my?page=${page}&limit=5`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setReports(data.reports || []);
+      setTotalPages(data.totalPages || 1);
+
+      
+      const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
+      if (firstPending) {
+        setSelectedReportId(firstPending._id);
       }
-    };
-    fetchReports();
-  }, [page]);
-
-  const handleApprove = async (id: string) => {
-    try {
-      const res = await api.patch(`/reports/${id}/status`, { status: "accepted" });
-      setReports((prev) =>
-        prev.map((report) =>
-          report._id === id ? { ...report, status: "accepted" } : report
-        )
-      );
-      toast.success("Report approved successfully");
-    } catch (err: any) {
-      console.error("Error approving report:", err);
-      toast.error(err.response?.data?.message || "Failed to approve report");
+    } catch (error) {
+      console.error("Error fetching reports", error);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
-  const handleReject = async (id: string) => {
+  fetchReports();
+}, [user?.token, page]);
+
+
+  const updateStatus = async (id: string, status: 'accepted' | 'rejected') => {
     try {
-      const res = await api.patch(`/reports/${id}/status`, { status: "rejected" });
-      setReports((prev) =>
-        prev.map((report) =>
-          report._id === id ? { ...report, status: "rejected" } : report
-        )
+      setLoading(true);
+      const { data } = await api.patch(`/reports/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${user?.token}` } }
       );
-      toast.success("Report rejected successfully");
-    } catch (err: any) {
-      console.error("Error rejecting report:", err);
-      toast.error(err.response?.data?.message || "Failed to reject report");
+      
+      setReports(prev =>
+        prev.map(r => r._id === id ? { ...r, status: data.report?.status || status } : r)
+      );
+    } catch (error) {
+      console.error("Error updating status", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'accepted': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'accepted': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'rejected': return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'pending': return <Clock className="w-4 h-4 text-yellow-600" />;
+      default: return <Clock className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const selectedReport = reports.find(report => report._id === selectedReportId);
+
+  if (loading) return (
+    <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading detail...</p>
         </div>
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="bg-white border border-[#ddd] p-4 rounded flex gap-3 items-center">
-        <FileText size={35} className="p-2 rounded bg-blue-500 text-white" />
-        <p className="text-xl font-semibold">Employees Daily Report</p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {reports.map((report) => (
-          <div key={report._id} className="border border-[#ddd] p-5 rounded bg-white">
-            <div className="flex justify-between">
-              <div className="flex gap-3">
-                <Calendar size={30} className="p-2 bg-blue-500 text-white rounded" />
-                <p className="font-medium text-lg">
-                  Daily Report - {report.submittedBy.name} ({report.projectId.name})
-                </p>
+    <div className="min-h-screen ">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <h1 className="text-xl font-semibold text-gray-900">Managers Daily Report</h1>
               </div>
-              <div className="flex gap-3">
-                <div
-                  className={`p-2 text-xs rounded-full border ${
-                    report.status === "accepted"
-                      ? "bg-green-100 text-green-500 border-green-300"
-                      : report.status === "rejected"
-                      ? "bg-red-100 text-red-500 border-red-300"
-                      : "bg-yellow-100 text-yellow-500 border-yellow-300"
-                  }`}
-                >
-                  {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                </div>
-                <button onClick={() => setIsExpand(isExpand === report._id ? null : report._id)}>
-                  {isExpand === report._id ? (
-                    <ChevronDown className="text-[#696969] transition-transform duration-300" />
-                  ) : (
-                    <ChevronRight className="text-[#696969] transition-transform duration-300" />
-                  )}
-                </button>
+              <div className="text-sm text-gray-500">
+                {reports.length} report{reports.length !== 1 ? 's' : ''} found
               </div>
             </div>
-            {isExpand === report._id && (
-              <div className="mt-6 border p-4 rounded border-[#ddd] flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Description:</h2>
-                  <p className="ml-10">{report.descriptions || "No description provided"}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Date:</h2>
-                  <p className="ml-10">{format(new Date(report.date), "PPP")}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Time:</h2>
-                  <p className="ml-10">
-                    {report.startTime} - {report.endTime} ({report.effectiveHours} hours)
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Completed Tasks:</h2>
-                  <ul className="ml-10 list-disc">
-                    {report.completedTasks.length > 0 ? (
-                      report.completedTasks.map((task) => (
-                        <li key={task._id} className="text-sm">{task.title}</li>
-                      ))
-                    ) : (
-                      <li className="text-sm">No tasks completed</li>
-                    )}
-                  </ul>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Planned Tasks:</h2>
-                  <ul className="ml-10 list-disc">
-                    {report.plannedTasks.length > 0 ? (
-                      report.plannedTasks.map((task) => (
-                        <li key={task._id} className="text-sm">{task.title}</li>
-                      ))
-                    ) : (
-                      <li className="text-sm">No tasks planned</li>
-                    )}
-                  </ul>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Performance:</h2>
-                  <p className="ml-10">{report.performance || "No performance details provided"}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Challenges:</h2>
-                  <p className="ml-10">{report.challenges || "No challenges reported"}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-sm font-semibold text-[#696969]">Support Needed:</h2>
-                  <p className="ml-10">{report.supportNeeded || "No support needed"}</p>
-                </div>
+          </div>
+
+          <div className="p-6">
+            {reports.length === 0 ? (
+              <div className="text-center py-8">
+                <User className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">No reports found</p>
               </div>
-            )}
-            {report.status === "pending" && (
-              <div className="flex mt-2 justify-end gap-5">
+            ) : (
+              <div className="space-y-3">
+                {reports?.map((report) => (
+                  <div
+                    key={report._id}
+                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedReportId === report._id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedReportId(report._id)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <User className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          Daily Report - {report.submittedBy.name}
+                        </span>
+                        <div className="text-sm text-gray-500">
+                          {report.projectId?.name}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(report.status)}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(report.status)}`}>
+                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-center items-center space-x-4 mt-6">
                 <button
-                  onClick={() => handleApprove(report._id)}
-                  className="flex items-center gap-3 p-2 px-8 bg-green-500 text-white rounded"
+                  onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                  disabled={page === 1}
+                  className={`px-4 py-2 rounded-lg ${page === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
                 >
-                  <ThumbsUp size={15} className="mt-1" /> Approve
+                  Previous
                 </button>
+
+                <span className="text-gray-700">Page {page} of {totalPages}</span>
+
                 <button
-                  onClick={() => handleReject(report._id)}
-                  className="flex items-center gap-3 p-2 px-8 bg-red-500 text-white rounded"
+                  onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className={`px-4 py-2 rounded-lg ${page === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
                 >
-                  <ThumbsDown size={15} className="mt-1" /> Reject
+                  Next
                 </button>
+              </div>
+
               </div>
             )}
           </div>
-        ))}
-        {reports.length === 0 && (
-          <div className="text-center text-gray-500 py-4">
-            No reports found
+        </div>
+
+        {selectedReport && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Daily Report - {selectedReport.submittedBy.name}
+                </h2>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  <span>{selectedReport.effectiveHours}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Working Project</h3>
+                <p className="text-gray-900 font-medium">{selectedReport.projectId?.name}</p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Description</h3>
+                  <div className="space-y-2">
+                    {selectedReport.descriptions}
+                  </div>
+                </div>
+              </div>
+
+              
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => updateStatus(selectedReport?._id, 'rejected')}
+                  disabled={load || selectedReport?.status !== 'pending'}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+                    selectedReport?.status === 'rejected'
+                      ? 'bg-red-600 text-white'
+                      : selectedReport?.status !== 'pending' || load
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  }`}
+                >
+                  {load ? (
+                    <Clock className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <X className="w-4 h-4" />
+                  )}
+                  <span>
+                    {selectedReport.status === 'rejected' ? 'Rejected' : 'Reject'}
+                  </span>
+                </button>
+                <button
+                  onClick={() => updateStatus(selectedReport._id, 'accepted')}
+                  disabled={load || selectedReport.status !== 'pending'}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+                    selectedReport.status === 'accepted'
+                      ? 'bg-green-600 text-white'
+                      : selectedReport.status !== 'pending' || load
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-500 text-white hover:bg-green-600'
+                  }`}
+                >
+                  {load ? (
+                    <Clock className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  <span>
+                    {selectedReport.status === 'accepted' ? 'Approved' : 'Approve'}
+                  </span>
+                </button>
+              </div>
+
+              {selectedReport.status !== 'pending' && (
+                <div className={`mt-4 p-4 rounded-lg ${
+                  selectedReport.status === 'accepted' 
+                    ? 'bg-green-50 border border-green-200' 
+                    : 'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    {selectedReport.status === 'accepted' ? (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-600" />
+                    )}
+                    <span className={`font-medium ${
+                      selectedReport.status === 'accepted' ? 'text-green-800' : 'text-red-800'
+                    }`}>
+                      Report has been {selectedReport.status}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="flex justify-center mt-4 gap-2">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((prev) => prev - 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span className="px-4 py-2">{page} / {totalPages}</span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((prev) => prev + 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
       </div>
     </div>
   );
 };
-
 export default ManagerReport;

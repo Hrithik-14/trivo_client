@@ -56,6 +56,7 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    
     const user = useSelector((state: RootState) => state.user.user)
 
     const {
@@ -432,7 +433,7 @@ const Employees: FC = () => {
         };
 
         fetchEmployees();
-    }, [page, reload, user?.token]);
+    }, [page, reload]);
 
 
 

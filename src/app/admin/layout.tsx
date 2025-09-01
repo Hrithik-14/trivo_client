@@ -21,14 +21,13 @@ export default function RootLayout({ children }: MainContainerProps) {
         const storedUser = localStorage.getItem('user');
         const parsed = storedUser ? JSON.parse(storedUser) : null;
         setRole(parsed?.role || null);
-        console.log(storedUser);
-    }, []);
+        }, []);
 
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         toast.success('Logged out successfully!');
-        window.location.href = '/auth/login';
+        window.location.href = '/';
     };
     
 

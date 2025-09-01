@@ -1,6 +1,4 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-/* eslint-disable react-hooks/exhaustive-deps */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -127,7 +125,6 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     try {
       const token = user?.token;
       if (!token) throw new Error("No authentication token found");
-
       const reportsToSubmit = data.reports.map(report => ({
       currentProject: report.currentProject,
       startTime: report.startTime,
@@ -476,7 +473,7 @@ const DailyReport: FC = () => {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
         
-        if (response.data && response.data.report) {
+        if (response.data?.report) {
           const uniqueStatuses = Array.from(
             new Set(response.data.report.map((report: Report) => report.status))
           ) as string[];

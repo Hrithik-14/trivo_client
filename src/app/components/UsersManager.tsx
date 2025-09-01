@@ -51,6 +51,12 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
     return () => clearTimeout(timeoutId);
   };
 
+  const handleSelect = (user: User) => {
+    onSelect(user);
+    setQuery("");
+    setUsers([]);
+  };
+
   return (
     <div className="border border-[#ddd] rounded w-full">
       <div className="flex items-center px-2 py-1 border-b border-[#eee]">
@@ -71,7 +77,7 @@ const ManagersUserSearch: FC<Props> = ({ selectedUser, onSelect, managerId }) =>
           users.map((user) => (
             <div
               key={user._id}
-              onClick={() => onSelect(user)}
+              onClick={() => handleSelect(user)}
               className={`px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 ${
                 selectedUser?._id === user._id ? "" : "bg-green-100"
               }`}
