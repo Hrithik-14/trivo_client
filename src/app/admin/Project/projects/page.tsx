@@ -92,6 +92,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
     };
 
     try {
+      console.log(project);
       await api.post("/admin/addAdminProject", project);
       toast.success("Project created successfully");
       onClose();
