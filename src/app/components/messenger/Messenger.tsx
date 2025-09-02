@@ -1019,15 +1019,6 @@ useEffect(() => {
                             {chatItem.type === 'group' && <Users size={12} className="text-gray-500" />}
                             {chatItem.type === 'personal' && <User size={12} className="text-gray-500" />}
                           </h3>
-                          <h4
-                            className={`text-sm ${
-                              chatItem.unreadCount && chatItem.unreadCount > 0
-                                ? 'text-gray-900 font-medium'
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {getLastMessageText(chatItem.lastMessage, chatItem.type)}
-                          </h4>
                         </div>
                       </div>
                       <div className="text-xs text-gray-400 flex flex-col items-end">
@@ -1206,7 +1197,7 @@ useEffect(() => {
             )}
 
             {message.type === "audio" && message.file?.url && (
-              <div className="bg-gray-50/50 rounded-xl p-3">
+              <div>
                 <AudioPlayer
                   fileUrl={message.file?.url}
                   fileName={message.file?.name}

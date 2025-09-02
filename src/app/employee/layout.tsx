@@ -79,7 +79,7 @@ export default function RootLayout({ children }: MainContainerProps) {
   return (
     <>
       <header>
-        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5 z-20">
           <div>
             <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
           </div>
@@ -144,7 +144,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                         >
                             Attendance
                         </Link>
-                        
+                        <Link
+                            href={"/employee/events"}
+                            className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                            pathname === "/employee/events" ? "bg-black text-white" : ""
+                            }`}
+                        >
+                            Event
+                        </Link>
                         </ul>
                     </div>
                     

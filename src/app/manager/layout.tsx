@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react"
@@ -154,6 +153,14 @@ export default function RootLayout({ children }: MainContainerProps) {
                         }`}
                     >
                         Employee Reports
+                    </Link>
+                                        <Link
+                        href={"/manager/event"}
+                        className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                        pathname === "/manager/event" ? "bg-black text-white" : ""
+                        }`}
+                    >
+                        Events
                     </Link>
                     </ul>
                 </div>
