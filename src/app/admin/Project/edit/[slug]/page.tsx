@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Select, { SingleValue } from "react-select";
+import { Ban, Lock, Unlock, UserCheck, UserX } from "lucide-react";
 
 interface Project {
   _id: string;
@@ -591,53 +592,51 @@ export default function UpdateProjectPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {teamMembers
-                      
-                      .map((member) => (
-                        <div
-                          key={member._id}
-                          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-2">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                  <span className="text-blue-600 font-medium text-sm">
-                                    {member.user?.name?.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <h3 className="font-medium text-gray-900">
-                                    {member.user?.name}
-                                  </h3>
-                                  <p className="text-sm text-gray-500">
-                                    {member.user?.employeeCode}
-                                  </p>
-                                </div>
+                    {teamMembers.map((member) => (
+                      <div
+                        key={member._id}
+                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-blue-600 font-medium text-sm">
+                                  {member.user?.name?.charAt(0).toUpperCase()}
+                                </span>
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-sm text-gray-600">
-                                  {member.email}
+                              <div>
+                                <h3 className="font-medium text-gray-900">
+                                  {member.user?.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {member.user?.employeeCode}
                                 </p>
-                                {member.role && (
-                                  <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                                    {member.role}
-                                  </span>
-                                )}
-                                {member.department && (
-                                  <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full ml-1">
-                                    {member.department}
-                                  </span>
-                                )}
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleTeamMember(member._id)}
-                              className="text-red-600 hover:text-red-800 p-1 rounded transition-colors"
-                              title="Remove team member"
-                            >
-                              <svg
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">
+                                {member.email}
+                              </p>
+                              {member.role && (
+                                <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                  {member.role}
+                                </span>
+                              )}
+                              {member.department && (
+                                <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full ml-1">
+                                  {member.department}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTeamMember(member._id)}
+                            className="text-red-600 hover:text-red-800 p-1 rounded transition-colors"
+                            title="Remove team member"
+                          >
+                            {/* <svg
                                 className="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
@@ -649,11 +648,23 @@ export default function UpdateProjectPage() {
                                   strokeWidth={2}
                                   d="M6 18L18 6M6 6l12 12"
                                 />
-                              </svg>
-                            </button>
-                          </div>
+                              </svg> */}
+
+                            {member.isActive === false ? (
+                              <div className="flex gap-4 text-xl">
+                                <UserX aria-label="User Blocked" />{" "}
+                              </div>
+                            ) : (
+                              <div>
+                                {" "}
+                                {/* <Unlock aria-label="Unblock" /> */}
+                                <UserCheck aria-label="User Unblocked" />
+                              </div>
+                            )}
+                          </button>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -84,6 +84,8 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isActive, setIsActive] = useState<boolean | null>(null);
+  const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
+
 
   const projectId = slug;
 
@@ -91,6 +93,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     const fetchProject = async () => {
       try {
         const response = await api.get(`/getProjectById/${projectId}`);
+        console.log(response.data);
         const data: Project = response.data;
         setProject(data);
         setIsActive(data.isActive);
@@ -104,6 +107,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     fetchProject();
   }, [projectId]);
 
+  
   const handleActiveChange = async (newStatus: boolean) => {
     try {
       await api.patch(`/toggleActive/${projectId}`, {
