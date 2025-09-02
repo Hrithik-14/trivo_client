@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import api from '@/app/api/axios'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
@@ -63,7 +63,7 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
   const [loading, setLoading] = useState(false)
   const [attendanceToday, setAttendanceToday] = useState<Attendance | null>(null)
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = useCallback(async () => {
     if (!userId) return
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -72,11 +72,11 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
     } catch (error) {
       console.log('Error fetching attendance for today', error)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
     fetchTodayAttendance()
-  }, [userId])
+  }, [userId, fetchTodayAttendance])
 
   const handleMarkAttendance = async () => {
     if (!userId) {
@@ -138,7 +138,7 @@ const ManagerDashboard = () => {
 
 
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = useCallback(async () => {
     if (!user?.id) return
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -147,13 +147,13 @@ const ManagerDashboard = () => {
     } catch (error) {
       console.log('Error fetching attendance for today', error)
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.id) {
       fetchTodayAttendance()
     }
-  }, [user?.id])
+  }, [user?.id, fetchTodayAttendance])
 
 useEffect(() => {
   if (attendance?.signInTime && !attendance.signOutTime) {

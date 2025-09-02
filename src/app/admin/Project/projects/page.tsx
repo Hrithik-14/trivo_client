@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { FC, useState, useEffect } from 'react';
@@ -7,9 +6,7 @@ import { X, Clock, Plus, FileText, CheckCircle, Info, Calendar, User } from 'luc
 import api from '@/app/api/axios';
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
-// import Link from 'next/link';
 import ProjectSearch from '@/app/components/ProjectSearch';
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
@@ -17,7 +14,6 @@ import { AxiosError } from 'axios';
 import Link from 'next/link';
 
 
-type ManagerOption = { value: string; label: string };
 
 const today = new Date();
 today.setHours(0, 0, 0, 0); 
@@ -66,24 +62,7 @@ const AddProject: FC<{ onClose: () => void }> = ({ onClose }) => {
   const startDate = watch("startDate");
   const today = new Date().toISOString().split("T")[0];
 
-  const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
 
-  useEffect(() => {
-    const fetchManagers = async () => {
-      try {
-        const res = await api.get("/managersdeatil");
-        const options = res.data.map((manager: any) => ({
-          value: manager._id,
-          label: manager.name,
-        }));
-        setManagerOptions(options);
-      } catch (err) {
-        console.error("Failed to fetch managers:", err);
-      }
-    };
-
-    fetchManagers();
-  }, []);
 
   const onSubmit = async (data: ProjectFormData) => {
     const project = {

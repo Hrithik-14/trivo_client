@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
 import api from '@/app/api/axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
-import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
+import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
 
 
 
@@ -36,14 +35,14 @@ const EmployeeDailyReport: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const user = useSelector((state: RootState) => state.user.user)
-  const { loading } = useAdminAuthGuard()
+  const { loading } = useManangerAuthGuard()
   const [filterDate, setFilterDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
 
 
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     if (!user?.token) {
       setFetchLoading(false);
       return;
@@ -72,11 +71,11 @@ const EmployeeDailyReport: React.FC = () => {
     } finally {
       setFetchLoading(false);
     }
-  };
+  }, [filterDate,page,user?.token])
 
 useEffect(() => {
   fetchReports();
-}, [user?.token, page, filterDate]);
+}, [user?.token, page, filterDate, fetchReports]);
 
 
 

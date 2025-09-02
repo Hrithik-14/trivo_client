@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, useState, useEffect } from "react";
+import React, { FC, useState } from "react";
 import { Search } from "lucide-react";
 import api from "@/app/api/axios";
 

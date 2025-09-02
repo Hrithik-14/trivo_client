@@ -2,9 +2,9 @@
 "use client";
 
 import React, { FC, useState, useEffect } from "react";
-import { Users, Plus, Search, Mail, Map, Phone, X, User, Camera } from "lucide-react";
+import { Users, Plus, Mail, Map, Phone, X, User, Camera } from "lucide-react";
 import Image from "next/image";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import api from "@/app/api/axios";
@@ -51,11 +51,8 @@ const AddManager: FC<{ onClose: () => void }> = ({ onClose }) => {
   const {
     register,
     handleSubmit,
-    control,
     reset,
-    formState: { errors, isValid },
-    setValue,
-    watch
+    formState: { errors },
   } = useForm<ManagerFormData>({
     resolver: zodResolver(managerSchema),
     defaultValues: {

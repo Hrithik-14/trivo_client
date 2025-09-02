@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { FC, useState, useEffect } from 'react';
-import { X, Clock, Plus, FileText, CheckCircle, Info, Search, Calendar, User } from 'lucide-react';
+import { Clock, FileText, CheckCircle, Info, Calendar, User } from 'lucide-react';
 import api from '@/app/api/axios';
-import { useForm, Controller, useFieldArray  } from 'react-hook-form';
 
 import Link from 'next/link';
 
@@ -13,99 +11,6 @@ import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
 
-type Projects = {
-  _id: string;
-  name: string;
-  type: string
-};
-
-type Props = {
-  selectedProject: Projects | null;
-  onSelect: (project: Projects) => void;
-  managerId: string; 
-};
-
-const ProjectSearch: FC<Props> = ({ selectedProject, onSelect, managerId }) => {
-  const [projects, setProjects] = useState<Projects[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const fetchProjects = async (searchTerm = "") => {
-    if (!managerId) {
-      setProjects([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const res = await api.get(`/projectManagerSearch/${managerId}`, {
-        params: { query: searchTerm },
-      });
-      setProjects(res.data || []);
-    } catch (err) {
-      console.error("Failed to fetch projects:", err);
-      setProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-useEffect(() => {
-  if (!query.trim()) {
-    setProjects([]); 
-    return;
-  }
-
-  const timeoutId = setTimeout(() => {
-    fetchProjects(query);
-  }, 300);
-
-  return () => clearTimeout(timeoutId);
-}, [query, managerId]);
-
-  return (
-    <div className="border border-[#ddd] rounded w-full h-fit">
-      <div className="flex items-center px-2 py-1 border-b border-[#eee]">
-        <Search size={16} className="text-gray-500" />
-        <input
-          type="text"
-          placeholder="Search projects..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 outline-none p-2 text-sm"
-        />
-      </div>
-
-      <div className="max-h-40 overflow-y-auto">
-        {loading ? (
-          <p className="text-sm text-gray-500 p-2">Loading...</p>
-        ) : projects.length > 0 ? (
-          projects.map((project) => (
-            <div
-              key={project._id}
-              onClick={() => onSelect(project)}
-              className={`px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 ${
-                selectedProject?._id === project._id ? "bg-green-100" : ""
-              }`}
-            >
-              {project.name}
-            </div>
-          ))
-        ) : (
-          <p className={`text-sm text-gray-500 ${query && 'p-2'}`}>
-            {query ? "No projects found" : ""}
-          </p>
-        )}
-      </div>
-
-      {selectedProject && (
-        <div className="bg-gray-50 px-3 py-2 border-t border-[#eee] text-xs text-gray-600">
-          Selected: {selectedProject.name}
-        </div>
-      )}
-    </div>
-  );
-};
 
 
 
@@ -133,7 +38,6 @@ const Projects: FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
-    const [reload, setReload] = useState(false);
     const { loading } = useManangerAuthGuard()
     const user = useSelector((state: RootState) => state.user.user)
 
@@ -157,7 +61,7 @@ const Projects: FC = () => {
           
         })
         .catch(err => {console.error("Error in Fetching project:", err);})
-    }, [page, reload, user?.id])
+    }, [page, user?.id])
 
 
 

@@ -62,11 +62,8 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
     const {
         register,
         handleSubmit,
-        control,
         reset,
-        formState: { errors, isValid },
-        setValue,
-        watch
+        formState: { errors },
     } = useForm<EmployeeFormData>({
         resolver: zodResolver(employeeSchema),
         defaultValues: {
@@ -170,7 +167,6 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
             
             <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-5 flex gap-10 rounded mt-2">
-            {/* Image Upload Section */}
             <div className="w-[400px] h-[250px] relative">
                 {imagePreview ? (
                 <Image
@@ -433,7 +429,7 @@ const Employees: FC = () => {
         };
 
         fetchEmployees();
-    }, [page, reload]);
+    }, [page, reload, user]);
 
 
 

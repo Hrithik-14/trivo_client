@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
 import api from '@/app/api/axios';
 import { useSelector } from 'react-redux';
@@ -40,7 +40,7 @@ const ManagerReport: React.FC = () => {
 
 
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     if (!user?.token) {
       setFetchLoading(false);
       return;
@@ -69,11 +69,11 @@ const ManagerReport: React.FC = () => {
     } finally {
       setFetchLoading(false);
     }
-  };
+  },[user?.token, filterDate, page])
 
 useEffect(() => {
   fetchReports();
-}, [user?.token, page, filterDate]);
+}, [user?.token, page, filterDate, fetchReports]);
 
 
 

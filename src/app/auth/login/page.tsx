@@ -49,7 +49,7 @@ import toast from 'react-hot-toast'
   } else {
     setLoading(false)
   }
-}, []);
+}, [router]);
 
 
 const onSubmit = async (data: LoginFormData) => {

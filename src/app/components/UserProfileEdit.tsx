@@ -3,31 +3,28 @@
 
 import { Camera, User } from 'lucide-react'
 import Image from 'next/image'
-import React, { FC } from 'react'
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import api from '@/app/api/axios'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 const jobRoles: { [key: string]: string } = {
-  frontend: 'Frontend Developer',
-  backend: 'Backend Developer',
-  tester: 'Tester',
-  seniordeveloper: 'Senior Developer',
-  designer: 'UI/UX Designer',
-  productmanager: 'Product Manager',
-  designmanager: 'Design Manager',
+    frontend: 'Frontend Developer',
+    backend: 'Backend Developer',
+    tester: 'Tester',
+    seniordeveloper: 'Senior Developer',
+    designer: 'UI/UX Designer',
+    productmanager: 'Product Manager',
+    designmanager: 'Design Manager',
 };
 
-type Props = {
-    userId?: string;
+type UserProfileProps = {
+    slug: string 
 }
 
-const EditProfile: FC<Props> = ({ userId }) => {
-    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm()
-
-
-
+const EditProfile = ({ slug }: UserProfileProps) => {
+    const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm()
     const [userData, setUserData] = React.useState<any>(null);
     const [managerList, setManagerList] = React.useState<any[]>([]);
     const [load, setLoading] = React.useState(true);
@@ -38,7 +35,7 @@ const EditProfile: FC<Props> = ({ userId }) => {
     React.useEffect(() => {
         const fetchUserData = async () => {
         try {
-            const userRes = await api.get(`/users/${userId}`);
+            const userRes = await api.get(`/users/${slug}`);
             setUserData(userRes.data);
 
             reset({
@@ -64,13 +61,13 @@ const EditProfile: FC<Props> = ({ userId }) => {
             }
 
             setLoading(false);
-        } catch (err) {
-            toast.error('Failed to load user data');
+        } catch (err: any) {
+            toast.error('Failed to load user data', err);
         }
         };
 
         fetchUserData();
-    }, [userId, reset]);
+    }, [slug, reset]);
 
     const getJobRoleOptions = () => {
         if (userData?.role === 'manager') {
@@ -109,15 +106,15 @@ const EditProfile: FC<Props> = ({ userId }) => {
         }
 
         try {
-        await api.patch(`/updateuser/${userId}`, formData, {
+        await api.patch(`/updateuser/${slug}`, formData, {
             headers: {
             'Content-Type': 'multipart/form-data',
             },
         });
         toast.success('User updated successfully');
-        router.push(`/admin/profile/${userId}`)
-        } catch (err) {
-        toast.error('Error updating user');
+        router.push(`/admin/profile/${slug}`)
+        } catch (err: any) {
+        toast.error('Error updating user', err);
         }
     };
 

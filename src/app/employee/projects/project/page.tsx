@@ -29,11 +29,10 @@ type Project = {
 
 const Projects: FC = () => {
     const [ projects, setProject ] = useState<Project[]>([])
-    const [load, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
-    const [reload, setReload] = useState(false);
+
     const user = useSelector((state: RootState) => state.user.user)
     const { loading } = useEmployeeAuthGuard()
 
@@ -42,20 +41,18 @@ const Projects: FC = () => {
         setProject([]);
         setTotalPages(0);
         setStats({ total: 0, ongoing: 0, completed: 0 });
-        setLoading(false);
+
         return;
     }
 
-    setLoading(true);
     api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=2`)
         .then(res => {
             setProject(res.data.projects); 
             setTotalPages(res.data.totalPages);
             setStats(res.data.stats)
-            setLoading(false);
         })
-        .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
-    }, [page, reload, user?.id])
+        .catch(err => {console.error("Error in Fetching project:", err); })
+    }, [page, user?.id])
 
 
     if (loading) return (

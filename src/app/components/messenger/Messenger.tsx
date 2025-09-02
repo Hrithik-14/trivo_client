@@ -3,16 +3,18 @@
 
 'use client'
 import api from '@/app/api/axios';
-import React, { useState, useEffect, useRef, FC, ChangeEvent  } from 'react';
+import React, { useState, useEffect, useRef, FC, ChangeEvent, useCallback  } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Search, Plus, Users, Send, MessageCircle, ArrowLeft, Camera, User, Paperclip, Download, Loader2 } from 'lucide-react';
 import { format, isToday, isYesterday, differenceInDays } from 'date-fns';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import PdfModal from './pdfModal';
 import { saveAs } from "file-saver";
 import { AudioPlayer } from './audioPlayer';
 
+import dynamic from "next/dynamic";
+
+const PdfModal = dynamic(() => import("./pdfModal"), { ssr: false });
 
 function getDateLabel(dateString: string) {
   const date = new Date(dateString);
@@ -130,18 +132,6 @@ interface MessengerProps {
 }
 
 
-const getLastMessageText = (lastMessage?: MessageLike, type?: 'group' | 'personal'): string => {
-  if (!lastMessage) {
-    return type === 'personal' ? 'Start a conversation' : 'No messages yet';
-  }
-
-  if (typeof lastMessage === 'string') {
-    return lastMessage;
-  }
-
-  return lastMessage.content || lastMessage.file?.name || (type === 'personal' ? 'Start a conversation' : 'No messages yet');
-};
-
 
 const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -164,10 +154,8 @@ const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [groupList, setGroupList] = useState(false);
-  const lastDateLabel: string | null = null;
   const [activeArea, setActiveArea] = useState('list');
   const [chatType, setChatType] = useState<'group' | 'direct'>('group');
-  const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [showContactsTab, setShowContactsTab] = useState(false);
@@ -194,55 +182,9 @@ const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   }, []);
 
 
-useEffect(() => {
-  if (initialContact && token && currentUserId) {
-    console.log('Initial contact provided:', initialContact);
-    console.log('Contacts loaded:', contacts.length);
-    console.log('Current user ID:', currentUserId);
-    
-    const timer = setTimeout(() => {
-      setActiveArea('chat');
-      setChatType('direct');
-      
-      const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
-      console.log('Selecting contact:', contact);
-      
-      setSelectedContact(contact);
-      setSelectedGroup(null);
-      
-      if (contact._id !== currentUserId) {
-        loadDirectMessages(contact._id);
-        
-        addOrUpdatePersonalChat(contact);
-        
-        if (socket) {
-          console.log("Joining direct chat room for:", contact._id);
-          socket.emit("joinDirectChat", { 
-            userId: currentUserId, 
-            contactId: contact._id 
-          });
-        }
-      }
-    }, 1000);
 
-    return () => clearTimeout(timer);
-  }
-}, [initialContact, token, currentUserId, contacts.length, socket]);
 
-useEffect(() => {
-  if (initialContact && contacts.length > 0 && !selectedContact && !selectedGroup) {
-    console.log('Contacts loaded after initialContact was set, trying to select contact');
-    const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
-    if (contact && contact._id !== currentUserId) {
-      setActiveArea('chat');
-      setChatType('direct');
-      setSelectedContact(contact);
-      setSelectedGroup(null);
-      loadDirectMessages(contact._id);
-      addOrUpdatePersonalChat(contact);
-    }
-  }
-}, [contacts.length, initialContact, selectedContact, selectedGroup, currentUserId]);
+
 
   const handleFileChange = async (e: any) => {
     if (e.target.files.length > 0) {
@@ -268,23 +210,15 @@ useEffect(() => {
     }
   }
 
-  const calculateUnreadCount = (groupId: string, groupMessages: Message[]): number => {
+  const calculateUnreadCount = useCallback((groupId: string, groupMessages: Message[]): number => {
     return groupMessages.filter(message => 
       message.groupId === groupId && 
       message.senderId._id !== currentUserId && 
       !message.readBy.includes(currentUserId)
     ).length;
-  };
+  }, [currentUserId])
 
-  const calculateDirectUnreadCount = (contactId: string, directMessages: DirectMessage[]): number => {
-    return directMessages.filter(message => 
-      message.senderId._id === contactId && 
-      message.recieverId === currentUserId &&
-      (!message.readBy || !message.readBy.includes(currentUserId))
-    ).length;
-  };
-
-  const loadUnreadCounts = async () => {
+  const loadUnreadCounts = useCallback(async () => {
     if (!token || !currentUserId) return;
     
     try {
@@ -306,9 +240,9 @@ useEffect(() => {
     } catch (error) {
       console.error("Failed to load unread counts", error);
     }
-  };
+  }, [token, currentUserId, calculateUnreadCount, groups])
 
-  const loadPersonalChats = async () => {
+  const loadPersonalChats = useCallback(async () => {
     if (!token || !currentUserId) {
       console.log('Cannot load personal chats - missing token or currentUserId:', { token: !!token, currentUserId });
       return;
@@ -356,7 +290,7 @@ useEffect(() => {
       console.error("Failed to load personal chats - full error:", error);
       setPersonalChats([]);
     }
-  };
+  }, [token, currentUserId])
 
   const addOrUpdatePersonalChat = (contact: Contact, message?: MessageLike, timestamp?: string) => {
     setPersonalChats(prev => {
@@ -436,6 +370,8 @@ useEffect(() => {
     );
   };
 
+  
+
   useEffect(() => {
     if (!token || !currentUserId) return;
 
@@ -476,6 +412,7 @@ useEffect(() => {
         return group;
       }));
     });
+    
 
     newSocket.on("newDirectMessage", (msg: DirectMessage) => {
       
@@ -565,28 +502,23 @@ useEffect(() => {
       console.log("Cleaning up socket connection");
       newSocket.disconnect();
     };
-  }, [token, currentUserId, contacts]);
+  }, [token, currentUserId, contacts, selectedContact, selectedGroup]);
 
-  useEffect(() => {
-    if (token) {
-      loadContacts();
-      loadGroups();
-    }
-  }, [token]);
+
 
   useEffect(() => {
     if (token && currentUserId && contacts.length > 0) {
       loadPersonalChats();
     }
-  }, [token, currentUserId, contacts.length]);
+  }, [token, currentUserId, contacts.length, loadPersonalChats]);
 
   useEffect(() => {
     if (groups.length > 0 && currentUserId) {
       loadUnreadCounts();
     }
-  }, [groups.length, currentUserId]);
+  }, [groups.length, currentUserId, loadUnreadCounts]);
 
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       const res = await api.get('/group/users', {
         headers: {
@@ -598,9 +530,9 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load users", err);
     }
-  };
+  }, [token])
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       const res = await api.get('/group/my', {
         headers: {
@@ -612,7 +544,14 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load groups", err);
     }
-  };
+  }, [token])
+
+    useEffect(() => {
+    if (token) {
+      loadContacts();
+      loadGroups();
+    }
+  }, [token, loadContacts, loadGroups]);
 
   const loadGroupMessages = async (groupId: string) => {
     try {
@@ -627,7 +566,7 @@ useEffect(() => {
     }
   };
 
-  const loadDirectMessages = async (contactId: string) => {
+  const loadDirectMessages = useCallback(async (contactId: string) => {
     try {
       const res = await api.get(`/chat/${contactId}/messages`, {
         headers: {
@@ -638,7 +577,57 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load direct messages", err);
     }
-  };
+  }, [token])
+
+  useEffect(() => {
+  if (initialContact && token && currentUserId) {
+    console.log('Initial contact provided:', initialContact);
+    console.log('Contacts loaded:', contacts.length);
+    console.log('Current user ID:', currentUserId);
+    
+    const timer = setTimeout(() => {
+      setActiveArea('chat');
+      setChatType('direct');
+      
+      const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+      console.log('Selecting contact:', contact);
+      
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      
+      if (contact._id !== currentUserId) {
+        loadDirectMessages(contact._id);
+        
+        addOrUpdatePersonalChat(contact);
+        
+        if (socket) {
+          console.log("Joining direct chat room for:", contact._id);
+          socket.emit("joinDirectChat", { 
+            userId: currentUserId, 
+            contactId: contact._id 
+          });
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }
+}, [initialContact, token, currentUserId, contacts.length, socket, contacts, loadDirectMessages]);
+
+  useEffect(() => {
+  if (initialContact && contacts.length > 0 && !selectedContact && !selectedGroup) {
+    console.log('Contacts loaded after initialContact was set, trying to select contact');
+    const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+    if (contact && contact._id !== currentUserId) {
+      setActiveArea('chat');
+      setChatType('direct');
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      loadDirectMessages(contact._id);
+      addOrUpdatePersonalChat(contact);
+    }
+  }
+}, [contacts.length, initialContact, selectedContact, selectedGroup, currentUserId, loadDirectMessages, contacts]);
 
   const toggleMember = (contact: Contact) => {
     setSelectedMembers(prev => {
@@ -692,7 +681,6 @@ useEffect(() => {
       setSelectedMembers([]);
       setProfileImage(null);
       setProfileImagePreview(null);
-      setActiveTab('groups');
     } catch (err) {
       console.error("Failed to create group", err);
       toast.error("Failed to create group");

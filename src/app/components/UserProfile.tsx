@@ -2,10 +2,10 @@
 "use client"
 
 import api from '@/app/api/axios'
-import { AlarmClock, ArrowLeft, Briefcase, Calendar, ChevronDown, ChevronRight, CircleCheckBig, Clock, File, Info, Mail, Map, Phone, TicketCheck, TrendingDown, TrendingUp, User  } from 'lucide-react'
+import { AlarmClock, Briefcase, Calendar, ChevronDown, ChevronRight, CircleCheckBig, Clock, Info, Mail, Map, Phone, TrendingDown, TrendingUp, User  } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { FC, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 
 type User = {
@@ -74,12 +74,11 @@ type Report = {
     challenges: string;
 }
 
-type Props = {
-    userId?: string;
+interface UserProfileProps {
+    slug: string
 }
 
-const UserProfile: FC<Props> = ({ userId }) => {
-    
+const UserProfile = ({ slug }: UserProfileProps) => {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -102,10 +101,10 @@ const UserProfile: FC<Props> = ({ userId }) => {
         const fetchUser = async () => {
             try {
                 const [userResponse, attendanceResponse, reportResponse, projectResponse] = await Promise.all([
-                    api.get(`/users/${userId}`),
-                    api.get(`/user/attendace-history/${userId}?filter=${filter}`),
-                    api.get(`/my-report/${userId}?date=${selectedDate}`),
-                    api.get(`/allProject/member/${userId}?page=${page}&limit=2`)
+                    api.get(`/users/${slug}`),
+                    api.get(`/user/attendace-history/${slug}?filter=${filter}`),
+                    api.get(`/my-report/${slug}?date=${selectedDate}`),
+                    api.get(`/allProject/member/${slug}?page=${page}&limit=2`)
                 ])
                 setUser(userResponse.data)
                 setAttendance(attendanceResponse.data)
@@ -118,21 +117,18 @@ const UserProfile: FC<Props> = ({ userId }) => {
             }
         }
         fetchUser()
-    }, [userId, filter, selectedDate])
+    }, [slug, filter, selectedDate, page])
     
     const updateIsActive = async (userId: string, isActive: boolean): Promise<User> => {
         const res = await api.patch(`/${userId}/active`, { isActive });
         return res.data;
     };
 
-
-
-
     if (!user) return (
         <div className="h-screen flex items-center justify-center">
             <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading project details...</p>
+            <p className="text-gray-600">Loading...</p>
             </div>
         </div>
     );

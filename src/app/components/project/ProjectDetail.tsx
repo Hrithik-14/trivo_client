@@ -2,7 +2,7 @@
 "use client";
 
 import React, { FC, useState, useEffect } from "react";
-import { ChevronDown, User, Building2, Clock, Users, Plus,  UserPlus, Trash2, Zap, CheckSquare, Building, Target, AlertCircle, UserCheck, Folder, X, FileText } from "lucide-react";
+import { ChevronDown, User, Building2, Clock, Users, Plus,  UserPlus, Trash2, Building, Target, AlertCircle, UserCheck, Folder, X, FileText } from "lucide-react";
 import Image from "next/image";
 import { differenceInDays, parseISO } from "date-fns";
 import api from "@/app/api/axios";
@@ -12,7 +12,7 @@ import Messenger from "../messenger/Messenger";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { Rnd } from "react-rnd";
-import { useFieldArray, useForm, useController, Controller } from "react-hook-form";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 import toast from 'react-hot-toast';
 import ManagersUserSearch from '@/app/components/UsersManager';
 
@@ -65,7 +65,6 @@ const AddProject: FC<{ onClose: () => void; projectId: string; projectName: stri
         type: "project"
     });
   const [selectedEmployeeIndex, setSelectedEmployeeIndex] = useState<number | null>(null);
-  const [addedEmployees, setAddedEmployees] = useState<Set<string>>(new Set());
   const user = useSelector((state: RootState) => state.user.user)
   
   const managerId = user?.id
@@ -122,7 +121,6 @@ const AddProject: FC<{ onClose: () => void; projectId: string; projectName: stri
             projectId,
             employeeCode,
           });
-          setAddedEmployees(prev => new Set(prev).add(employeeCode));
           onClose()
         } catch (error: any) {
           if (!error?.response?.data?.message?.includes("already")) {
@@ -324,7 +322,6 @@ const AddProject: FC<{ onClose: () => void; projectId: string; projectName: stri
                               <span className="text-xs">{errors.taskAssignments[index]?.employeeCode?.message}</span>
                             </div>
                           )}
- 
                         </div>
                       </div>
                     </div>
@@ -536,6 +533,8 @@ const calculateDuration = (start?: string, end?: string) => {
         return { months, days };
     } catch (error) {
         console.error("Invalid dates:", { start, end });
+        console.log(error);
+        
         return { months: 0, days: 0 };
     }
 };

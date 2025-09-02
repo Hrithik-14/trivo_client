@@ -1,6 +1,6 @@
 'use client'
 
-import UserProfile from '@/app/components/userProfile/[slug]/page'
+import UserProfile from '@/app/components/UserProfile'
 import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard'
 import { useParams } from 'next/navigation'
 import React from 'react'
@@ -20,7 +20,7 @@ const Profile = () => {
     );
     return (
         <div>
-            <UserProfile userId={userId}  />
+            <UserProfile slug={userId}  />
         </div>
     )
 }

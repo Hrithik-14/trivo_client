@@ -35,8 +35,8 @@ const UpcomingHoliday = () => {
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     return (
-        <div className="p-4 bg-white border border-gray-200 h-full w-80 rounded">
-            <h2 className="font-bold mb-4">Upcoming Holidays:</h2>
+        <div className="p-4 bg-white border border-gray-200  rounded">
+            <h2 className="font-bold mb-4 sticky top-0 py-2 bg-white">Upcoming Holidays:</h2>
             <ul>
                 {upcomingHolidays.length > 0 ? (
                     upcomingHolidays.map((day) => (
