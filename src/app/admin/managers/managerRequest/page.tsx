@@ -3,7 +3,7 @@
 
 import { Calendar, ThumbsDown, ThumbsUp } from "lucide-react";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/app/api/axios";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
@@ -31,40 +31,39 @@ const ManagerRequest: React.FC = () => {
         Request[]
     >([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
     const user = useSelector((state: RootState) => state.user.user);
     const token = user?.token;
 
+
+
+    const fetchRequests = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [leaveResponse, regularizationResponse] = await Promise.all([
+                api.get<Request[]>("/allrequest", {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                api.get<Request[]>("/get-regularization", {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ]);
+
+            setLeaveRequests(leaveResponse.data);
+            setRegularizationRequests(regularizationResponse.data);
+        } catch (err: any) {
+            console.error("Error fetching requests:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [token]);
+
     useEffect(() => {
         fetchRequests();
-    }, []);
-
-    const fetchRequests = async () => {
-        try {
-        setLoading(true);
-        const [leaveResponse, regularizationResponse] = await Promise.all([
-            api.get<Request[]>("/allrequest", {
-            headers: { Authorization: `Bearer ${token}` },
-            }),
-            api.get<Request[]>("/get-regularization", {
-            headers: { Authorization: `Bearer ${token}` },
-            }),
-        ]);
-
-        setLeaveRequests(leaveResponse.data);
-        setRegularizationRequests(regularizationResponse.data);
-        } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to fetch requests");
-        console.error("Error fetching requests:", err);
-        } finally {
-        setLoading(false);
-        }
-    };
+    }, [fetchRequests]);
 
     const handleRequestAction = async (
         requestId: string,
         status: "Approve" | "Reject",
-        requestType: string
     ) => {
         try {
         await api.patch(
@@ -93,7 +92,7 @@ const ManagerRequest: React.FC = () => {
         });
     };
 
-const renderRequestCard = (request: Request, requestType: string) => (
+const renderRequestCard = (request: Request) => (
   <div
     key={request._id}
     className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 rounded-lg mb-4"
@@ -162,7 +161,7 @@ const renderRequestCard = (request: Request, requestType: string) => (
         <div className="flex flex-col sm:flex-row gap-2 ml-4 flex-shrink-0">
           <button
             onClick={() =>
-              handleRequestAction(request._id, "Approve", requestType)
+              handleRequestAction(request._id, "Approve")
             }
             className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
           >
@@ -172,7 +171,7 @@ const renderRequestCard = (request: Request, requestType: string) => (
           
           <button
             onClick={() =>
-              handleRequestAction(request._id, "Reject", requestType)
+              handleRequestAction(request._id, "Reject")
             }
             className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
           >
@@ -215,7 +214,7 @@ const renderRequestCard = (request: Request, requestType: string) => (
             ) : (
             <div className="space-y-3">
                 {regularizationRequests.map((request) =>
-                renderRequestCard(request, "regularization")
+                renderRequestCard(request)
                 )}
             </div>
             )}
@@ -232,7 +231,7 @@ const renderRequestCard = (request: Request, requestType: string) => (
             ) : (
             <div className="space-y-3">
                 {leaveRequests.map((request) =>
-                renderRequestCard(request, "leave")
+                renderRequestCard(request)
                 )}
             </div>
             )}

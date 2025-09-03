@@ -68,18 +68,14 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
         },
     });
 
-    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
-    const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [employeeList, setEmployeeList] = useState<Employee[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Watch salary fields for tax calculation
     const basicSalary = watch("basicSalary");
     const allowance = watch("allowance");
     const bonus = watch("bonus");
     const incentive = watch("incentive");
 
-    // Calculate and set tax automatically (10% of total earnings)
     useEffect(() => {
         const basic = parseFloat(basicSalary) || 0;
         const allow = parseFloat(allowance) || 0;
@@ -87,7 +83,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
         const incent = parseFloat(incentive) || 0;
 
         const totalEarnings = basic + allow + bon + incent;
-        const calculatedTax = totalEarnings * 0.10; // 10% tax
+        const calculatedTax = totalEarnings * 0.10;
 
         setValue("tax", calculatedTax.toFixed(2));
     }, [basicSalary, allowance, bonus, incentive, setValue]);
@@ -112,7 +108,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
         }
         const employee = employeeList.find((emp) => emp.employeeCode === option.value);
         if (employee) {
-            setSelectedEmployee(employee);
             setValue("employeeName", employee.name);
             setValue("employeeCode", employee.employeeCode);
             setValue("designation", employee.designation);
@@ -126,7 +121,6 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
     };
 
     const clearEmployeeSelection = () => {
-        setSelectedEmployee(null);
         reset({
             employeeName: "",
             employeeCode: "",
@@ -155,11 +149,7 @@ const AddPayslip: FC<AddPayslipProps> = ({ onClose }) => {
                 .filter((emp) => emp.name.toLowerCase().includes(term.toLowerCase()));
 
             setEmployeeList(filteredEmployees);
-            const options = filteredEmployees.map((emp) => ({
-                value: emp.employeeCode,
-                label: emp.name,
-            }));
-            setEmployeeOptions(options);
+
         } catch (err) {
             console.error("Failed to fetch employees:", err);
         }
@@ -472,7 +462,7 @@ const Payslip: FC = () => {
     useEffect(() => {
         const fetchPayslips = async () => {
             try {
-                const res = await api.get(`/payslips?page=${page}&limit=4`);
+                const res = await api.get(`/payslips?page=${page}&limit=10`);
                 setPayslips(res.data.data);
                 setTotalPages(res.data.totalPages);
             } catch (err) {

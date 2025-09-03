@@ -2,10 +2,16 @@
 
 import ProjectDetail from "@/app/components/project/ProjectDetail"
 import { useManangerAuthGuard } from "@/app/hooks/usemanagerAuthGuard"
+import React from "react"
+
+type ManagerProjectDetailProps = {
+    params: Promise<{ slug: string }>
+}
 
 
-const ManagerProjectDetail = ({ params }: { params: { slug: string } }) => {
+const ManagerProjectDetail = ({ params }: ManagerProjectDetailProps) => {
     const { loading } = useManangerAuthGuard()
+    const { slug } = React.use(params)
 
     if (loading) return  (   
         <div className="min-h-screen flex items-center justify-center">
@@ -17,7 +23,7 @@ const ManagerProjectDetail = ({ params }: { params: { slug: string } }) => {
     )
     return (
         <div>
-            <ProjectDetail slug={params.slug} role="manager"/>
+            <ProjectDetail slug={slug} role="manager"/>
         </div>
     )
 }

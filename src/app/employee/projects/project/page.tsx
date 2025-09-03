@@ -29,11 +29,10 @@ type Project = {
 
 const Projects: FC = () => {
     const [ projects, setProject ] = useState<Project[]>([])
-    const [load, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
-    const [reload, setReload] = useState(false);
+
     const user = useSelector((state: RootState) => state.user.user)
     const { loading } = useEmployeeAuthGuard()
 
@@ -42,20 +41,18 @@ const Projects: FC = () => {
         setProject([]);
         setTotalPages(0);
         setStats({ total: 0, ongoing: 0, completed: 0 });
-        setLoading(false);
+
         return;
     }
 
-    setLoading(true);
-    api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=2`)
+    api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=5`)
         .then(res => {
             setProject(res.data.projects); 
             setTotalPages(res.data.totalPages);
             setStats(res.data.stats)
-            setLoading(false);
         })
-        .catch(err => {console.error("Error in Fetching project:", err); setLoading(false);})
-    }, [page, reload, user?.id])
+        .catch(err => {console.error("Error in Fetching project:", err); })
+    }, [page, user?.id])
 
 
     if (loading) return (
@@ -116,11 +113,11 @@ const Projects: FC = () => {
                                 <p className='text-sm text-[#696969]'>{project.description}</p>
                             </div>
                             <div className={`p-2 text-xs h-fit px-4 rounded-full border ${
-                                project.status === 'ongoing'
+                                project.status === 'Ongoing'
                                 ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
                                 : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
                             }`}>
-                                {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
+                                {project.status === 'Ongoing' ? "Ongoing" : "Completed"}
                             </div>
                         </div>
 
@@ -135,17 +132,7 @@ const Projects: FC = () => {
                             <User size={15} />
                             <p className='text-xs'><span className='font-semibold'>Client: </span>{project.client}</p>
                         </div>
-
-                        <div className='text-[#696969] flex gap-3 flex-col'>
-                            <div className='font-semibold text-xs'>Team Members :</div>
-                            <div className='ml-5 flex flex-wrap gap-2'>
-                                {project.members.filter((member) => member.role.toLowerCase() !== "manager").map((member, index) => (
-                                    <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
-                                        {member.name}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        
                     </Link>
                 ))}
             <div className="flex justify-center mt-4 gap-2">

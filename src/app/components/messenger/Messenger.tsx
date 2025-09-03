@@ -3,16 +3,18 @@
 
 'use client'
 import api from '@/app/api/axios';
-import React, { useState, useEffect, useRef, FC, ChangeEvent  } from 'react';
+import React, { useState, useEffect, useRef, FC, ChangeEvent, useCallback  } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Search, Plus, Users, Send, MessageCircle, ArrowLeft, Camera, User, Paperclip, Download } from 'lucide-react';
+import { Search, Plus, Users, Send, MessageCircle, ArrowLeft, Camera, User, Paperclip, Download, Loader2 } from 'lucide-react';
 import { format, isToday, isYesterday, differenceInDays } from 'date-fns';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import PdfModal from './pdfModal';
 import { saveAs } from "file-saver";
 import { AudioPlayer } from './audioPlayer';
 
+import dynamic from "next/dynamic";
+
+const PdfModal = dynamic(() => import("./pdfModal"), { ssr: false });
 
 function getDateLabel(dateString: string) {
   const date = new Date(dateString);
@@ -130,18 +132,6 @@ interface MessengerProps {
 }
 
 
-const getLastMessageText = (lastMessage?: MessageLike, type?: 'group' | 'personal'): string => {
-  if (!lastMessage) {
-    return type === 'personal' ? 'Start a conversation' : 'No messages yet';
-  }
-
-  if (typeof lastMessage === 'string') {
-    return lastMessage;
-  }
-
-  return lastMessage.content || lastMessage.file?.name || (type === 'personal' ? 'Start a conversation' : 'No messages yet');
-};
-
 
 const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -164,13 +154,12 @@ const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [groupList, setGroupList] = useState(false);
-  const lastDateLabel: string | null = null;
   const [activeArea, setActiveArea] = useState('list');
   const [chatType, setChatType] = useState<'group' | 'direct'>('group');
-  const [activeTab, setActiveTab] = useState<'groups' | 'contacts'>('groups');
   const [groupImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  const [showContactsTab, setShowContactsTab] = useState(false); 
+  const [showContactsTab, setShowContactsTab] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
     const [previewUrl, setpreviewUrl] = useState<{
     url: string;
     name?: string;
@@ -193,61 +182,27 @@ const Messenger: FC<MessengerProps> = ({ role, initialContact }) => {
   }, []);
 
 
-useEffect(() => {
-  if (initialContact && token && currentUserId) {
-    console.log('Initial contact provided:', initialContact);
-    console.log('Contacts loaded:', contacts.length);
-    console.log('Current user ID:', currentUserId);
-    
-    const timer = setTimeout(() => {
-      setActiveArea('chat');
-      setChatType('direct');
-      
-      const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
-      console.log('Selecting contact:', contact);
-      
-      setSelectedContact(contact);
-      setSelectedGroup(null);
-      
-      if (contact._id !== currentUserId) {
-        loadDirectMessages(contact._id);
-        
-        addOrUpdatePersonalChat(contact);
-        
-        if (socket) {
-          console.log("Joining direct chat room for:", contact._id);
-          socket.emit("joinDirectChat", { 
-            userId: currentUserId, 
-            contactId: contact._id 
-          });
-        }
-      }
-    }, 1000);
 
-    return () => clearTimeout(timer);
-  }
-}, [initialContact, token, currentUserId, contacts.length, socket]);
 
-useEffect(() => {
-  if (initialContact && contacts.length > 0 && !selectedContact && !selectedGroup) {
-    console.log('Contacts loaded after initialContact was set, trying to select contact');
-    const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
-    if (contact && contact._id !== currentUserId) {
-      setActiveArea('chat');
-      setChatType('direct');
-      setSelectedContact(contact);
-      setSelectedGroup(null);
-      loadDirectMessages(contact._id);
-      addOrUpdatePersonalChat(contact);
-    }
-  }
-}, [contacts.length, initialContact, selectedContact, selectedGroup, currentUserId]);
 
-  const handleFileChange =(e: any) => {
+
+  const handleFileChange = async (e: any) => {
     if (e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setIsLoading(true);
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        setFile(selectedFile);
+        console.log("File ready:", selectedFile.name);
+      } catch (error) {
+        console.error("File handling failed", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
+  };
 
   const handleDownload = () => {
     if (previewUrl?.url) {
@@ -255,23 +210,15 @@ useEffect(() => {
     }
   }
 
-  const calculateUnreadCount = (groupId: string, groupMessages: Message[]): number => {
+  const calculateUnreadCount = useCallback((groupId: string, groupMessages: Message[]): number => {
     return groupMessages.filter(message => 
       message.groupId === groupId && 
       message.senderId._id !== currentUserId && 
       !message.readBy.includes(currentUserId)
     ).length;
-  };
+  }, [currentUserId])
 
-  const calculateDirectUnreadCount = (contactId: string, directMessages: DirectMessage[]): number => {
-    return directMessages.filter(message => 
-      message.senderId._id === contactId && 
-      message.recieverId === currentUserId &&
-      (!message.readBy || !message.readBy.includes(currentUserId))
-    ).length;
-  };
-
-  const loadUnreadCounts = async () => {
+  const loadUnreadCounts = useCallback(async () => {
     if (!token || !currentUserId) return;
     
     try {
@@ -293,9 +240,9 @@ useEffect(() => {
     } catch (error) {
       console.error("Failed to load unread counts", error);
     }
-  };
+  }, [token, currentUserId, calculateUnreadCount, groups])
 
-  const loadPersonalChats = async () => {
+  const loadPersonalChats = useCallback(async () => {
     if (!token || !currentUserId) {
       console.log('Cannot load personal chats - missing token or currentUserId:', { token: !!token, currentUserId });
       return;
@@ -343,7 +290,7 @@ useEffect(() => {
       console.error("Failed to load personal chats - full error:", error);
       setPersonalChats([]);
     }
-  };
+  }, [token, currentUserId])
 
   const addOrUpdatePersonalChat = (contact: Contact, message?: MessageLike, timestamp?: string) => {
     setPersonalChats(prev => {
@@ -423,6 +370,8 @@ useEffect(() => {
     );
   };
 
+  
+
   useEffect(() => {
     if (!token || !currentUserId) return;
 
@@ -463,6 +412,7 @@ useEffect(() => {
         return group;
       }));
     });
+    
 
     newSocket.on("newDirectMessage", (msg: DirectMessage) => {
       
@@ -552,28 +502,23 @@ useEffect(() => {
       console.log("Cleaning up socket connection");
       newSocket.disconnect();
     };
-  }, [token, currentUserId, contacts]);
+  }, [token, currentUserId, contacts, selectedContact, selectedGroup]);
 
-  useEffect(() => {
-    if (token) {
-      loadContacts();
-      loadGroups();
-    }
-  }, [token]);
+
 
   useEffect(() => {
     if (token && currentUserId && contacts.length > 0) {
       loadPersonalChats();
     }
-  }, [token, currentUserId, contacts.length]);
+  }, [token, currentUserId, contacts.length, loadPersonalChats]);
 
   useEffect(() => {
     if (groups.length > 0 && currentUserId) {
       loadUnreadCounts();
     }
-  }, [groups.length, currentUserId]);
+  }, [groups.length, currentUserId, loadUnreadCounts]);
 
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       const res = await api.get('/group/users', {
         headers: {
@@ -585,9 +530,9 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load users", err);
     }
-  };
+  }, [token])
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       const res = await api.get('/group/my', {
         headers: {
@@ -599,7 +544,14 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load groups", err);
     }
-  };
+  }, [token])
+
+    useEffect(() => {
+    if (token) {
+      loadContacts();
+      loadGroups();
+    }
+  }, [token, loadContacts, loadGroups]);
 
   const loadGroupMessages = async (groupId: string) => {
     try {
@@ -614,7 +566,7 @@ useEffect(() => {
     }
   };
 
-  const loadDirectMessages = async (contactId: string) => {
+  const loadDirectMessages = useCallback(async (contactId: string) => {
     try {
       const res = await api.get(`/chat/${contactId}/messages`, {
         headers: {
@@ -625,7 +577,57 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to load direct messages", err);
     }
-  };
+  }, [token])
+
+  useEffect(() => {
+  if (initialContact && token && currentUserId) {
+    console.log('Initial contact provided:', initialContact);
+    console.log('Contacts loaded:', contacts.length);
+    console.log('Current user ID:', currentUserId);
+    
+    const timer = setTimeout(() => {
+      setActiveArea('chat');
+      setChatType('direct');
+      
+      const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+      console.log('Selecting contact:', contact);
+      
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      
+      if (contact._id !== currentUserId) {
+        loadDirectMessages(contact._id);
+        
+        addOrUpdatePersonalChat(contact);
+        
+        if (socket) {
+          console.log("Joining direct chat room for:", contact._id);
+          socket.emit("joinDirectChat", { 
+            userId: currentUserId, 
+            contactId: contact._id 
+          });
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }
+}, [initialContact, token, currentUserId, contacts.length, socket, contacts, loadDirectMessages]);
+
+  useEffect(() => {
+  if (initialContact && contacts.length > 0 && !selectedContact && !selectedGroup) {
+    console.log('Contacts loaded after initialContact was set, trying to select contact');
+    const contact = contacts.find(c => c._id === initialContact._id) || initialContact;
+    if (contact && contact._id !== currentUserId) {
+      setActiveArea('chat');
+      setChatType('direct');
+      setSelectedContact(contact);
+      setSelectedGroup(null);
+      loadDirectMessages(contact._id);
+      addOrUpdatePersonalChat(contact);
+    }
+  }
+}, [contacts.length, initialContact, selectedContact, selectedGroup, currentUserId, loadDirectMessages, contacts]);
 
   const toggleMember = (contact: Contact) => {
     setSelectedMembers(prev => {
@@ -679,7 +681,6 @@ useEffect(() => {
       setSelectedMembers([]);
       setProfileImage(null);
       setProfileImagePreview(null);
-      setActiveTab('groups');
     } catch (err) {
       console.error("Failed to create group", err);
       toast.error("Failed to create group");
@@ -727,7 +728,7 @@ useEffect(() => {
       return;
     }
 
-    
+    setGroupList(false)
     setSelectedContact(contact);
     setSelectedGroup(null);
     setChatType('direct');
@@ -796,6 +797,7 @@ useEffect(() => {
 
   const sendMessage = async () => {
     if (!messageText.trim() && !file) return;
+    setLoading(true)
 
     try {
       const formData = new FormData();
@@ -847,6 +849,8 @@ useEffect(() => {
     } catch (err) {
       console.error("Failed to send message", err);
       toast.error("Failed to send message");
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -1105,182 +1109,174 @@ useEffect(() => {
                 )}
               </div>
               
-<div className="flex-1 overflow-y-auto p-4 scrollbar-thin space-y-4">
-  {(chatType === "group" ? messages : directMessages).map((message, index) => {
-    const dateLabel = getDateLabel(message.createdAt);
-    const prevDateLabel =
-      index > 0 ? getDateLabel((chatType === "group" ? messages : directMessages)[index - 1].createdAt) : null;
-    const showLabel = dateLabel !== prevDateLabel;
+                <div className="flex-1 overflow-y-auto p-4 scrollbar-thin space-y-4">
+                  {(chatType === "group" ? messages : directMessages).map((message, index) => {
+                    const dateLabel = getDateLabel(message.createdAt);
+                    const prevDateLabel =
+                      index > 0 ? getDateLabel((chatType === "group" ? messages : directMessages)[index - 1].createdAt) : null;
+                    const showLabel = dateLabel !== prevDateLabel;
 
-    const isCurrentUser = message.senderId._id === currentUserId;
-    const senderName = message.senderId?.name;
-    const senderAvatar = message.senderId?.profileImage;
+                    const isCurrentUser = message.senderId._id === currentUserId;
+                    const senderName = message.senderId?.name;
+                    const senderAvatar = message.senderId?.profileImage;
 
-    return (
-      <div
-        key={message._id}
-        className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"}`}
-      >
-        {/* Date separator */}
-        {showLabel && (
-          <div className="text-center w-full text-xs text-gray-400 mb-3 font-medium">
-            {dateLabel}
-          </div>
-        )}
+                    return (
+                      <div
+                        key={message._id}
+                        className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"}`}
+                      >
+                        {showLabel && (
+                          <div className="text-center w-full text-xs text-gray-400 mb-3 font-medium">
+                            {dateLabel}
+                          </div>
+                        )}
 
-        <div className="flex items-end gap-3 max-w-[85%]">
-          {/* Avatar (for others only) */}
-          {!isCurrentUser && (
-            <div className="w-8 h-8 relative flex-shrink-0 mb-1">
-              {chatType === "group" || chatType === "direct" ? (
-                senderAvatar ? (
-                  <Image
-                    src={senderAvatar}
-                    alt=""
-                    fill
-                    className="rounded-full object-cover object-center ring-2 ring-white shadow-sm"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-200 flex items-center justify-center rounded-full text-xs font-semibold">
-                    {senderName?.[0]?.toUpperCase() || "?"}
-                  </div>
-                )
-              ) : null}
-            </div>
-          )}
+                        <div className="flex items-end gap-3 max-w-[85%]">
+                          {!isCurrentUser && (
+                            <div className="w-8 h-8 relative flex-shrink-0 mb-1">
+                              {chatType === "group" || chatType === "direct" ? (
+                                senderAvatar ? (
+                                  <Image
+                                    src={senderAvatar}
+                                    alt=""
+                                    fill
+                                    className="rounded-full object-cover object-center ring-2 ring-white shadow-sm"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 bg-gray-200 flex items-center justify-center rounded-full text-xs font-semibold">
+                                    {senderName?.[0]?.toUpperCase() || "?"}
+                                  </div>
+                                )
+                              ) : null}
+                            </div>
+                          )}
 
-          {/* Message Bubble */}
-          <div
-            className={`relative group animate-in slide-in-from-bottom-2 duration-200
-              ${
-                isCurrentUser
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-blue-500/25"
-                  : "bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-lg border border-gray-100"
-              } px-4 py-3 min-w-[120px] max-w-[300px] backdrop-blur-sm`}
-          >
-            {/* Bubble corner */}
-            <div
-              className={`absolute w-3 h-3 ${
-                isCurrentUser
-                  ? "bg-gray-100 -bottom-0 -right-0 rounded-bl-full"
-                  : "bg-gray-100 -bottom-0 -left-0 rounded-br-full border-l border-b border-gray-100"
-              }`}
-            ></div>
+                          <div
+                            className={`relative group animate-in slide-in-from-bottom-2 duration-200
+                              ${
+                                isCurrentUser
+                                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-blue-500/25"
+                                  : "bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-lg border border-gray-100"
+                              } px-4 py-3 min-w-[120px] max-w-[300px] backdrop-blur-sm`}
+                          >
+                            <div
+                              className={`absolute w-3 h-3 ${
+                                isCurrentUser
+                                  ? "bg-gray-100 -bottom-0 -right-0 rounded-bl-full"
+                                  : "bg-gray-100 -bottom-0 -left-0 rounded-br-full border-l border-b border-gray-100"
+                              }`}
+                            ></div>
 
-            {/* Sender name (only in group chat and not self) */}
-            {chatType === "group" && !isCurrentUser && (
-              <div className="text-xs font-semibold mb-2 text-blue-600 opacity-80">
-                {senderName}
-              </div>
-            )}
+                            {chatType === "group" && !isCurrentUser && (
+                              <div className="text-xs font-semibold mb-2 text-blue-600 opacity-80">
+                                {senderName}
+                              </div>
+                            )}
 
-            {/* Message Content */}
-            {message.type === "text" && (
-              <div className="text-sm leading-relaxed font-medium">
-                {message.content}
-              </div>
-            )}
+                            {message.type === "text" && (
+                              <div className="text-sm leading-relaxed font-medium">
+                                {message.content}
+                              </div>
+                            )}
 
-            {message.type === "image" && message.file?.url && (
-              <div className="w-40 h-40 overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
-                <Image
-                  src={message.file.url}
-                  alt={message.file.name || "Image"}
-                  width={160}
-                  height={160}
-                  className="object-cover object-center h-full cursor-pointer hover:scale-105 transition-transform duration-200"
-                  onClick={() =>
-                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "image", })
-                  }
-                />
-              </div>
-            )}
+                            {message.type === "image" && message.file?.url && (
+                              <div className="w-40 h-40 overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+                                <Image
+                                  src={message.file.url}
+                                  alt={message.file.name || "Image"}
+                                  width={160}
+                                  height={160}
+                                  className="object-cover object-center h-full cursor-pointer hover:scale-105 transition-transform duration-200"
+                                  onClick={() =>
+                                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "image", })
+                                  }
+                                />
+                              </div>
+                            )}
 
-            {message.type === "audio" && message.file?.url && (
-              <div>
-                <AudioPlayer
-                  fileUrl={message.file?.url}
-                  fileName={message.file?.name}
-                />
-              </div>
-            )}
+                            {message.type === "audio" && message.file?.url && (
+                              <div>
+                                <AudioPlayer
+                                  fileUrl={message.file?.url}
+                                  fileName={message.file?.name}
+                                />
+                              </div>
+                            )}
 
-            {message.type === "video" && message.file?.url && (
-              <div className="rounded-xl overflow-hidden shadow-md">
-                <video
-                  src={message.file?.url}
-                  onClick={() =>
-                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "video", })
-                  }
-                  className="rounded-xl cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
-                />
-              </div>
-            )}
+                            {message.type === "video" && message.file?.url && (
+                              <div className="rounded-xl overflow-hidden shadow-md">
+                                <video
+                                  src={message.file?.url}
+                                  onClick={() =>
+                                    setpreviewUrl({ url: message.file.url, name: message.file.name, type: "video", })
+                                  }
+                                  className="rounded-xl cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
+                                />
+                              </div>
+                            )}
 
-            {message.type === "document" && message.file?.url && (
-              <div className="bg-gray-50/50 rounded-xl p-3">
-                <PdfModal
-                  fileUrl={message.file?.url}
-                  fileName={message.file?.name}
-                />
-              </div>
-            )}
+                            {message.type === "document" && message.file?.url && (
+                              <div className="bg-gray-50/50 rounded-xl p-3">
+                                <PdfModal
+                                  fileUrl={message.file?.url}
+                                  fileName={message.file?.name}
+                                />
+                              </div>
+                            )}
 
-            {/* Timestamp */}
-            <div
-              className={`text-[10px] mt-2 text-right font-medium ${
-                isCurrentUser ? "text-blue-100/80" : "text-gray-400"
-              } group-hover:opacity-100 transition-opacity duration-200`}
-            >
-              {new Date(message.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  })}
+                            <div
+                              className={`text-[10px] mt-2 text-right font-medium ${
+                                isCurrentUser ? "text-blue-100/80" : "text-gray-400"
+                              } group-hover:opacity-100 transition-opacity duration-200`}
+                            >
+                              {new Date(message.createdAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
 
-  {/* Preview Modal (shared for all file types) */}
-  {previewUrl?.url && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50">
-      <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
-        {previewUrl.url.match(/\.(mp4|webm|ogg)$/i) ? (
-          <video
-            src={previewUrl.url}
-            controls
-            autoPlay
-            className="rounded-2xl object-contain max-h-[70vh] w-auto"
-          />
-        ) : (
-          <Image
-            src={previewUrl.url}
-            alt="Preview"
-            width={500}
-            height={500}
-            className="rounded-2xl object-contain max-h-[70vh] w-auto"
-          />
-        )}
-        <button
-          onClick={handleDownload}
-          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
-        >
-          <Download size={18} />
-        </button>
-        <button
-          onClick={() => setpreviewUrl(null)}
-          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
-        >
-          <Plus className="rotate-45" />
-        </button>
-      </div>
-    </div>
-  )}
+                  {previewUrl?.url && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50">
+                      <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
+                        {previewUrl.url.match(/\.(mp4|webm|ogg)$/i) ? (
+                          <video
+                            src={previewUrl.url}
+                            controls
+                            autoPlay
+                            className="rounded-2xl object-contain max-h-[70vh] w-auto"
+                          />
+                        ) : (
+                          <Image
+                            src={previewUrl.url}
+                            alt="Preview"
+                            width={500}
+                            height={500}
+                            className="rounded-2xl object-contain max-h-[70vh] w-auto"
+                          />
+                        )}
+                        <button
+                          onClick={handleDownload}
+                          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
+                        >
+                          <Download size={18} />
+                        </button>
+                        <button
+                          onClick={() => setpreviewUrl(null)}
+                          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-105"
+                        >
+                          <Plus className="rotate-45" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-  <div ref={messagesEndRef} />
-</div>
+                  <div ref={messagesEndRef} />
+                </div>
 
                   <div className="bg-white p-4 border-t border-gray-200">
                 <div className="flex items-center space-x-2">
@@ -1298,10 +1294,14 @@ useEffect(() => {
                   />
                   <button
                     onClick={sendMessage}
-                    disabled={!messageText.trim() && !file}
+                    disabled={(!messageText.trim() && !file) || isLoading}
                     className="w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 rounded-full flex items-center justify-center text-white transition-colors"
                   >
-                    <Send size={15} />
+                    {isLoading ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Send size={15} />
+                    )}
                   </button>
                 </div>
               </div>

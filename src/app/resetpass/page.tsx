@@ -90,9 +90,9 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     } else {
     
       router.replace("/"); 
-    }
-  }
-}, []);
+    }
+  }
+}, [router]);
 
   const onSubmit = async (data: PasswordSetupForm) => {
     setApiMessage("");

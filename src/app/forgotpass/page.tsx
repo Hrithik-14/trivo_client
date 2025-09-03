@@ -151,14 +151,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <h1 className="text-3xl font-bold">
                   Check your email
                 </h1>
-                <p className="text-white/70 text-lg">
+                <p className="text-black text-lg">
                   We sent a password reset OTP to
                 </p>
-                <p className="text-white font-medium">{email}</p>
+                <p className="text-black font-medium">{email}</p>
               </div>
 
               <div className="space-y-4">
-                <p className="text-white/60 text-sm">
+                <p className="text-black text-sm">
                   {` Didn't receive the email? Check your spam folder or`}
                 </p>
 
@@ -167,7 +167,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     setIsSubmitted(false);
                     setEmail("");
                   }}
-                  className="text-purple-300 hover:text-purple-200 font-medium transition-colors duration-200"
+                  className="text-black font-medium transition-colors duration-200"
                 >
                   try another email address
                 </button>

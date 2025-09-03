@@ -61,9 +61,7 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
     handleSubmit,
     control,
     reset,
-    formState: { errors, isValid },
-    setValue,
-    watch
+    formState: { errors },
   } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {

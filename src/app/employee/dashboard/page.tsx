@@ -1,6 +1,6 @@
 
 'use client'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import api from '@/app/api/axios'
 import WaveChart from '@/app/components/WaveChart'
 import { Clock } from 'lucide-react'
@@ -61,7 +61,7 @@ const MarkAttendanceButton: React.FC<{
   const [loading, setLoading] = useState(false)
   const [attendanceToday, setAttendanceToday] = useState<Attendance | null>(null)
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = useCallback(async () => {
     if (!userId) return
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -70,11 +70,11 @@ const MarkAttendanceButton: React.FC<{
     } catch (error) {
       console.log('Error fetching attendance for today', error)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
     fetchTodayAttendance()
-  }, [userId])
+  }, [userId, fetchTodayAttendance])
 
   const handleMarkAttendance = async () => {
     if (!userId) {
@@ -88,7 +88,7 @@ const MarkAttendanceButton: React.FC<{
         type = 'signOut'
       }
       const employeeId = userId
-      const res = await api.post('/attendance', { employeeId, type })
+      await api.post('/attendance', { employeeId, type })
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
@@ -113,7 +113,7 @@ const MarkAttendanceButton: React.FC<{
       <button
         onClick={handleMarkAttendance}
         disabled={loading}
-        className="px-4 py-2 rounded bg-red-500 text-white w-70"
+        className="px-4 py-2 rounded bg-red-500 text-white  w-70"
       >
         {loading ? 'SigningOut...' : 'SignOut'}
       </button>
@@ -133,7 +133,7 @@ const EmployeeDashboard = () => {
 
 
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = useCallback(async () => {
     if (!user?.id) return
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -142,13 +142,13 @@ const EmployeeDashboard = () => {
     } catch (error) {
       console.log('Error fetching attendance for today', error)
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.id) {
       fetchTodayAttendance()
     }
-  }, [user?.id])
+  }, [user?.id, fetchTodayAttendance])
 
 useEffect(() => {
   if (attendance?.signInTime && !attendance.signOutTime) {
@@ -217,7 +217,7 @@ useEffect(() => {
             <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
       </div>
 
-      <div className="flex gap-5">
+      <div className="flex gap-5 h-100 overflow-hidden">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full flex flex-col justify-center">
           <h2 className="font-semibold text-sm mb-10">Working Hours</h2>
           {user?.id && <WaveChart userId={user?.id} />}
@@ -227,7 +227,7 @@ useEffect(() => {
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
           {user?.id && <EmployeeAttendance employeeId={user?.id} />}
         </div>
-        <div>
+        <div className='overflow-y-auto min-w-80 scrollbar-thin'>
           <UpcomingHoliday/>
         </div>
       </div>
