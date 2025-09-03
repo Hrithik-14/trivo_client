@@ -6,6 +6,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'TRIVO',
   description: 'Multinational company',
+  icons: {
+    icon: "/icon.png"
+  }
 };
 
 
