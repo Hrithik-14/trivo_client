@@ -687,7 +687,6 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     setLoadingMemberData((prev) => ({ ...prev, [memberId]: true }));
 
     try {
-      console.log("hello");
       const tasksResponse = await api.get(`/project/${projectId}/user/${memberId}/tasks`);
       const tasks: Task[] = tasksResponse.data;
       console.log(tasksResponse);
