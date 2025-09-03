@@ -8,6 +8,7 @@ import EmployeeAttendance from '@/app/components/EmployeeAttendence'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/app/store'
 import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard'
+import UpcomingHoliday from '@/app/components/upcomingHoliday/page'
 
 interface Project {
   _id: string
@@ -93,7 +94,6 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
       console.log(`Marking attendance: ${type} for user: ${employeeId}`)
       const res = await api.post('/attendance', { employeeId, type })
       console.log('Attendance marked:', res.data)
-      // Notify parent to refresh attendance data
       onAttendanceUpdated()
       await fetchTodayAttendance()
     } catch (error) {
@@ -108,7 +108,7 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
       <button
         onClick={handleMarkAttendance}
         disabled={loading}
-        className="px-4 py-2 rounded bg-green-500 text-white h-full w-30"
+        className="px-4 py-2 rounded bg-green-500 text-white  w-70"
       >
         {loading ? 'Signing in...' : 'Sign In'}
       </button>
@@ -118,7 +118,7 @@ const MarkAttendanceButton: React.FC<Props> = ({ userId, onAttendanceUpdated }) 
       <button
         onClick={handleMarkAttendance}
         disabled={loading}
-        className="px-4 py-2 rounded bg-red-500 text-white h-full "
+        className="px-4 py-2 rounded bg-red-500 text-white  w-70 "
       >
         {loading ? 'SigningOut...' : 'SignOut'}
       </button>
@@ -224,7 +224,7 @@ useEffect(() => {
         <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
       </div>
 
-      <div className="flex gap-5">
+      <div className="flex gap-5 h-100  overflow-hidden">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full">
           <h2 className="font-semibold text-sm mb-4">Working Hours</h2>
           {user?.id && <WaveChart userId={user?.id} />}
@@ -233,6 +233,9 @@ useEffect(() => {
         <div className="bg-white p-4 px-10 border border-[#ddd] rounded">
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
           {user?.id && <EmployeeAttendance employeeId={user?.id} />}
+        </div>
+        <div className='overflow-y-auto min-w-80 scrollbar-thin'>
+          <UpcomingHoliday />
         </div>
       </div>
 

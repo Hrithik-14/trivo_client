@@ -57,22 +57,21 @@ useEffect(() => {
 
   const fetchAlerts = async () => {
     try {
-      // 1. Normal alerts (already created in DB)
       const res1 = await api.get<Alert[]>(`/alerts/${userId}`);
       const normalAlerts = res1.data ?? [];
 
-      // 2. Today’s birthday users (no duplicates, just fetch list)
       const res2 = await api.get<Alert[]>(`/alerts/birthday/today`);
+      console.log(res2);
+      
       const birthdayUsers = res2.data ?? [];
+      
 
-      // Convert each birthday user into an alert card format
       const birthdayAlerts = birthdayUsers.map((user) => ({
         message: `🎉 Today is ${user.name}'s birthday!`,
         image: user.image || "/avatar.png",
-        forUsers: [userId], // show only for logged-in user
+        forUsers: [userId],
       }));
 
-      // (Optional) 3. Today’s yearly/anniversary users
       const res3 = await api.get<Alert[]>(`/alerts/yearly/today`);
       const yearlyUsers = res3.data ?? [];
       const yearlyAlerts = yearlyUsers.map((user) => ({
@@ -81,7 +80,6 @@ useEffect(() => {
         forUsers: [userId],
       }));
 
-      // Merge all alerts into one list
       const merged = [
         ...normalAlerts,
         ...birthdayAlerts,
@@ -108,7 +106,7 @@ useEffect(() => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">📢 My Alerts</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">  My Alerts</h2>
           <p className="text-gray-600">
             Stay updated with your personalized notifications
           </p>

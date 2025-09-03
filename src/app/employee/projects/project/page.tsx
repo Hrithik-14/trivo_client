@@ -132,17 +132,7 @@ const Projects: FC = () => {
                             <User size={15} />
                             <p className='text-xs'><span className='font-semibold'>Client: </span>{project.client}</p>
                         </div>
-
-                        <div className='text-[#696969] flex gap-3 flex-col'>
-                            <div className='font-semibold text-xs'>Team Members :</div>
-                            <div className='ml-5 flex flex-wrap gap-2'>
-                                {project.members.filter((member) => member.role.toLowerCase() !== "manager").map((member, index) => (
-                                    <div key={index} className='bg-[#EBEBEB] text-[#696969] text-[10px] px-2 py-1 rounded-full w-fit'>
-                                        {member.name}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        
                     </Link>
                 ))}
             <div className="flex justify-center mt-4 gap-2">

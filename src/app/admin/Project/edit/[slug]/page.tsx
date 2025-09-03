@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Select, { SingleValue } from "react-select";
-import { Ban, Lock, Unlock, UserCheck, UserX } from "lucide-react";
+import { UserCheck, UserX } from "lucide-react";
 
 interface Project {
   _id: string;

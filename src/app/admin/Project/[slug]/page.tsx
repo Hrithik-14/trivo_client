@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+'use client'
 import ProjectDetail from '@/app/components/project/ProjectDetail'
 import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard'
 import React from 'react'
@@ -6,16 +6,7 @@ import React from 'react'
 type AdminProjectDetailProps = {
   params: Promise<{ slug: string }>
 }
-=======
-import ProjectDetail from '@/app/components/project/ProjectDetail';
-import React from 'react';
 
-type AdminProjectDetailProps = {
-  params: {
-    slug: string;
-  };
-};
->>>>>>> d260c2db3e0218468096758080f7fe1ef6cc912c
 
 const AdminProjectDetail = ({ params }: AdminProjectDetailProps) => {
   const { loading } = useAdminAuthGuard()

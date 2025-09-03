@@ -11,7 +11,6 @@ import {
   Plus,
   UserPlus,
   Trash2,
-  Zap,
   CheckSquare,
   Building,
   Target,
@@ -92,7 +91,7 @@ interface Project {
   members: Member[];
   client: string;
   clientEmail: string;
-  status: "ongoing" | "completed" | "paused";
+  status: "Ongoing" | "Completed";
   isActive: boolean;
 }
 
@@ -165,7 +164,6 @@ const AddProject: FC<{
   const [selectedEmployeeIndex, setSelectedEmployeeIndex] = useState<
     number | null
   >(null);
-  const [addedEmployees, setAddedEmployees] = useState<Set<string>>(new Set());
   const user = useSelector((state: RootState) => state.user.user);
   const managerId = user?.id;
 
@@ -174,18 +172,7 @@ const AddProject: FC<{
     name: "taskAssignments",
   });
 
-  const statusOptions: Option[] = [
-    { value: "pending", label: "Pending" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-    { value: "overdue", label: "Overdue" },
-  ];
 
-  const priorityOptions: Option[] = [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-  ];
 
   useEffect(() => {
     setSelectedProject({
@@ -228,7 +215,6 @@ const AddProject: FC<{
             projectId,
             employeeCode,
           });
-          setAddedEmployees((prev) => new Set(prev).add(employeeCode));
         } catch (error: any) {
           if (!error?.response?.data?.message?.includes("already")) {
             throw error;
@@ -563,99 +549,8 @@ const AddProject: FC<{
                                   </div>
                                 )}
                               </div>
-                              <div>
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                  <Zap size={16} />
-                                  Task Status *
-                                </label>
-                                <Controller
-                                  control={control}
-                                  name={`taskAssignments.${selectedEmployeeIndex}.tasks.${taskIndex}.status`}
-                                  rules={{ required: "Task status is required" }}
-                                  render={({ field }) => (
-                                    <select
-                                      {...field}
-                                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 hover:border-gray-400"
-                                    >
-                                      {statusOptions.map((option) => (
-                                        <option
-                                          key={option.value}
-                                          value={option.value}
-                                        >
-                                          {option.label}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  )}
-                                />
-                                {errors.taskAssignments?.[selectedEmployeeIndex]
-                                  ?.tasks?.[taskIndex]?.status && (
-                                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg mt-2">
-                                    <AlertCircle size={14} />
-                                    <span className="text-xs">
-                                      {
-                                        errors.taskAssignments[
-                                          selectedEmployeeIndex
-                                        ]?.tasks?.[taskIndex]?.status?.message
-                                      }
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                  <Target size={16} />
-                                  Task Priority *
-                                </label>
-                                <Controller
-                                  control={control}
-                                  name={`taskAssignments.${selectedEmployeeIndex}.tasks.${taskIndex}.priority`}
-                                  rules={{ required: "Task priority is required" }}
-                                  render={({ field }) => (
-                                    <select
-                                      {...field}
-                                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 hover:border-gray-400"
-                                    >
-                                      {priorityOptions.map((option) => (
-                                        <option
-                                          key={option.value}
-                                          value={option.value}
-                                        >
-                                          {option.label}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  )}
-                                />
-                                {errors.taskAssignments?.[selectedEmployeeIndex]
-                                  ?.tasks?.[taskIndex]?.priority && (
-                                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg mt-2">
-                                    <AlertCircle size={14} />
-                                    <span className="text-xs">
-                                      {
-                                        errors.taskAssignments[
-                                          selectedEmployeeIndex
-                                        ]?.tasks?.[taskIndex]?.priority?.message
-                                      }
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                  <FileText size={16} />
-                                  Description
-                                </label>
-                                <textarea
-                                  {...register(
-                                    `taskAssignments.${selectedEmployeeIndex}.tasks.${taskIndex}.description`
-                                  )}
-                                  key={`description-${selectedEmployeeIndex}-${taskIndex}`}
-                                  placeholder="Enter task description..."
-                                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 hover:border-gray-400"
-                                  rows={4}
-                                />
-                              </div>
+                              
+                              
                             </div>
                           </div>
                         </div>
@@ -741,7 +636,7 @@ const calculateDuration = (start?: string, end?: string) => {
     const days = totalDays % 30;
     return { months, days };
   } catch (error) {
-    console.error("Invalid dates:", { start, end });
+    console.error("Invalid dates:", { start, end },  error);
     return { months: 0, days: 0 };
   }
 };
@@ -792,13 +687,11 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     setLoadingMemberData((prev) => ({ ...prev, [memberId]: true }));
 
     try {
-      // Fetch tasks for the member
       console.log("hello");
       const tasksResponse = await api.get(`/project/${projectId}/user/${memberId}/tasks`);
       const tasks: Task[] = tasksResponse.data;
       console.log(tasksResponse);
 
-      // Fetch reports for the member
       const reportsResponse = await api.get(`/report/project/${projectId}/submittedBy/${memberId}`);
       const reports: Report[] = reportsResponse.data || [];
       console.log(reports);
@@ -814,14 +707,10 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     }
   };
 
-  const handleMemberExpand = async (memberId: string,expandId:string) => {
-    if (expandedMemberId === memberId) {
-      setExpandedMemberId(null);
-    } else {
-      setExpandedMemberId(expandId);
-      await fetchMemberData(memberId);
-    }
-  };
+const handleMemberExpand = (userId: string, memberId: string) => {
+  setExpandedMemberId((prev) => (prev === memberId ? null : memberId));
+};
+
 
   const handleActiveChange = async (newStatus: boolean) => {
     try {
@@ -833,7 +722,20 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
       console.error("Failed to toggle active status:", error);
     }
   };
-  console.log(memberTasks);
+
+const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
+  if (!project) return;
+  try {
+    const { data } = await api.patch(`/projectProgress/${project._id}`, { status: newStatus });
+
+    setProject((prev) => prev ? { ...prev, status: newStatus } : prev);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+
 
   const handleOpenChat = (member: Member) => {
     const contact: Contact = {
@@ -893,16 +795,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-700 border-red-300";
-      case "medium":
-        return "bg-yellow-100 text-yellow-700 border-yellow-300";
-      default:
-        return "bg-green-100 text-green-700 border-green-300";
-    }
-  };
+
 
   if (loading)
     return (
@@ -955,15 +848,33 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
             <p className="text-gray-600 text-sm">{project.description}</p>
           </div>
           <div className="flex gap-3">
-            <div
-              className={`p-2 text-xs h-fit px-4 rounded-full border ${
-                project.status === "ongoing"
-                  ? "bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]"
-                  : "bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]"
+            { role === 'manager' ? (
+              <select
+              value={project.status}
+              onChange={(e) => handleStatusChange(e.target.value as "Ongoing" | "Completed")}
+              className={`px-4 py-2 text-xs font-semibold rounded-full border cursor-pointer outline-0 ${
+                project.status === "Ongoing"
+                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                  : "bg-green-100 text-green-700 border-green-300"
               }`}
             >
-              {project.status === "ongoing" ? "Ongoing" : "Completed"}
-            </div>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Completed">Completed</option>
+            </select>
+            ) : (
+              <>
+              <div
+                className={`p-2 text-xs h-fit px-4 rounded-full border ${
+                  project.status === 'Ongoing'
+                    ? "bg-blue-100 border-blue-300 text-blue-500"
+                    : "bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]"
+                }`}
+              >
+                {project.status === 'Ongoing' ? "Ongoing" : "Completed"}
+              </div>
+              </>
+            )}
+
             {role === "admin" ? (
               <div className="relative">
                 <button
@@ -1083,7 +994,6 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
                     key={member._id}
                     className="border border-[#ddd] rounded overflow-hidden"
                   >
-                    {/* Member Header */}
                     <div
                       className="p-3 flex gap-3 items-center cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => handleMemberExpand(member.user._id,member._id)}
@@ -1129,7 +1039,6 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
                       </div>
                     </div>
 
-                    {/* Expanded Content */}
                     {expandedMemberId === member._id && (
                       <div className="border-t border-gray-200 bg-gray-50">
                         {loadingMemberData[member._id] ? (
@@ -1161,13 +1070,6 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
                                         </h5>
                                         <div className="flex gap-2">
                                           <span
-                                            className={`text-xs px-2 py-1 rounded border ${getPriorityColor(
-                                              task.priority
-                                            )}`}
-                                          >
-                                            {task.priority}
-                                          </span>
-                                          <span
                                             className={`text-xs px-2 py-1 rounded border ${getStatusColor(
                                               task.status,
                                               "task"
@@ -1177,19 +1079,9 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
                                           </span>
                                         </div>
                                       </div>
-                                      <p className="text-xs text-gray-600 mb-2">
+                                      <p className="text-xs text-gray-600 ">
                                         {task.description}
                                       </p>
-                                      <div className="text-xs text-gray-500">
-                                        <span>
-                                          Due: {"nale"}
-                                        </span>
-                                        {task.completedDate && (
-                                          <span className="ml-3">
-                                            Completed: {new Date(task.completedDate).toLocaleDateString()}
-                                          </span>
-                                        )}
-                                      </div>
                                     </div>
                                   ))
                                 ) : (
