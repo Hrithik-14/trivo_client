@@ -14,6 +14,7 @@ export default function VerifyOtpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false)
   const router = useRouter();
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('forgotPasswordEmail');
@@ -23,6 +24,16 @@ export default function VerifyOtpForm() {
       router.push('/auth/login');
     }
   }, [router]);
+
+  useEffect(() => {
+  let timer: NodeJS.Timeout;
+  if (resendCooldown > 0) {
+    timer = setTimeout(() => {
+      setResendCooldown(resendCooldown - 1);
+    }, 1000);
+  }
+  return () => clearTimeout(timer);
+}, [resendCooldown]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +77,7 @@ export default function VerifyOtpForm() {
 
       if (response?.data?.message === 'OTP sent successfully') {
         setMessage('OTP resent successfully to your email.');
+        setResendCooldown(30);
       } else {
         setError('Failed to resend OTP.');
       }
@@ -153,10 +165,14 @@ export default function VerifyOtpForm() {
             </p>
             <button
               onClick={handleResendOTP}
-              disabled={resendLoading}
+              disabled={resendLoading || resendCooldown > 0}
               className="w-full text-slate-700 hover:text-slate-800 py-2 px-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
             >
-              {resendLoading ? 'Resending...' : 'Resend Code'}
+              {resendLoading
+                ? 'Resending...'
+                : resendCooldown > 0
+                ? `Resend Code in ${resendCooldown}s`
+                : 'Resend Code'}
             </button>
           </div>
         </div>
