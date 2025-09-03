@@ -45,7 +45,7 @@ const Projects: FC = () => {
         return;
     }
 
-    api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=2`)
+    api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/allProject/member/${user?.id}?page=${page}&limit=5`)
         .then(res => {
             setProject(res.data.projects); 
             setTotalPages(res.data.totalPages);
@@ -113,11 +113,11 @@ const Projects: FC = () => {
                                 <p className='text-sm text-[#696969]'>{project.description}</p>
                             </div>
                             <div className={`p-2 text-xs h-fit px-4 rounded-full border ${
-                                project.status === 'ongoing'
+                                project.status === 'Ongoing'
                                 ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
                                 : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
                             }`}>
-                                {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
+                                {project.status}
                             </div>
                         </div>
 
