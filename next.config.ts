@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import webpack from "webpack";
 
 const nextConfig: NextConfig = {
   images: {
@@ -14,6 +15,13 @@ const nextConfig: NextConfig = {
         crypto: false,
       };
     }
+
+    // 🚀 Completely ignore "canvas"
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^canvas$/,
+      })
+    );
 
     return config;
   },
