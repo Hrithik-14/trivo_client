@@ -5,8 +5,10 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { Download, FileText, Plus } from "lucide-react";
 import { saveAs } from "file-saver";
+import { Worker } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+
 
 // Dynamically import Viewer + Worker (never touched during SSR)
 const Viewer = dynamic(
@@ -14,10 +16,6 @@ const Viewer = dynamic(
   { ssr: false }
 );
 
-const Worker = dynamic(
-  () => import("@react-pdf-viewer/core").then((mod) => mod.Worker),
-  { ssr: false }
-);
 
 export default function PdfModal({
   fileUrl,
