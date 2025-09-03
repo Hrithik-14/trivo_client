@@ -49,7 +49,7 @@ export default function MyCalendar() {
       setDay(res.data)
     }
     fetchHoliday()
-  }, [])
+  }, [user?.token, holidays])
 
   const handleClickDay = (value: Date) => {
     const today = new Date();
@@ -119,7 +119,7 @@ export default function MyCalendar() {
 
 
   return (
-    <div className="p-4 rounded-lg border border-[#ddd] bg-white">
+    <div className="p-4 rounded-lg max-h-[86.3vh] overflow-y-hidden min-w-100 border border-[#ddd] bg-white">
       <Calendar
         onClickDay={handleClickDay}
         value={date}
@@ -142,8 +142,8 @@ export default function MyCalendar() {
         )}
       </div>
 
-      <div className="mt-4">
-        <h2 className="font-bold mb-2">Upcoming Holidays:</h2>
+      <div className="mt-4 h-[50%] overflow-y-scroll scrollbar-thin">
+        <h2 className="font-bold mb-2 sticky top-0 bg-white">Upcoming Holidays:</h2>
         <ul>
           {days
             .filter((day) => new Date(day.date) >= new Date(new Date().setHours(0, 0, 0, 0)))

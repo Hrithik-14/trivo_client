@@ -594,48 +594,48 @@ const AttendancePage: React.FC = () => {
   const renderLeaveSection = () => (
     <div className="space-y-6">
       <div className="flex justify-between">
-         <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.sickCount == 8 ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.sickCount}/<span className="text-[#696969]">8</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total Sick <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total Sick <br/> Leave</span>
+          </div>
           
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.PaternityCount == 12 ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.PaternityCount}/<span className="text-[#696969]">12</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total Paternity <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total Paternity <br/> Leave</span>
+          </div>
           
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.MaternityCount == 90 ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.MaternityCount}/<span className="text-[#696969]">90</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total Maternity <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total Maternity <br/> Leave</span>
+          </div>
           
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.CasualCount == 6 ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.CasualCount}/<span className="text-[#696969]">6</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total Casual <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total Casual <br/> Leave</span>
+          </div>
           
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.PrivilegeCount == 15 ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.PrivilegeCount}/<span className="text-[#696969]">15</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total Privilege <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total Privilege <br/> Leave</span>
+          </div>
           
-          <p className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="w-40 flex flex-col items-center border py-2 border-[#ddd] bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className={`text-4xl font-bold mb-2 ${leaveCount?.CompOffCount == leaveCount?.CompOffHave ? 'text-red-500' : 'text-green-500'}`}>
               {leaveCount?.CompOffCount}/<span className="text-[#696969]">{leaveCount?.CompOffHave}</span>
             </div>
-            <span className="text-[#696969] font-semibold text-sm text-center">Total CompOff <br/> Leave</span>
-          </p>
+            <span className="text-[#696969] font-semibold text-xs text-center">Total CompOff <br/> Leave</span>
+          </div>
         </div>
         <button
           onClick={() => setIsLeaveModalOpen(true)}

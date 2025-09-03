@@ -1,7 +1,7 @@
 'use client'
 
 
-import EditProfile from '@/app/components/userProfile/edit/[slug]/page'
+import EditProfile from '@/app/components/UserProfileEdit'
 import { useManangerAuthGuard } from '@/app/hooks/usemanagerAuthGuard'
 import { useParams } from 'next/navigation'
 import React from 'react'
@@ -21,7 +21,7 @@ const Profile = () => {
     );
     return (
         <div>
-            <EditProfile userId={userId} />
+            <EditProfile slug={userId} />
         </div>
     )
 }

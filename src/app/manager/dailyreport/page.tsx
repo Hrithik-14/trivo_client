@@ -5,7 +5,7 @@ import api from "@/app/api/axios";
 import { useManangerAuthGuard } from "@/app/hooks/usemanagerAuthGuard";
 import { RootState } from "@/app/store";
 import { Calendar, Clock, Columns, Plus, Rows } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
@@ -45,7 +45,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         setMessage("");
 
         try {
-        const res = await api.post(`/manager-report/${managerId}`, {
+          await api.post(`/manager-report/${managerId}`, {
             startTime,
             endTime,
             description,
@@ -198,8 +198,6 @@ const ManagerReport = () => {
 
   const [reports, setReports] = useState<Report[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [load, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const user = useSelector((state: RootState) => state.user.user)
   console.log(user);
   
@@ -212,20 +210,14 @@ const ManagerReport = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const response = await api.get(`/report/getReportsByEmployee/${user?.id}`, {
+        await api.get(`/report/getReportsByEmployee/${user?.id}`, {
 
           headers: { Authorization:` Bearer ${user?.token}` },
         });
         
-        if (response.data && response.data.report) {
-          const uniqueStatuses = Array.from(
-            new Set(response.data.report.map((report: Report) => report.status))
-          ) as string[];
-          
-        }
+
       } catch (error) {
         console.error("Failed to fetch statuses", error);
-        setError("Failed to load report statuses");
       }
     };
 
@@ -234,17 +226,11 @@ const ManagerReport = () => {
     }
   }, [user?.id, user?.token]);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchReports();
-    }
-  }, [user?.id]);
 
-  const fetchReports = async () => {
+
+  const fetchReports = useCallback(async () => {
     if (!user?.id) return;
     
-    setLoading(true);
-    setError("");
     
     try {
 
@@ -254,12 +240,18 @@ const ManagerReport = () => {
 
       setReports(Array.isArray(response.data.report) ? response.data.report : []);
     } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch reports");
+      console.log(error);
+      
       setReports([]);
     } finally {
-      setLoading(false);
     }
-  };
+  }, [user?.id, user?.token])
+
+    useEffect(() => {
+    if (user?.id) {
+      fetchReports();
+    }
+  }, [user?.id, fetchReports]);
 
 
   const filteredReports = reports.filter((report) => {

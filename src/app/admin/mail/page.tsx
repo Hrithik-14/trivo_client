@@ -61,8 +61,9 @@ const MailSend = () => {
 
     useEffect(() => {
         const fetchUsers = async() => {
-            const res = await api.get<User[]>('/users')
-            setUser(res.data); 
+            const res = await api.get('/users')
+            const data = Array.isArray(res.data) ? res.data : res.data.users || [];
+            setUser(data); 
         }
         fetchUsers()
     }, [])
@@ -101,7 +102,7 @@ const MailSend = () => {
             payload.designation = data.designation;
             }
 
-            const res = await api.post("/send-mail", payload);
+            await api.post("/send-mail", payload);
             toast.success("Mail sent successfully!");
         } catch (err) {
             console.error("Failed to send mail:", err);

@@ -63,8 +63,8 @@ export default function RootLayout({ children }: MainContainerProps) {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        toast.success('Logged out successfully!');
         window.location.href = '/';
+        toast.success('Logged out successfully!');
     };
     
 

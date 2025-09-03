@@ -32,7 +32,7 @@ const SIDEBAR_WIDTH = 300;
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [token, setToken] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
@@ -50,40 +50,44 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
     }
   }, []);
 
-  const checkUnreadMessages = async () => {
-    if (!token || !currentUserId) return;
+const checkUnreadMessages = async () => {
+  if (!token || !currentUserId) return;
 
-    try {
-      const groupsRes = await api.get('/group/my', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const groups = groupsRes.data;
-      let totalUnreadCount = 0;
-
-      for (const group of groups) {
-        try {
-          const messagesRes = await api.get(`/group/${group._id}/messages`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          const unreadCount = messagesRes.data.filter((message: Message) => 
-            message.groupId === group._id && 
-            message.senderId._id !== currentUserId && 
-            !message.readBy.includes(currentUserId)
-          ).length;
-
-          totalUnreadCount += unreadCount;
-        } catch (error) {
-          console.error(`Failed to check messages for group ${group._id}`, error);
-        }
-      }
-
-      const conversationsRes = await api.get('/chat/conversations', {
+  try {
+    const groupsRes = await api.get('/group/my', {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    const conversations = conversationsRes.data; 
+    const groups = groupsRes.data;
+    const unreadChats = new Set<string>();
+
+    // Check group chats
+    for (const group of groups) {
+      try {
+        const messagesRes = await api.get(`/group/${group._id}/messages`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const hasUnread = messagesRes.data.some((message: Message) =>
+          message.groupId === group._id &&
+          message.senderId._id !== currentUserId &&
+          !message.readBy.includes(currentUserId)
+        );
+
+        if (hasUnread) {
+          unreadChats.add(group._id); // count group as 1
+        }
+      } catch (error) {
+        console.error(`Failed to check messages for group ${group._id}`, error);
+      }
+    }
+
+    // Check personal conversations
+    const conversationsRes = await api.get('/chat/conversations', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const conversations = conversationsRes.data;
 
     for (const conv of conversations) {
       try {
@@ -91,22 +95,27 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        const unreadCount = messagesRes.data.filter((message: Message) =>
-          message.senderId._id === conv._id &&
+        const hasUnread = messagesRes.data.some((message: Message) =>
+          message.senderId._id !== currentUserId &&
           !message.readBy.includes(currentUserId)
-        ).length;
+        );
 
-        totalUnreadCount += unreadCount;
+        if (hasUnread) {
+          unreadChats.add(conv._id); // count chat as 1
+        }
       } catch (error) {
         console.error(`Failed to check personal messages for user ${conv._id}`, error);
       }
     }
 
-      setHasUnreadMessages(totalUnreadCount > 0);
-    } catch (error) {
-      console.error("Failed to check unread messages", error);
-    }
-  };
+    setUnreadChatCount(unreadChats.size);
+    console.log("Unread chats:", unreadChats.size);
+
+  } catch (error) {
+    console.error("Failed to check unread messages", error);
+  }
+};
+
 
   useEffect(() => {
     if (token && currentUserId) {
@@ -120,9 +129,6 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const handleToggleOpen = () => {
     setIsOpen((prev) => {
       const newIsOpen = !prev;
-      if (newIsOpen) {
-        setHasUnreadMessages(false);
-      }
       return newIsOpen;
     });
   };
@@ -138,9 +144,10 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
       >
         <MessageCircle size={24} />
 
-        {hasUnreadMessages && !isOpen && (
-          <div className="absolute -top-0 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse">
+        {unreadChatCount > 0 && !isOpen && (
+          <div className="absolute -top-0 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white">
             <div className="w-full h-full bg-red-500 rounded-full animate-ping"></div>
+            <span className="absolute -top-[1px] z-50 right-[5px] text-xs">{unreadChatCount}</span>
           </div>
         )}
       </button>

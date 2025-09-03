@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import api from '../api/axios';
 import { Search } from 'lucide-react';
 
@@ -22,9 +22,9 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
     const [results, setResults] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [suppressSearch, setSuppressSearch] = useState(false);
 
-    const fetchUsers = async (searchText: string) => {
+
+    const fetchUsers = useCallback(async (searchText: string) => {
         setLoading(true);
         try {
         const params = new URLSearchParams();
@@ -38,7 +38,7 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
         } finally {
         setLoading(false);
         }
-    };
+    }, [role])
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -58,14 +58,12 @@ const ManagerProjectSearch: React.FC<UserSearchProps> = ({ initialQuery = '', ro
         }, 300);
 
         return () => clearTimeout(delayDebounce);
-    }, [query, role, selectedUser]);
+    }, [query, role, selectedUser, fetchUsers]);
 
     const handleSelect = (user: User) => {
         onSelect?.(user);
         setQuery(user.name);
-        setSuppressSearch(true);
         setShowDropdown(false);
-        setTimeout(() => setSuppressSearch(false), 500);
     };
 
     return (

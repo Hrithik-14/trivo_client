@@ -1,8 +1,7 @@
 'use client'
 
 import api from '@/app/api/axios';
-import UserSearch from '@/app/components/UserSearch';
-import { FileText, Calendar, Clock, User, Filter, Search, X } from 'lucide-react';
+import { FileText, Calendar, Clock, User, Filter, Search, X, UserCheck } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react'
 import SearchableDropdown from './Searchuser';
@@ -40,7 +39,8 @@ const TodaysLeave = () => {
         const fetchEmployees = async() => {
             try {
                 const res = await api.get('/users')
-                setEmployees(res.data)
+                const data = Array.isArray(res.data) ? res.data : res.data.users || [];
+                setEmployees(data)
             } catch (err) {
                 console.error('Error fetching employees:', err);
             }
@@ -97,7 +97,7 @@ const TodaysLeave = () => {
             case 'leave':
                 return 'bg-orange-500 text-white'
             default:
-                return 'bg-gray-500 text-white'
+                return 'bg-green-500 text-white'
         }
     }
 
@@ -110,11 +110,10 @@ const TodaysLeave = () => {
             case 'leave':
                 return <Calendar size={16} />
             default:
-                return <FileText size={16} />
+                return <UserCheck size={16} />
         }
     }
 
-    const filteredUsers = users.filter(user => user.status !== 'present')
     const hasActiveFilters = selectedEmployee || showAll || selectedDate !== new Date().toISOString().split('T')[0]
 
     return (
@@ -126,8 +125,7 @@ const TodaysLeave = () => {
                             <FileText size={32} className='text-white' />
                         </div>
                         <div>
-                            <h2 className='text-2xl font-bold'>Leave Management</h2>
-                            <p className='text-blue-100 mt-1'>Track employee attendance and leave status</p>
+                            <h2 className='text-2xl font-bold'>Attendance Management</h2>
                         </div>
                     </div>
                     
@@ -208,12 +206,12 @@ const TodaysLeave = () => {
                     <div className='flex items-center justify-center py-12'>
                         <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600'></div>
                     </div>
-                ) : filteredUsers.length > 0 ? (
+                ) : users.length > 0 ? (
                     <div className='space-y-4'>
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h3 className='text-lg font-semibold text-gray-800'>
-                                    Leave Records ({filteredUsers.length})
+                                    Leave Records ({users.length})
                                 </h3>
                                 <p className='text-sm text-gray-600 mt-1'>
                                     {showAll ? 'Showing all records' : 
@@ -231,7 +229,7 @@ const TodaysLeave = () => {
                             </div>
                         </div>
                         
-                        {filteredUsers.map(user => (
+                        {users.map(user => (
                             <div key={user._id} className='bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden'>
                                 <div className='p-5'>
                                     <div className='flex items-center justify-between gap-4'>

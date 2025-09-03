@@ -1,19 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, User, Calendar, Check, X, } from 'lucide-react';
 import api from '@/app/api/axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
 import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// import { Calendar, ChevronDown, ChevronRight, FileText, ThumbsDown, ThumbsUp } from "lucide-react";
-// import React, { FC, useState, useEffect } from "react";
-// import api from "@/app/api/axios";
-// import toast from "react-hot-toast";
-// import { format } from "date-fns";
-
 
 type Task = {
   _id: string;
@@ -43,10 +34,13 @@ const ManagerReport: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const user = useSelector((state: RootState) => state.user.user)
   const { loading } = useAdminAuthGuard()
+  const [filterDate, setFilterDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
 
-useEffect(() => {
-  const fetchReports = async () => {
+
+  const fetchReports = useCallback(async () => {
     if (!user?.token) {
       setFetchLoading(false);
       return;
@@ -54,14 +48,19 @@ useEffect(() => {
 
     try {
       setFetchLoading(true);
-      const { data } = await api.get(`/report/my?page=${page}&limit=5`, {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
+      const { data } = await api.get(
+        `/report/my?page=${page}&limit=5&date=${filterDate}`,
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+
       setReports(data.reports || []);
       setTotalPages(data.totalPages || 1);
 
-      
-      const firstPending = data.reports?.find((r: Report) => r.status === 'pending');
+      const firstPending = data.reports?.find(
+        (r: Report) => r.status === "pending"
+      );
       if (firstPending) {
         setSelectedReportId(firstPending._id);
       }
@@ -70,10 +69,12 @@ useEffect(() => {
     } finally {
       setFetchLoading(false);
     }
-  };
+  },[user?.token, filterDate, page])
 
+useEffect(() => {
   fetchReports();
-}, [user?.token, page]);
+}, [user?.token, page, filterDate, fetchReports]);
+
 
 
   const updateStatus = async (id: string, status: 'accepted' | 'rejected') => {
@@ -137,13 +138,33 @@ useEffect(() => {
                 {reports.length} report{reports.length !== 1 ? 's' : ''} found
               </div>
             </div>
+            <div className="flex items-center justify-between mt-4 px-6">
+              <div className="flex items-center space-x-2">
+                <label htmlFor="filterDate" className="text-sm text-gray-700 font-medium">
+                  Filter by Date:
+                </label>
+                <input
+                  id="filterDate"
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
           </div>
 
           <div className="p-6">
-            {reports.length === 0 ? (
+            {fetchLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-500">Loading reports...</p>
+              </div>
+            ) : reports.length === 0 ? (
               <div className="text-center py-8">
                 <User className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">No reports found</p>
+                <p className="text-gray-500">No reports found for {filterDate}</p>
               </div>
             ) : (
               <div className="space-y-3">
