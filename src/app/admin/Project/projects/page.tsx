@@ -12,6 +12,7 @@ import * as z from "zod";
 import ManagerProjectSearch from '@/app/components/ManagerProjectSearch';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 
 
 
@@ -274,11 +275,14 @@ type Project = {
 const Projects: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [ projects, setProject ] = useState<Project[]>([])
-    const [loading, setLoading] = useState(true);
+    const [load, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
     const [reload, setReload] = useState(false);
+    const { loading } = useAdminAuthGuard()
+
+
     useEffect(() => {
         api.get<{ totalPages: number; project: Project[]; total: number, page: number, stats: {total: number, ongoing: number, completed: number} }>(`/admin/getAllProject?page=${page}&limit=10`)
         .then(res => {
@@ -293,6 +297,14 @@ const Projects: FC = () => {
     const handleAdd = () => setIsModalOpen(true);
     const handleCloseModal = () => {setIsModalOpen(false); setReload(prev => !prev)};
 
+    if (load) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project details...</p>
+            </div>
+        </div>
+    );
     if (loading) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
