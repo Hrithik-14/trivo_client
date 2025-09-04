@@ -40,7 +40,7 @@ interface AttendanceRecord {
 interface Employee {
   _id: string;
   name: string;
-  employeeId: string; 
+  employeeId: string;
   email: string;
 }
 
@@ -77,7 +77,10 @@ interface SimpleCalendarProps {
   selectedDate: Date | null;
   onDateChange: (date: Date) => void;
   attendanceData: Record<string, AttendanceRecord>;
-  tileContent: (props: { date: Date; view: string }) => React.ReactElement | null;
+  tileContent: (props: {
+    date: Date;
+    view: string;
+  }) => React.ReactElement | null;
   tileClassName: (props: { date: Date; view: string }) => string;
 }
 
@@ -99,15 +102,15 @@ interface LeaveCount {
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
-const SimpleCalendar: React.FC<SimpleCalendarProps> = ({ 
-  selectedDate, 
-  onDateChange, 
-  attendanceData, 
-  tileContent, 
-  tileClassName 
+const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
+  selectedDate,
+  onDateChange,
+  attendanceData,
+  tileContent,
+  tileClassName,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  
+
   const getDaysInMonth = (date: Date): (Date | null)[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -115,22 +118,22 @@ const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     const days: (Date | null)[] = [];
-    
+
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-    
+
     return days;
   };
 
   const navigateMonth = (direction: number) => {
-    setCurrentMonth(prev => {
+    setCurrentMonth((prev) => {
       const newDate = new Date(prev);
       newDate.setMonth(prev.getMonth() + direction);
       return newDate;
@@ -138,58 +141,69 @@ const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
   };
 
   const days = getDaysInMonth(currentMonth);
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4 bg-gray-50 p-2 rounded">
-        <button 
+        <button
           onClick={() => navigateMonth(-1)}
           className="px-3 py-1 hover:bg-gray-200 rounded font-semibold"
         >
           ‹
         </button>
         <h2 className="text-lg font-semibold">
-          {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          {currentMonth.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
         </h2>
-        <button 
+        <button
           onClick={() => navigateMonth(1)}
           className="px-3 py-1 hover:bg-gray-200 rounded font-semibold"
         >
           ›
         </button>
       </div>
-      
+
       <div className="grid grid-cols-7 gap-1 mb-2 bg-gray-50 p-2 rounded">
-        {weekdays.map(day => (
-          <div key={day} className="text-center text-xs font-semibold text-gray-600 p-1">
+        {weekdays.map((day) => (
+          <div
+            key={day}
+            className="text-center text-xs font-semibold text-gray-600 p-1"
+          >
             {day}
           </div>
         ))}
       </div>
-      
+
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, index) => {
           if (!day) {
             return <div key={index} className="h-12"></div>;
           }
-          
-          const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
+
+          const isSelected =
+            selectedDate && day.toDateString() === selectedDate.toDateString();
           const isToday = day.toDateString() === new Date().toDateString();
-          const customClassName = tileClassName ? tileClassName({ date: day, view: 'month' }) : '';
-          
+          const customClassName = tileClassName
+            ? tileClassName({ date: day, view: "month" })
+            : "";
+
           return (
             <button
               key={index}
               onClick={() => onDateChange(day)}
               className={`h-12 relative border border-transparent rounded transition-all ${
-                isSelected ? 'bg-blue-600 text-white' : 
-                isToday ? 'bg-blue-100 text-blue-800 font-semibold' :
-                'hover:bg-gray-100'
+                isSelected
+                  ? "bg-blue-600 text-white"
+                  : isToday
+                  ? "bg-blue-100 text-blue-800 font-semibold"
+                  : "hover:bg-gray-100"
               } ${customClassName}`}
             >
               <span className="text-sm">{day.getDate()}</span>
-              {tileContent && tileContent({ date: day, view: 'month' })}
+              {tileContent && tileContent({ date: day, view: "month" })}
             </button>
           );
         })}
@@ -199,9 +213,13 @@ const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
 };
 
 const AttendancePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"calendar" | "leave" | "regularisation">("calendar");
+  const [activeTab, setActiveTab] = useState<
+    "calendar" | "leave" | "regularisation"
+  >("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [attendanceData, setAttendanceData] = useState<Record<string, AttendanceRecord>>({});
+  const [attendanceData, setAttendanceData] = useState<
+    Record<string, AttendanceRecord>
+  >({});
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -214,16 +232,24 @@ const AttendancePage: React.FC = () => {
     description: "",
   });
   const [leaveHistory, setLeaveHistory] = useState<LeaveDes[]>([]);
-  const [regularisationHistory, setRegularisationHistory] = useState<LeaveDes[]>([]);
+  const [regularisationHistory, setRegularisationHistory] = useState<
+    LeaveDes[]
+  >([]);
 
   const user = useSelector((state: RootState) => state.user.user);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [day, setDay] = useState<DayResponse | null>(null);
 
-  const [leaveCount, setLeaveCount] = useState<LeaveCount | null>(null) 
-  
+  const [leaveCount, setLeaveCount] = useState<LeaveCount | null>(null);
+
   const leaveTypes = [
-    "Casual", "Sick", "Maternity", "Paternity", "Privilege", "Regularization", "CompOff"
+    "Casual",
+    "Sick",
+    "Maternity",
+    "Paternity",
+    "Privilege",
+    "Regularization",
+    "CompOff",
   ];
 
   useEffect(() => {
@@ -252,22 +278,21 @@ const AttendancePage: React.FC = () => {
     fetchAttendanceData();
   }, [user?.token]);
 
-
   useEffect(() => {
     const fetchTotalLeaveCount = async () => {
       try {
-        const res = await api.get('/get-my-leave-count', {
+        const res = await api.get("/get-my-leave-count", {
           headers: {
-            Authorization: `Bearer ${user?.token}`
-          }
-        })
-        setLeaveCount(res.data)
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+        setLeaveCount(res.data);
       } catch (err) {
-        console.error('Error in fetching leave count:', error);
+        console.error("Error in fetching leave count:", error);
       }
-    }
-    fetchTotalLeaveCount()
-  }, [user?.token])
+    };
+    fetchTotalLeaveCount();
+  }, [user?.token]);
 
   useEffect(() => {
     const loadAttendanceData = () => {
@@ -303,7 +328,7 @@ const AttendancePage: React.FC = () => {
       try {
         const dateKey = formatDateKey(selectedDate);
         const data = attendanceData[dateKey];
-        
+
         const date = data?.date || selectedDate;
         const response = await api.get(`/singleday-status`, {
           params: { date },
@@ -395,7 +420,10 @@ const AttendancePage: React.FC = () => {
     setSelectedDate(date);
   };
 
-  const tileContent = ({ date, view }: TileProps): React.ReactElement | null => {
+  const tileContent = ({
+    date,
+    view,
+  }: TileProps): React.ReactElement | null => {
     if (view === "month") {
       const dateKey = formatDateKey(date);
       const attendanceRecord = attendanceData[dateKey];
@@ -436,7 +464,11 @@ const AttendancePage: React.FC = () => {
     e.preventDefault();
     if (!user?.token) return;
 
-    if (!leaveForm.leaveType || !leaveForm.leaveDate || !leaveForm.description.trim()) {
+    if (
+      !leaveForm.leaveType ||
+      !leaveForm.leaveDate ||
+      !leaveForm.description.trim()
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -446,27 +478,48 @@ const AttendancePage: React.FC = () => {
       setError("");
 
       const requestBody = {
-        leaveDate: leaveForm.leaveDate.toISOString().split('T')[0],
+        leaveDate: leaveForm.leaveDate.toISOString().split("T")[0],
         leaveType: leaveForm.leaveType,
-        description: leaveForm.description.trim()
+        description: leaveForm.description.trim(),
       };
 
       console.log("Submitting leave request:", requestBody);
 
       const response = await api.post("/request-leave", requestBody, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${user?.token}`,
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
       });
+      console.log("qwertyu", response.data);
 
-      toast.success(response.data?.message || "Leave application submitted successfully!");
+      toast.success(
+        response.data?.message || "Leave application submitted successfully!"
+      );
+      await api.post(
+        "/notification",
+        {
+          senderId: user.id,
+          type: "leaveRequest",
+          action: "sent",
+          entityId: response.data.leave._id,
+          description: `Leave Request: ${leaveForm.leaveType}`,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       setLeaveForm({ leaveType: "", leaveDate: null, description: "" });
       setIsLeaveModalOpen(false);
       fetchLeaveHistory();
     } catch (error: any) {
       console.error("Leave submission error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to submit leave application";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to submit leave application";
       toast.error(errorMessage);
       setError(errorMessage);
     } finally {
@@ -478,7 +531,9 @@ const AttendancePage: React.FC = () => {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Attendance Calendar</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Attendance Calendar
+          </h2>
         </div>
 
         <SimpleCalendar
@@ -525,7 +580,7 @@ const AttendancePage: React.FC = () => {
         </div>
       );
     }
-    
+
     const formattedDate = selectedDate.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -538,17 +593,21 @@ const AttendancePage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">No attendance record for this date</p>
-          <p className="text-gray-400 text-sm mt-2">Employee was not logged in on this day</p>
+          <p className="text-gray-400 text-sm mt-2">
+            Employee was not logged in on this day
+          </p>
         </div>
       );
     }
-    
+
     const { dayStatus, des } = day;
 
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="border-b pb-4 mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Attendance Details</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">
+            Attendance Details
+          </h3>
           <p className="text-gray-600">{formattedDate}</p>
         </div>
 
@@ -557,17 +616,23 @@ const AttendancePage: React.FC = () => {
             <User className="w-5 h-5 text-gray-500" />
             <span className="font-medium">Status:</span>
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(dayStatus.status)}`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                  dayStatus.status
+                )}`}
+              >
                 {dayStatus.status === "present" ? "Present" : dayStatus.status}
               </span>
             </div>
           </div>
 
-          {dayStatus.status !== 'absent' && (
+          {dayStatus.status !== "absent" && (
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-gray-500" />
               <span className="font-medium">Sign In Time:</span>
-              <span className="text-gray-700">{formatTime(dayStatus.signInTime)}</span>
+              <span className="text-gray-700">
+                {formatTime(dayStatus.signInTime)}
+              </span>
             </div>
           )}
 
@@ -582,7 +647,9 @@ const AttendancePage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5 text-gray-500" />
                 <span className="font-medium">Reason:</span>
-                <span className="text-gray-700">{des.description || "No reason provided"}</span>
+                <span className="text-gray-700">
+                  {des.description || "No reason provided"}
+                </span>
               </div>
             </>
           )}
@@ -649,7 +716,6 @@ const AttendancePage: React.FC = () => {
       {isLeaveModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
-
             <button
               onClick={() => setIsLeaveModalOpen(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
@@ -657,31 +723,50 @@ const AttendancePage: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Apply for Leave</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Apply for Leave
+            </h2>
 
             <form onSubmit={handleLeaveSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Leave Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Leave Type
+                  </label>
                   <select
                     value={leaveForm.leaveType}
-                    onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
+                    onChange={(e) =>
+                      setLeaveForm({ ...leaveForm, leaveType: e.target.value })
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
                     <option value="">Select Leave Type</option>
                     {leaveTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Leave Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Leave Date
+                  </label>
                   <input
                     type="date"
-                    value={leaveForm.leaveDate ? leaveForm.leaveDate.toISOString().split("T")[0] : ""}
-                    onChange={(e) => setLeaveForm({ ...leaveForm, leaveDate: new Date(e.target.value) })}
+                    value={
+                      leaveForm.leaveDate
+                        ? leaveForm.leaveDate.toISOString().split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setLeaveForm({
+                        ...leaveForm,
+                        leaveDate: new Date(e.target.value),
+                      })
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -689,10 +774,14 @@ const AttendancePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason
+                </label>
                 <textarea
                   value={leaveForm.description}
-                  onChange={(e) => setLeaveForm({ ...leaveForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setLeaveForm({ ...leaveForm, description: e.target.value })
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={4}
                   placeholder="Enter reason for leave..."
@@ -713,11 +802,7 @@ const AttendancePage: React.FC = () => {
                   disabled={loading}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
                 >
-                  {loading ? (
-                    'Submitting...'
-                  ) : (
-                    "Submit Leave Application"
-                  )}
+                  {loading ? "Submitting..." : "Submit Leave Application"}
                 </button>
               </div>
             </form>
@@ -729,27 +814,40 @@ const AttendancePage: React.FC = () => {
         <h3 className="text-xl font-bold text-gray-800 mb-4">Leave History</h3>
         {leaveHistory.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {leaveHistory.map(leave => (
-              <div key={leave._id} className="shadow-sm border border-gray-300 rounded-lg p-4 flex flex-col gap-2">
+            {leaveHistory.map((leave) => (
+              <div
+                key={leave._id}
+                className="shadow-sm border border-gray-300 rounded-lg p-4 flex flex-col gap-2"
+              >
                 <div className="flex gap-3">
-                  <h2 className={`w-fit px-3 text-xs py-1 rounded-full font-semibold ${
-                    leave.leaveType === "Sick" ? "text-red-700 bg-red-100 border border-red-300" :
-                    leave.leaveType === "Casual" ? "text-blue-700 bg-blue-100 border border-blue-300" :
-                    leave.leaveType === "Maternity" ? "text-pink-700 bg-pink-100 border border-pink-300" :
-                    leave.leaveType === "Paternity" ? "text-indigo-700 bg-indigo-100 border border-indigo-300" :
-                    leave.leaveType === "Privilege" ? "text-purple-700 bg-purple-100 border border-purple-300" :
-                    leave.leaveType === "Regularization" ? "text-yellow-700 bg-yellow-100 border border-yellow-300" :
-                    "text-gray-700 bg-gray-100 border border-gray-300"
-                  }`}>
+                  <h2
+                    className={`w-fit px-3 text-xs py-1 rounded-full font-semibold ${
+                      leave.leaveType === "Sick"
+                        ? "text-red-700 bg-red-100 border border-red-300"
+                        : leave.leaveType === "Casual"
+                        ? "text-blue-700 bg-blue-100 border border-blue-300"
+                        : leave.leaveType === "Maternity"
+                        ? "text-pink-700 bg-pink-100 border border-pink-300"
+                        : leave.leaveType === "Paternity"
+                        ? "text-indigo-700 bg-indigo-100 border border-indigo-300"
+                        : leave.leaveType === "Privilege"
+                        ? "text-purple-700 bg-purple-100 border border-purple-300"
+                        : leave.leaveType === "Regularization"
+                        ? "text-yellow-700 bg-yellow-100 border border-yellow-300"
+                        : "text-gray-700 bg-gray-100 border border-gray-300"
+                    }`}
+                  >
                     {leave.leaveType}
                   </h2>
-                  <span className={`px-3 py-1 rounded-full text-xs border font-medium ${
-                    leave.status === "Approve"
-                      ? "bg-green-100 text-green-800 border-green-300"
-                      : leave.status === "Reject"
-                      ? "bg-red-100 text-red-800 border-red-300"
-                      : "bg-yellow-100 text-yellow-800 border-yellow-300"
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs border font-medium ${
+                      leave.status === "Approve"
+                        ? "bg-green-100 text-green-800 border-green-300"
+                        : leave.status === "Reject"
+                        ? "bg-red-100 text-red-800 border-red-300"
+                        : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                    }`}
+                  >
                     {leave.status}
                   </span>
                 </div>
@@ -765,7 +863,9 @@ const AttendancePage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No leave applications found</p>
+          <p className="text-gray-500 text-center py-8">
+            No leave applications found
+          </p>
         )}
       </div>
     </div>
@@ -774,22 +874,29 @@ const AttendancePage: React.FC = () => {
   const renderRegularisationSection = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Regularisation History</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
+          Regularisation History
+        </h3>
         {regularisationHistory.length > 0 ? (
           <div className="flex flex-col gap-3">
             {regularisationHistory.map((request) => (
-              <div key={request._id} className="shadow-sm border border-gray-300 rounded-lg p-4 flex flex-col gap-2">
+              <div
+                key={request._id}
+                className="shadow-sm border border-gray-300 rounded-lg p-4 flex flex-col gap-2"
+              >
                 <div className="flex gap-3">
                   <h2 className="w-fit px-3 text-xs py-1 rounded-full font-semibold bg-yellow-100 text-yellow-700 border border-yellow-300">
                     {request.leaveType}
                   </h2>
-                  <span className={`px-3 py-1 rounded-full text-xs border font-medium ${
-                    request.status === "Approve"
-                      ? "bg-green-100 text-green-800 border-green-300"
-                      : request.status === "Reject"
-                      ? "bg-red-100 text-red-800 border-red-300"
-                      : "bg-yellow-100 text-yellow-800 border-yellow-300"
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs border font-medium ${
+                      request.status === "Approve"
+                        ? "bg-green-100 text-green-800 border-green-300"
+                        : request.status === "Reject"
+                        ? "bg-red-100 text-red-800 border-red-300"
+                        : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                    }`}
+                  >
                     {request.status}
                   </span>
                 </div>
@@ -805,7 +912,9 @@ const AttendancePage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No regularisation requests found</p>
+          <p className="text-gray-500 text-center py-8">
+            No regularisation requests found
+          </p>
         )}
       </div>
     </div>
@@ -817,7 +926,10 @@ const AttendancePage: React.FC = () => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
-          <button onClick={() => setError("")} className="ml-auto text-red-500 hover:text-red-700">
+          <button
+            onClick={() => setError("")}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
             <X />
           </button>
         </div>
@@ -827,7 +939,10 @@ const AttendancePage: React.FC = () => {
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
           <CheckCircle className="w-5 h-5" />
           <span>{success}</span>
-          <button onClick={() => setSuccess("")} className="ml-auto text-green-500 hover:text-green-700">
+          <button
+            onClick={() => setSuccess("")}
+            className="ml-auto text-green-500 hover:text-green-700"
+          >
             <X />
           </button>
         </div>

@@ -27,6 +27,7 @@ const AlertCard: React.FC<{ alert: Alert }> = ({ alert }) => {
           </div>
         )}
         <div className="flex">
+
           <p className="font-semibold text-md text-gray-800 mb-3">
             {alert.message}
           </p>
@@ -59,6 +60,7 @@ useEffect(() => {
     try {
       const res1 = await api.get<Alert[]>(`/alerts/${userId}`);
       const normalAlerts = res1.data ?? [];
+
 
       const res2 = await api.get<Alert[]>(`/alerts/birthday/today`);
       console.log(res2);
@@ -94,8 +96,6 @@ useEffect(() => {
 
   fetchAlerts();
 }, [userId]);
-
-
   const userAlerts = alerts.filter(
     (alert) =>
       Array.isArray(alert.forUsers) &&

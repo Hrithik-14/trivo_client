@@ -41,11 +41,12 @@ const Alerts: React.FC = () => {
   const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
+   
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUserId(parsedUser?.id || parsedUser?._id || "");
+        setUserId(parsedUser?.id || parsedUser?._id || ""); 
       } catch (e) {
         console.error("Invalid user object in localStorage", e);
       }

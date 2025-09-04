@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import api from "@/app/api/axios";
@@ -63,7 +62,6 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         }, 500);
         
         } catch (error: any) {
-
         setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
         } finally {
         setLoading(false);
@@ -210,6 +208,7 @@ const ManagerReport = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
+
         await api.get(`/report/getReportsByEmployee/${user?.id}`, {
 
           headers: { Authorization:` Bearer ${user?.token}` },
