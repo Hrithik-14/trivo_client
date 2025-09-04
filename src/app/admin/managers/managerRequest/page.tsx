@@ -8,6 +8,7 @@ import api from "@/app/api/axios";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 
 
 interface Employee {
@@ -27,11 +28,10 @@ interface Request {
 
 const ManagerRequest: React.FC = () => {
     const [leaveRequests, setLeaveRequests] = useState<Request[]>([]);
-    const [regularizationRequests, setRegularizationRequests] = useState<
-        Request[]
-    >([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [regularizationRequests, setRegularizationRequests] = useState<Request[]>([]);
+    const [load, setLoading] = useState<boolean>(true);
     const user = useSelector((state: RootState) => state.user.user);
+    const { loading } = useAdminAuthGuard()
     const token = user?.token;
 
 
@@ -83,7 +83,6 @@ const ManagerRequest: React.FC = () => {
         }
     };
 
-    // Format date helper
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -98,9 +97,7 @@ const renderRequestCard = (request: Request) => (
     className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 rounded-lg mb-4"
   >
     <div className="flex justify-between items-start">
-      {/* Left Content */}
       <div className="flex flex-col gap-4 flex-1">
-        {/* Profile and Basic Info */}
         <div className="flex gap-4 items-start">
           <div className="relative w-14 h-14 flex-shrink-0">
             <Image
@@ -145,7 +142,6 @@ const renderRequestCard = (request: Request) => (
           </div>
         </div>
 
-        {/* Description */}
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Description:
@@ -156,7 +152,6 @@ const renderRequestCard = (request: Request) => (
         </div>
       </div>
 
-      {/* Action Buttons */}
       {request.status === "Pending" && (
         <div className="flex flex-col sm:flex-row gap-2 ml-4 flex-shrink-0">
           <button
@@ -184,7 +179,7 @@ const renderRequestCard = (request: Request) => (
   </div>
 );
 
-    if (loading) {
+    if (load) {
         return (
         <div className="flex flex-col gap-5 ">
             <div className="bg-white p-5 px-5 border border-[#ddd] rounded flex gap-3 items-center">
@@ -195,6 +190,15 @@ const renderRequestCard = (request: Request) => (
         </div>
         );
     }
+
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex flex-col gap-5">

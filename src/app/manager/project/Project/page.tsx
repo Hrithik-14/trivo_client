@@ -31,14 +31,14 @@ const Projects: FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState({ ongoing: 0, completed: 0, total: 0 });
-  const [loadingProjects, setLoadingProjects] = useState(true); // 👈 new state
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const { loading } = useManangerAuthGuard()
   const user = useSelector((state: RootState) => state.user.user)
 
   useEffect(() => {
     if (!user?.id || user?.id === 'null') return;
 
-    setLoadingProjects(true); // start loader
+    setLoadingProjects(true);
 
     api.get<{ totalPages: number; projects: Project[]; total: number, page: number, stats: { total: number, ongoing: number, completed: number } }>(
       `/manager/${user?.id}/getProjectByManager?page=${page}&limit=10`
@@ -51,7 +51,7 @@ const Projects: FC = () => {
       .catch(err => {
         console.error("Error in Fetching project:", err);
       })
-      .finally(() => setLoadingProjects(false)); // stop loader
+      .finally(() => setLoadingProjects(false));
   }, [page, user?.id]);
 
   if (loading || loadingProjects) {
@@ -67,7 +67,6 @@ const Projects: FC = () => {
 
   return (
     <div className='flex flex-col gap-5'>
-      {/* header */}
       <div className='bg-white w-full h-18 border border-[#ddd] rounded-md flex items-center px-5 justify-between'>
         <div className='flex items-center gap-3'>
           <FileText size={30} className='p-2 bg-[#18A0FB] text-white rounded-md' />
@@ -75,7 +74,6 @@ const Projects: FC = () => {
         </div>
       </div>
 
-      {/* stats */}
       <div className='grid grid-cols-3 gap-5'>
         <div className='bg-white px-5 h-18 flex items-center border border-[#ddd] rounded gap-5'>
           <Clock size={35} className='p-2 bg-[#DBEAFE] text-[#2563EB] rounded-full' />
@@ -102,7 +100,6 @@ const Projects: FC = () => {
         </div>
       </div>
 
-      {/* projects */}
       <div className='flex flex-col gap-4'>
         {projects.map((project) => (
           <Link href={`/manager/project/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
@@ -134,7 +131,6 @@ const Projects: FC = () => {
           </Link>
         ))}
 
-        {/* pagination */}
         <div className="flex justify-center mt-4 gap-2">
           <button
             disabled={page === 1}

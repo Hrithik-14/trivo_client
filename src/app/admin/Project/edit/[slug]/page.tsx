@@ -6,6 +6,7 @@ import api from "@/app/api/axios";
 import toast from "react-hot-toast";
 import Select, { SingleValue } from "react-select";
 import { UserCheck, UserX } from "lucide-react";
+import { useAdminAuthGuard } from "@/app/hooks/useAdminAuthGuard";
 
 interface Project {
   _id: string;
@@ -75,7 +76,8 @@ export default function UpdateProjectPage() {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [load, setLoading] = useState(true);
+  const { loading } = useAdminAuthGuard()
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -91,8 +93,6 @@ export default function UpdateProjectPage() {
     clientEmail: "",
   });
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
-  // console.log("teamMembersdd",teamMembers)
-  // if(teamMembers.user)
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function UpdateProjectPage() {
     if (projectId) {
       fetchData();
     }
-  }, [projectId, refreshKey]); // 🔑 refreshKey added here
+  }, [projectId, refreshKey]);
 
   const validateForm = () => {
     const newErrors: Partial<typeof formData> = {};
@@ -229,10 +229,8 @@ export default function UpdateProjectPage() {
           `/projects/${project?._id}/members/${memberId}`
         );
         setRefreshKey((prev) => prev + 1);
-        // API returns updated project -> update only members in state
         setTeamMembers(response.data.members);
 
-        // Show toast based on new state of the toggled member
         const toggled = response.data.members.find(
           (m: any) => m.user === memberId
         );
@@ -287,6 +285,16 @@ export default function UpdateProjectPage() {
     }
   };
 
+  if (load) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
+      </div>
+    );
+  }
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">

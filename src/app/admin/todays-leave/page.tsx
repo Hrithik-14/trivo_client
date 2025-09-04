@@ -5,6 +5,7 @@ import { FileText, Calendar, Clock, User, Filter, Search, X, UserCheck } from 'l
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react'
 import SearchableDropdown from './Searchuser';
+import { useAdminAuthGuard } from '@/app/hooks/useAdminAuthGuard';
 
 interface Employee {
     _id: string;
@@ -23,7 +24,8 @@ interface Attendance {
 
 const TodaysLeave = () => {
     const [users, setUser] = useState<Attendance[]>([])
-    const [loading, setLoading] = useState(true)
+    const [load, setLoading] = useState(true)
+    const { loading } = useAdminAuthGuard()
     const [employees, setEmployees] = useState<Employee[]>([])
     
     const [selectedDate, setSelectedDate] = useState(() => {
@@ -116,6 +118,16 @@ const TodaysLeave = () => {
 
     const hasActiveFilters = selectedEmployee || showAll || selectedDate !== new Date().toISOString().split('T')[0]
 
+
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
+
     return (
         <div className='min-h-[400px] bg-gradient-to-br from-slate-50 to-white shadow-lg rounded-md border border-gray-100 overflow-hidden'>
             <div className='bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6'>
@@ -202,7 +214,7 @@ const TodaysLeave = () => {
             )}
 
             <div className='p-6'>
-                {loading ? (
+                {load ? (
                     <div className='flex items-center justify-center py-12'>
                         <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600'></div>
                     </div>

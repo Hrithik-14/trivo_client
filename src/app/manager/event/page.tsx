@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import api from "@/app/api/axios";
+import { useManangerAuthGuard } from "@/app/hooks/usemanagerAuthGuard";
 
 interface Alert {
   _id?: string;
@@ -40,6 +41,7 @@ const AlertCard: React.FC<{ alert: Alert }> = ({ alert }) => {
 const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [userId, setUserId] = useState<string>("");
+  const { loading } = useManangerAuthGuard()
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -101,6 +103,15 @@ useEffect(() => {
       Array.isArray(alert.forUsers) &&
       alert.forUsers.some((u) => String(u) === String(userId))
   );
+
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

@@ -77,7 +77,7 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
       pincode: "",
       managerId: "",
     },
-    mode: "onChange" // Validates on every change
+    mode: "onChange"
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

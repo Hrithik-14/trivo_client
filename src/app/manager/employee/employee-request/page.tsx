@@ -8,6 +8,7 @@ import api from "@/app/api/axios";
 import { RootState } from "@/app/store";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { useManangerAuthGuard } from "@/app/hooks/usemanagerAuthGuard";
 
 
 interface Employee {
@@ -27,12 +28,11 @@ interface Request {
 
 const EmployeeRequest: React.FC = () => {
     const [leaveRequests, setLeaveRequests] = useState<Request[]>([]);
-    const [regularizationRequests, setRegularizationRequests] = useState<
-        Request[]
-    >([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [regularizationRequests, setRegularizationRequests] = useState<Request[]>([]);
+    const [load, setLoading] = useState<boolean>(true);
     const user = useSelector((state: RootState) => state.user.user);
     const token = user?.token;
+    const { loading } = useManangerAuthGuard()
 
 
 
@@ -183,7 +183,7 @@ const EmployeeRequest: React.FC = () => {
         </div>
     );
 
-    if (loading) {
+    if (load) {
         return (
         <div className="flex flex-col gap-5 ">
             <div className="bg-white p-5 px-5 border border-[#ddd] rounded flex gap-3 items-center">
@@ -194,6 +194,15 @@ const EmployeeRequest: React.FC = () => {
         </div>
         );
     }
+
+    if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex flex-col gap-5">
