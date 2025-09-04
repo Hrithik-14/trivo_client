@@ -7,6 +7,7 @@ import { Calendar, Clock, Columns, Plus, Rows } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { AxiosError } from "axios";
 
 interface Report {
     id: string;
@@ -61,8 +62,9 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             setMessage("");
         }, 500);
         
-        } catch (error: any) {
-        setMessage(` ${error.response?.data?.message || "Error submitting report"}`);
+        } catch (error: unknown) {
+        const axiosErr = error as AxiosError<{ error: string }>;
+        setMessage(axiosErr.response?.data?.error || "Failed to load notifications");
         } finally {
         setLoading(false);
         }
@@ -238,8 +240,9 @@ const ManagerReport = () => {
       );
 
       setReports(Array.isArray(response.data.report) ? response.data.report : []);
-    } catch (error: any) {
-      console.log(error);
+    } catch (error: unknown) {
+      const axiosErr = error as AxiosError<{ error: string }>;
+      console.error(axiosErr.response?.data?.error || "Failed to load notifications");
       
       setReports([]);
     } finally {
