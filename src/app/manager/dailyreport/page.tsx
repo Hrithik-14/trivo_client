@@ -84,7 +84,6 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         onClick={handleBackdropClick}
         >
         <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl w-full max-w-lg max-h-[95vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 className="text-lg font-medium text-gray-900">New Manager Report</h3>
             <button
@@ -100,7 +99,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             <div className="px-6 py-4 max-h-[calc(90vh-120px)] overflow-y-auto">
             {message && (
                 <div className={`mb-4 p-3 rounded-md text-sm ${
-                message.includes('✅') 
+                message
                     ? 'bg-green-50 text-green-700 border border-green-200' 
                     : 'bg-red-50 text-red-700 border border-red-200'
                 }`}>

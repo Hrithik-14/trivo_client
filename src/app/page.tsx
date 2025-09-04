@@ -7,10 +7,20 @@ import 'aos/dist/aos.css';
 
 import { useRouter } from 'next/navigation';
 import { useHomeGuard } from './hooks/useHomeGuard';
+import toast from 'react-hot-toast';
 
 export default function LandingPage() {
     const router = useRouter()
     const { loading } = useHomeGuard()
+
+    useEffect(() => {
+      const message = sessionStorage.getItem("logoutMessage");
+      if (message) {
+        toast.success(message);
+        sessionStorage.removeItem("logoutMessage");
+      }
+    }, []);
+
     
     useEffect(() => {
         AOS.init({
@@ -36,7 +46,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white drop-shadow-lg z-50" data-aos="fade-down">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -51,7 +60,7 @@ export default function LandingPage() {
             </div>
             <button 
             onClick={handleLoginClick}
-            className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors mr-10">
+            className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors mr-10 cursor-pointer">
               Log In
             </button>
           </div>
