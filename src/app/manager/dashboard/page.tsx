@@ -224,7 +224,7 @@ useEffect(() => {
         <MarkAttendanceButton userId={user?.id || null} onAttendanceUpdated={fetchTodayAttendance} />
       </div>
 
-      <div className="flex gap-5 h-100  overflow-hidden">
+      <div className="flex gap-5 ">
         <div className="bg-white p-4 border border-[#ddd] rounded w-full">
           <h2 className="font-semibold text-sm mb-4">Working Hours</h2>
           {user?.id && <WaveChart userId={user?.id} />}
@@ -234,22 +234,25 @@ useEffect(() => {
           <h2 className="font-semibold text-sm mb-4">Attendance</h2>
           {user?.id && <EmployeeAttendance employeeId={user?.id} />}
         </div>
+
+      </div>
+
+      <div className='flex gap-3 max-h-80 '>
+        <div className="flex flex-col gap-3 w-full bg-white p-4 border border-[#ddd] rounded overflow-y-auto scrollbar-thin">
+          <h2 className="font-semibold">Current Project</h2>
+          {ongoing.length === 0 && <p>No ongoing projects.</p>}
+          {ongoing.map((m) => (
+            <div key={m._id} className="bg-white p-3 border border-[#ddd] rounded ">
+              <p className="text-2xl font-bold text-blue-500">{m.name}</p>
+              <p className="text-sm text-[#696969]">
+                Project status: <span className="font-semibold">{m.status}</span>
+              </p>
+            </div>
+          ))}
+        </div>
         <div className='overflow-y-auto min-w-80 scrollbar-thin'>
           <UpcomingHoliday />
         </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <h2 className="font-semibold">Current Project</h2>
-        {ongoing.length === 0 && <p>No ongoing projects.</p>}
-        {ongoing.map((m) => (
-          <div key={m._id} className="bg-white p-3 border border-[#ddd] rounded">
-            <p className="text-2xl font-bold text-blue-500">{m.name}</p>
-            <p className="text-sm text-[#696969]">
-              Project status: <span className="font-semibold">{m.status}</span>
-            </p>
-          </div>
-        ))}
       </div>
     </div>
   )
