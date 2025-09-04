@@ -61,7 +61,6 @@ const checkUnreadMessages = async () => {
     const groups = groupsRes.data;
     const unreadChats = new Set<string>();
 
-    // Check group chats
     for (const group of groups) {
       try {
         const messagesRes = await api.get(`/group/${group._id}/messages`, {
@@ -75,14 +74,13 @@ const checkUnreadMessages = async () => {
         );
 
         if (hasUnread) {
-          unreadChats.add(group._id); // count group as 1
+          unreadChats.add(group._id);
         }
       } catch (error) {
         console.error(`Failed to check messages for group ${group._id}`, error);
       }
     }
 
-    // Check personal conversations
     const conversationsRes = await api.get('/chat/conversations', {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -101,7 +99,7 @@ const checkUnreadMessages = async () => {
         );
 
         if (hasUnread) {
-          unreadChats.add(conv._id); // count chat as 1
+          unreadChats.add(conv._id);
         }
       } catch (error) {
         console.error(`Failed to check personal messages for user ${conv._id}`, error);

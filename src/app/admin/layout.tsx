@@ -1,54 +1,98 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect, ReactNode, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import toast from "react-hot-toast";
+import { usePathname, useRouter } from "next/navigation";
 import DraggableMessenger from "../components/messenger/DraggableMessenger";
 import { Bell } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import api from "../api/axios";
+import { clearUser } from "../store/userSlice";
+import { useDispatch } from "react-redux";
+
 
 interface MainContainerProps {
   children: ReactNode;
 }
 
+
+export interface Notification {
+  id: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+
+
 export default function RootLayout({ children }: MainContainerProps) {
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
+  const router = useRouter()
+  const dispatch = useDispatch()
+  const user = useSelector((state: RootState) => state.user.user)
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const parsed = storedUser ? JSON.parse(storedUser) : null;
-    setRole(parsed?.role || null);
-  }, []);
+const checkUnreadNotifications = useCallback(async () => {
+  if (!user?.id) return;
+
+  try {
+    const res = await api.get(`/notification/${user.id}`, { params: { page: 1, limit: 50 } });
+    const notifications = res.data.notifications;
+
+    const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
+    setUnreadNotificationCount(unreadCount);
+  } catch (error) {
+    console.error("Failed to fetch notifications", error);
+  }
+}, [user?.id])
+
+useEffect(() => {
+  if (user?.id) {
+    checkUnreadNotifications();
+    const interval = setInterval(checkUnreadNotifications, 30000);
+    return () => clearInterval(interval);
+  }
+}, [user?.id, checkUnreadNotifications]);
+
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    toast.success("Logged out successfully!");
-    window.location.href = "/";
+    dispatch(clearUser());
+
+    sessionStorage.setItem("logoutMessage", "Logged out successfully!");
+    router.push('/')
   };
 
-  if (role !== "admin") return children;
+  if (user?.role !== "admin") return children;
 
   return (
     <>
       <header>
-        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5">
+        <nav className="bg-white p-2 border-b border-b-[#dddddd] flex justify-between fixed w-full px-5 z-50">
           <div>
             <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/admin/notification" className="cursor-pointer">
-              <Bell size={18} />
+            <Link href="/admin/notification" className="relative">
+              <Bell size={22} className="cursor-pointer" />
+              {unreadNotificationCount > 0 && (
+                <div className="absolute -top-2 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-white">{unreadNotificationCount}</span>
+                </div>
+              )}
             </Link>
-            <Image
+            <div>
+              <Image
               src="/avatar.png"
               alt="Logo image"
               width={40}
               height={40}
               className="rounded-full"
             />
+            </div>
             <h4 className="font-semibold uppercase tracking-[.1rem]">Admin</h4>
           </div>
         </nav>
