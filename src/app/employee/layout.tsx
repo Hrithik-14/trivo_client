@@ -114,7 +114,7 @@ export default function RootLayout({ children }: MainContainerProps) {
             <Image src="/Logo.png" alt="Logo image" width={100} height={35} />
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/employee/notification" className="cursor-pointer">
+            <Link href="/employee/notification" className="cursor-pointer relative">
               <Bell size={22} className="cursor-pointer relative" />
               {unreadNotificationCount > 0 && (
                 <div className="absolute -top-2 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
