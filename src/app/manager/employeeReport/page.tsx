@@ -36,9 +36,7 @@ const EmployeeDailyReport: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const user = useSelector((state: RootState) => state.user.user)
   const { loading } = useManangerAuthGuard()
-  const [filterDate, setFilterDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split("T")[0]);
 
 
 

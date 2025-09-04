@@ -40,7 +40,7 @@ type User = {
 
 
 const MailSend = () => {
-    const { control, register, watch, handleSubmit, formState: { errors, isSubmitting },} = useForm();
+    const { control, register, watch, handleSubmit, reset, formState: { errors, isSubmitting },} = useForm();
     const [isOpen, setIsOpen] = useState('allEmployee')
     const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
     const [users, setUser] = useState<User[]>([])
@@ -103,6 +103,7 @@ const MailSend = () => {
             }
 
             await api.post("/send-mail", payload);
+            reset()
             toast.success("Mail sent successfully!");
         } catch (err) {
             console.error("Failed to send mail:", err);

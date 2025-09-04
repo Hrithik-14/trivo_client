@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import api from "@/app/api/axios";
+import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
 
 interface Alert {
   _id?: string;
@@ -39,9 +40,9 @@ const AlertCard: React.FC<{ alert: Alert }> = ({ alert }) => {
 const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [userId, setUserId] = useState<string>("");
+  const { loading } = useEmployeeAuthGuard()
 
   useEffect(() => {
-   
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
@@ -58,22 +59,18 @@ useEffect(() => {
 
   const fetchAlerts = async () => {
     try {
-      // 1. Normal alerts (already created in DB)
       const res1 = await api.get<Alert[]>(`/alerts/${userId}`);
       const normalAlerts = res1.data ?? [];
 
-      // 2. Today’s birthday users (no duplicates, just fetch list)
       const res2 = await api.get<Alert[]>(`/alerts/birthday/today`);
       const birthdayUsers = res2.data ?? [];
 
-      // Convert each birthday user into an alert card format
       const birthdayAlerts = birthdayUsers.map((user) => ({
         message: `🎉 Today is ${user.name}'s birthday!`,
         image: user.image || "/avatar.png",
-        forUsers: [userId], // show only for logged-in user
+        forUsers: [userId],
       }));
 
-      // (Optional) 3. Today’s yearly/anniversary users
       const res3 = await api.get<Alert[]>(`/alerts/yearly/today`);
       const yearlyUsers = res3.data ?? [];
       const yearlyAlerts = yearlyUsers.map((user) => ({
@@ -82,7 +79,6 @@ useEffect(() => {
         forUsers: [userId],
       }));
 
-      // Merge all alerts into one list
       const merged = [
         ...normalAlerts,
         ...birthdayAlerts,
@@ -104,6 +100,16 @@ useEffect(() => {
       Array.isArray(alert.forUsers) &&
       alert.forUsers.some((u) => String(u) === String(userId))
   );
+
+
+  if (loading) return (
+        <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
