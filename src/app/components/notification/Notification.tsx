@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import api from "@/app/api/axios";
 import { Loader2, Bell, AlertCircle } from "lucide-react";
+import { AxiosError } from "axios";
 
 interface Notification {
   _id: string;
@@ -52,8 +53,9 @@ const Notifications: React.FC = () => {
 
       setNotifications(res.data.notifications);
       setPagination(res.data.pagination);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load notifications");
+    } catch (err: unknown) {
+      const axiosErr = err as AxiosError<{ error: string }>;
+      setError(axiosErr.response?.data?.error || "Failed to load notifications");
     } finally {
       setLoading(false);
     }
