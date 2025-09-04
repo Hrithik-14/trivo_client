@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import api from "@/app/api/axios";
-import { Loader2, Bell, Clock, User } from "lucide-react";
+import { Bell, Clock, User } from "lucide-react";
 import { AxiosError } from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
@@ -86,6 +86,16 @@ const Notifications: React.FC = () => {
     return date.toLocaleDateString();
   };
 
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-white">
       <div className=" mx-auto p-6">
@@ -112,14 +122,7 @@ const Notifications: React.FC = () => {
           </div>
         </div>
 
-        {loading && (
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg p-8">
-            <div className="flex items-center justify-center gap-3">
-              <Loader2 className="animate-spin w-6 h-6 text-blue-500" />
-              <span className="text-gray-600 font-medium">Loading notifications...</span>
-            </div>
-          </div>
-        )}
+
 
 
         {!loading && !error && notifications.length === 0 && (
