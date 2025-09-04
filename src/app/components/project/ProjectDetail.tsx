@@ -65,20 +65,18 @@ interface Task {
   _id?: string;
   title: string;
   description: string;
-  status: "pending" | "in-progress" | "completed" | "overdue";
-  priority: "low" | "medium" | "high";
-  dueDate?: string;
-  assignedDate?: string;
-  completedDate?: string;
+  status: "pending" | "completed";
 }
 
 interface Report {
   _id: string;
-  title: string;
-  description: string;
-  submittedDate: string;
-  status: "submitted" | "reviewed" | "approved";
-  type: "daily" | "weekly" | "monthly" | "project";
+  challenges: string;
+  supportNeeded: string;
+  performance: string;
+  createdAt: string;
+  status: "pending" | "accepted" | "rejected";
+  completedTasks: string[];
+  plannedTasks: string[]
 }
 
 interface Project {
@@ -146,9 +144,7 @@ const AddProject: FC<{
           tasks: [
             {
               title: "",
-              description: "",
               status: "pending",
-              priority: "low",
             },
           ],
         },
@@ -197,7 +193,7 @@ const AddProject: FC<{
         !assignment.employeeCode ||
         assignment.tasks.length === 0 ||
         assignment.tasks.some(
-          (task) => !task.title || !task.status || !task.priority
+          (task) => !task.title || !task.status
         )
     );
     if (invalidAssignments) {
@@ -227,7 +223,6 @@ const AddProject: FC<{
           title: task.title.trim(),
           description: task.description?.trim() || "",
           status: task.status,
-          priority: task.priority,
         }))
       );
       await api.post("/manager/addTask", {
@@ -247,7 +242,7 @@ const AddProject: FC<{
         taskAssignments: [
           {
             employeeCode: null,
-            tasks: [{ title: "", description: "", status: "pending", priority: "low" }],
+            tasks: [{ title: "", description: "", status: "pending" }],
           },
         ],
       });
@@ -264,7 +259,7 @@ const AddProject: FC<{
   const addNewAssignment = () => {
     append({
       employeeCode: null,
-      tasks: [{ title: "", description: "", status: "pending", priority: "low" }],
+      tasks: [{ title: "", description: "", status: "pending"}],
     });
     setSelectedEmployeeIndex(fields.length);
   };
@@ -284,7 +279,7 @@ const AddProject: FC<{
     const currentTasks = watch(`taskAssignments.${employeeIndex}.tasks`) || [];
     setValue(`taskAssignments.${employeeIndex}.tasks`, [
       ...currentTasks,
-      { title: "", description: "", status: "pending", priority: "low" },
+      { title: "", description: "", status: "pending" },
     ]);
   };
 
@@ -662,6 +657,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [memberTasks, setMemberTasks] = useState<{ [key: string]: Task[] }>({});
   const [memberReports, setMemberReports] = useState<{ [key: string]: Report[] }>({});
   const [loadingMemberData, setLoadingMemberData] = useState<{ [key: string]: boolean }>({});
+  const [reload, setReload] = useState(false)
 
   const projectId = slug;
 
@@ -679,7 +675,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
       }
     };
     fetchProject();
-  }, [projectId]);
+  }, [projectId, reload]);
 
   const fetchMemberData = async (memberId: string) => {
 
@@ -692,7 +688,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
       console.log(tasksResponse);
 
       const reportsResponse = await api.get(`/report/project/${projectId}/submittedBy/${memberId}`);
-      const reports: Report[] = reportsResponse.data || [];
+      const reports: Report[] = reportsResponse.data.reports || [];
       console.log(reports);
 
       setMemberTasks((prev) => ({ ...prev, [memberId]: tasks }));
@@ -706,9 +702,17 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
     }
   };
 
-const handleMemberExpand = (userId: string, memberId: string) => {
-  setExpandedMemberId((prev) => (prev === memberId ? null : memberId));
+const handleMemberExpand = (userId: string) => {
+  if (expandedMemberId === userId) {
+    setExpandedMemberId(null);
+  } else {
+    setExpandedMemberId(userId);
+    if (!memberTasks[userId] || !memberReports[userId]) {
+      fetchMemberData(userId);
+    }
+  }
 };
+
 
 
   const handleActiveChange = async (newStatus: boolean) => {
@@ -725,8 +729,7 @@ const handleMemberExpand = (userId: string, memberId: string) => {
 const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
   if (!project) return;
   try {
-    const { data } = await api.patch(`/projectProgress/${project._id}`, { status: newStatus });
-
+    await api.patch(`/projectProgress/${project._id}`, { status: newStatus });
     setProject((prev) => prev ? { ...prev, status: newStatus } : prev);
   } catch (err) {
     console.error(err);
@@ -768,6 +771,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setReload(true)
   };
 
   const getStatusColor = (status: string, type: "task" | "report") => {
@@ -775,18 +779,16 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
       switch (status) {
         case "completed":
           return "bg-green-100 text-green-700 border-green-300";
-        case "in-progress":
-          return "bg-blue-100 text-blue-700 border-blue-300";
-        case "overdue":
-          return "bg-red-100 text-red-700 border-red-300";
+        case "pending":
+          return "bg-yellow-100 text-yellow-700 border-yellow-300";
         default:
           return "bg-gray-100 text-gray-700 border-gray-300";
       }
     } else {
       switch (status) {
-        case "approved":
+        case "accepted":
           return "bg-green-100 text-green-700 border-green-300";
-        case "reviewed":
+        case "rejected":
           return "bg-blue-100 text-blue-700 border-blue-300";
         default:
           return "bg-yellow-100 text-yellow-700 border-yellow-300";
@@ -995,7 +997,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                   >
                     <div
                       className="p-3 flex gap-3 items-center cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={() => handleMemberExpand(member.user._id,member._id)}
+                      onClick={() => handleMemberExpand(member.user._id)}
                     >
                       <div className="relative w-10 h-10">
                         <Image
@@ -1012,8 +1014,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {(role === "admin" || role === "manager") &&
-                          !(user?.id === member._id) && (
+                        {!(user?.id === member.user._id) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1024,36 +1025,38 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                               Message
                             </button>
                           )}
-                        {expandedMemberId === member._id &&
-                          loadingMemberData[member._id] && (
+                        {expandedMemberId === member.user._id &&
+                          loadingMemberData[member.user._id] && (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                           )}
                         <div>
-                          {expandedMemberId === member._id ? (
+                          { (user?.role === "admin" || user?.role === "manager" || member.user._id === user?.id) ? 
+                          (expandedMemberId === member.user._id ? (
                             <ChevronUp size={20} className="text-gray-400" />
                           ) : (
                             <ChevronRight size={20} className="text-gray-400" />
+                          )) : (
+                            <></>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {expandedMemberId === member._id && (
+                    {expandedMemberId === member.user._id && (user?.role === "admin" || user?.role === "manager" || expandedMemberId === user?.id) && (
                       <div className="border-t border-gray-200 bg-gray-50">
-                        {loadingMemberData[member._id] ? (
+                        {loadingMemberData[member.user._id] ? (
                           <div className="p-4 text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                             <p className="text-sm text-gray-600">Loading member data...</p>
                           </div>
                         ) : (
                           <div className="p-4 space-y-6">
-                            {/* Tasks Section */}
                             <div>
                               <div className="flex items-center gap-2 mb-3">
                                 <CheckSquare size={16} className="text-blue-600" />
                                 <h4 className="font-semibold text-sm">Tasks</h4>
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                  {memberTasks[member._id]?.length || 0}
+                                  {memberTasks[member.user._id]?.length || 0}
                                 </span>
                               </div>
                               <div className="space-y-2">
@@ -1061,15 +1064,15 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                                   memberTasks[member.user._id].map((task) => (
                                     <div
                                       key={task._id}
-                                      className="bg-white p-3 rounded border"
+                                      className="bg-white p-3 rounded border border-[#ddd]"
                                     >
-                                      <div className="flex justify-between items-start mb-2">
+                                      <div className="flex justify-between items-center">
                                         <h5 className="font-medium text-sm">
                                           {task.title}
                                         </h5>
                                         <div className="flex gap-2">
                                           <span
-                                            className={`text-xs px-2 py-1 rounded border ${getStatusColor(
+                                            className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
                                               task.status,
                                               "task"
                                             )}`}
@@ -1078,9 +1081,6 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                                           </span>
                                         </div>
                                       </div>
-                                      <p className="text-xs text-gray-600 ">
-                                        {task.description}
-                                      </p>
                                     </div>
                                   ))
                                 ) : (
@@ -1091,32 +1091,33 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                               </div>
                             </div>
 
-                            {/* Reports Section */}
                             <div>
                               <div className="flex items-center gap-2 mb-3">
                                 <FileText size={16} className="text-green-600" />
                                 <h4 className="font-semibold text-sm">Reports</h4>
                                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                  {memberReports[member._id]?.length || 0}
+                                  {memberReports[member.user._id]?.length || 0}
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                {memberReports[member._id]?.length > 0 ? (
-                                  memberReports[member._id].map((report) => (
+                                {memberReports[member.user._id]?.length > 0 ? (
+                                  memberReports[member.user._id].map((report) => (
                                     <div
                                       key={report._id}
-                                      className="bg-white p-3 rounded border"
+                                      className="bg-white p-3 rounded border border-[#ddd]"
                                     >
                                       <div className="flex justify-between items-start mb-2">
-                                        <h5 className="font-medium text-sm">
-                                          {report.title}
-                                        </h5>
+                                        <div>
+                                          <h5 className="font-medium text-sm">
+                                            <span className="text-xs">Completed Tasks:</span> {report.completedTasks.length}
+                                          </h5>
+                                          <h5 className="font-medium text-sm">
+                                            <span className="text-xs">Planned Tasks:</span> {report.plannedTasks.length}
+                                          </h5>
+                                        </div>
                                         <div className="flex gap-2">
-                                          <span className="text-xs px-2 py-1 rounded border bg-purple-100 text-purple-700 border-purple-300">
-                                            {report.type}
-                                          </span>
                                           <span
-                                            className={`text-xs px-2 py-1 rounded border ${getStatusColor(
+                                            className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
                                               report.status,
                                               "report"
                                             )}`}
@@ -1126,10 +1127,15 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
                                         </div>
                                       </div>
                                       <p className="text-xs text-gray-600 mb-2">
-                                        {report.description}
+                                        <span className="text-xs">Performance:</span> {report.performance}
                                       </p>
+                                      {report.challenges && 
+                                        <p className="text-xs text-gray-600 mb-2">
+                                          <span className="text-xs">Performance:</span> {report.challenges}, {report.supportNeeded}
+                                        </p>
+                                      }
                                       <div className="text-xs text-gray-500">
-                                        Submitted: {new Date(report.submittedDate).toLocaleDateString()}
+                                        Submitted: {new Date(report.createdAt).toLocaleDateString()}
                                       </div>
                                     </div>
                                   ))
