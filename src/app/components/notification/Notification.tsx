@@ -101,9 +101,14 @@ const Notifications: React.FC = () => {
                 </h1>
               </div>
             </div>
-            <button onClick={handleMarkAsRead} className="py-2 px-4 border border-green-200 rounded font-semibold bg-green-100 cursor-pointer">
-              Mark as read
-            </button>
+            {notifications.some(n => !n.isRead) && (
+              <button
+                onClick={handleMarkAsRead}
+                className="py-2 px-4 rounded font-semibold bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 cursor-pointer"
+              >
+                Mark as read
+              </button>
+            )}
           </div>
         </div>
 

@@ -119,7 +119,7 @@ const checkUnreadMessages = async () => {
     if (token && currentUserId) {
       checkUnreadMessages();
       
-      const interval = setInterval(checkUnreadMessages, 30000);
+      const interval = setInterval(checkUnreadMessages, 15000);
       return () => clearInterval(interval);
     }
   }, [token, currentUserId]);
