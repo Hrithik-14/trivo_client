@@ -21,36 +21,18 @@ interface Attendance {
   signOutTime?: string
 }
 
-const calculateElapsedTime = (signInTime: string): string => {
+const calculateElapsedTime = (signIn: string): string => {
   const now = new Date()
-  const [h, m, s] = signInTime.split(':').map(Number)
-
-  // always local date + parsed time
-  const signInDate = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    h, m, s
-  )
-
-  let diffMs = now.getTime() - signInDate.getTime()
-  if (diffMs < 0) diffMs = 0
-
-  return formatDiff(diffMs)
+  const signInDate = new Date(signIn)
+  return formatDiff(now.getTime() - signInDate.getTime())
 }
 
-const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
-  const now = new Date()
-  const [h1, m1, s1] = signInTime.split(':').map(Number)
-  const [h2, m2, s2] = signOutTime.split(':').map(Number)
-
-  const signInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h1, m1, s1)
-  const signOutDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h2, m2, s2)
-
-  let diffMs = signOutDate.getTime() - signInDate.getTime()
-  if (diffMs < 0) diffMs = 0
-
-  return formatDiff(diffMs)
+const calculateWorkedTime = (signIn: string, signOut: string): string => {
+  const signInDate = new Date(signIn)
+  const signOutDate = new Date(signOut)
+  return formatDiff(signOutDate.getTime() - signInDate.getTime())
+}
+ formatDiff(diffMs)
 }
 
 const formatDiff = (diffMs: number): string => {
