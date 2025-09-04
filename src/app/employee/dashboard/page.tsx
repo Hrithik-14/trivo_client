@@ -62,28 +62,6 @@ const formatDiff = (diffMs: number): string => {
 }
 
 
-
-const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
-  const now = new Date()
-
-  const [h1, m1, s1] = signInTime.split(':').map(Number)
-  const [h2, m2, s2] = signOutTime.split(':').map(Number)
-
-  const signInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h1, m1, s1)
-  const signOutDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h2, m2, s2)
-
-  let diffMs = signOutDate.getTime() - signInDate.getTime()
-  if (diffMs < 0) diffMs = 0
-
-  const totalSeconds = Math.floor(diffMs / 1000)
-  const hrs = Math.floor(totalSeconds / 3600)
-  const mins = Math.floor((totalSeconds % 3600) / 60)
-  const secs = totalSeconds % 60
-
-  return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
-}
-
-
 const MarkAttendanceButton: React.FC<{
   userId: string | null
   onAttendanceUpdated: () => void
