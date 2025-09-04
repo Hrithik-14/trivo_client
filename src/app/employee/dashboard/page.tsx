@@ -28,15 +28,23 @@ const buildDateFromTime = (time: string): Date => {
 }
 
 const calculateElapsedTime = (signInTime: string): string => {
-  const signInDate = buildDateFromTime(signInTime)
   const now = new Date()
-  return formatDiff(now.getTime() - signInDate.getTime())
+  const signInDate = buildDateFromTime(signInTime)
+
+  let diffMs = now.getTime() - signInDate.getTime()
+  if (diffMs < 0) diffMs = 0
+
+  return formatDiff(diffMs)
 }
 
 const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
   const signInDate = buildDateFromTime(signInTime)
   const signOutDate = buildDateFromTime(signOutTime)
-  return formatDiff(signOutDate.getTime() - signInDate.getTime())
+
+  let diffMs = signOutDate.getTime() - signInDate.getTime()
+  if (diffMs < 0) diffMs = 0
+
+  return formatDiff(diffMs)
 }
 
 const formatDiff = (diffMs: number): string => {
@@ -46,6 +54,7 @@ const formatDiff = (diffMs: number): string => {
   const secs = totalSeconds % 60
   return [hrs, mins, secs].map(v => v.toString().padStart(2, '0')).join(':')
 }
+
 
 
 
