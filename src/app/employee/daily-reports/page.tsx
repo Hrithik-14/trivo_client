@@ -112,10 +112,8 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
   const handleProjectChange = async (projectId: string, index: number) => {
     if (!projectId) return setTasks((prev) => ({ ...prev, [index]: [] }));
     try {
-      const response = await api.get(
-        `/project/${projectId}/user/${user?.id}/tasks`
-      );
-      setTasks((prev) => ({ ...prev, [index]: response.data.data || [] }));
+      const response = await api.get(`/project/${projectId}/user/${user?.id}/tasks`);
+      setTasks((prev) => ({ ...prev, [index]: response.data || [] }));
     } catch (error) {
       console.error("Error fetching tasks:", error);
       setTasks((prev) => ({ ...prev, [index]: [] }));
