@@ -21,18 +21,22 @@ interface Attendance {
   signOutTime?: string
 }
 
-const calculateElapsedTime = (signIn: string): string => {
+const buildDateFromTime = (time: string): Date => {
+  const [h, m, s] = time.split(':').map(Number)
   const now = new Date()
-  const signInDate = new Date(signIn)
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s)
+}
+
+const calculateElapsedTime = (signInTime: string): string => {
+  const signInDate = buildDateFromTime(signInTime)
+  const now = new Date()
   return formatDiff(now.getTime() - signInDate.getTime())
 }
 
-const calculateWorkedTime = (signIn: string, signOut: string): string => {
-  const signInDate = new Date(signIn)
-  const signOutDate = new Date(signOut)
+const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
+  const signInDate = buildDateFromTime(signInTime)
+  const signOutDate = buildDateFromTime(signOutTime)
   return formatDiff(signOutDate.getTime() - signInDate.getTime())
-}
- formatDiff(diffMs)
 }
 
 const formatDiff = (diffMs: number): string => {
@@ -42,6 +46,7 @@ const formatDiff = (diffMs: number): string => {
   const secs = totalSeconds % 60
   return [hrs, mins, secs].map(v => v.toString().padStart(2, '0')).join(':')
 }
+
 
 
 const MarkAttendanceButton: React.FC<{
