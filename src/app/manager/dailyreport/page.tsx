@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 interface Report {
     id: string;
@@ -37,12 +38,10 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
     const [endTime, setEndTime] = useState("");
     const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setMessage("");
 
         try {
           await api.post(`/manager-report/${managerId}`, {
@@ -51,7 +50,7 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             description,
         });
 
-        setMessage("Manager report submitted successfully!");
+        toast.success("Manager report submitted successfully!");
         setStartTime("");
         setEndTime("");
         setDescription("");
@@ -59,12 +58,11 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
         setTimeout(() => {
             onReportSubmitted();
             onClose();
-            setMessage("");
         }, 500);
         
         } catch (error: unknown) {
         const axiosErr = error as AxiosError<{ error: string }>;
-        setMessage(axiosErr.response?.data?.error || "Failed to load notifications");
+        toast.error(axiosErr.response?.data?.error || "Failed to load notifications");
         } finally {
         setLoading(false);
         }
@@ -97,15 +95,6 @@ const ManagerReportForm: React.FC<ManagerReportFormProps> = ({
             </div>
 
             <div className="px-6 py-4 max-h-[calc(90vh-120px)] overflow-y-auto">
-            {message && (
-                <div className={`mb-4 p-3 rounded-md text-sm ${
-                message
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                {message}
-                </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -352,7 +341,7 @@ const ManagerReport = () => {
             <div className={`space-y-4 ${showStyle === true ? '' : 'grid grid-cols-2 gap-5'}`}>
                 {filteredReports.length > 0 ? (
                   filteredReports.map((report, index) => (
-                    <div key={report.id || index} className="p-6 bg-white hover:bg-gray-50 rounded border border-[#ddd] h-fit">
+                    <div key={report.id || index} className={`p-6 ${report.status === 'rejected' ? 'bg-red-100 border-red-300' : 'bg-white hover:bg-gray-50 border-[#ddd]'} rounded border  h-fit`}>
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                         <div className="flex items-center justify-between mb-3">

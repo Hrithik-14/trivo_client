@@ -22,10 +22,12 @@ interface Attendance {
 }
 
 const calculateElapsedTime = (signInTime: string): string => {
-  const todayDateStr = new Date().toISOString().split('T')[0]
-  const signInDate = new Date(`${todayDateStr}T${signInTime}`)
-
   const now = new Date()
+
+  const [h, m, s] = signInTime.split(':').map(Number)
+
+  const signInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s)
+
   let diffMs = now.getTime() - signInDate.getTime()
   if (diffMs < 0) diffMs = 0
 
@@ -37,10 +39,15 @@ const calculateElapsedTime = (signInTime: string): string => {
   return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
 }
 
+
 const calculateWorkedTime = (signInTime: string, signOutTime: string): string => {
-  const todayDateStr = new Date().toISOString().split('T')[0]
-  const signInDate = new Date(`${todayDateStr}T${signInTime}`)
-  const signOutDate = new Date(`${todayDateStr}T${signOutTime}`)
+  const now = new Date()
+
+  const [h1, m1, s1] = signInTime.split(':').map(Number)
+  const [h2, m2, s2] = signOutTime.split(':').map(Number)
+
+  const signInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h1, m1, s1)
+  const signOutDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h2, m2, s2)
 
   let diffMs = signOutDate.getTime() - signInDate.getTime()
   if (diffMs < 0) diffMs = 0
@@ -52,6 +59,7 @@ const calculateWorkedTime = (signInTime: string, signOutTime: string): string =>
 
   return [hrs, mins, secs].map((v) => v.toString().padStart(2, '0')).join(':')
 }
+
 
 
 const MarkAttendanceButton: React.FC<{

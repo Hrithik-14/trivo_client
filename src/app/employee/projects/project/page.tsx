@@ -22,9 +22,10 @@ type Project = {
         role: string;
     }[];
     tasks: string[];
-    client: string
-    clientEmail: string
-    status: string
+    client: string;
+    clientEmail: string;
+    status: string;
+    isActive: boolean;
 }
 
 const Projects: FC = () => {
@@ -58,8 +59,8 @@ const Projects: FC = () => {
     if (loading) return (
         <div className="h-full flex items-center justify-center">
             <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading details...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading details...</p>
             </div>
         </div>
     );
@@ -106,7 +107,7 @@ const Projects: FC = () => {
 
             <div className='flex flex-col gap-4'>
                 {projects.map((project) => (
-                    <Link href={`/employee/projects/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
+                    <Link href={`/employee/projects/${project._id}`} key={project._id} className={`p-3 px-5 border  rounded-md flex flex-col gap-3 ${project.isActive === false ? 'bg-red-50 border-red-200' : 'bg-white border-[#ddd]'}`}>
                         <div className='flex justify-between'>
                             <div>
                                 <h2 className='text-xl font-semibold'>{project.name}</h2>
@@ -135,23 +136,25 @@ const Projects: FC = () => {
                         
                     </Link>
                 ))}
-            <div className="flex justify-center mt-4 gap-2">
-                <button
-                    disabled={page === 1}
-                    onClick={() => setPage(prev => prev - 1)}
-                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-                >
-                    Prev
-                </button>
-                <span className="px-4 py-2">{page} / {totalPages}</span>
-                <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage(prev => prev + 1)}
-                    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-                >
-                    Next
-                </button>
-            </div>
+                { projects.length > 10 &&
+                    <div className="flex justify-center mt-4 gap-2">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(prev => prev - 1)}
+                            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                        >
+                            Prev
+                        </button>
+                        <span className="px-4 py-2">{page} / {totalPages}</span>
+                        <button
+                            disabled={page === totalPages}
+                            onClick={() => setPage(prev => prev + 1)}
+                            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
+                }
             </div>
         </div>
     );

@@ -7,6 +7,8 @@ import { Rnd } from "react-rnd";
 import { MessageCircle, X } from "lucide-react";
 import Messenger from "./Messenger";
 import api from '@/app/api/axios';
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
@@ -32,18 +34,27 @@ const SIDEBAR_WIDTH = 300;
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [token, setToken] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [unreadChatCount, setUnreadChatCount] = useState(0);  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const user = useSelector((state: RootState) => state.user.user)
+
+
+    useEffect(() => {
+      if (isOpen) {
+        const width = 500;
+        const height = 600;
+        setPosition({
+          x: (window.innerWidth - width) / 2,
+          y: window.scrollY + (window.innerHeight - height) / 2,
+        });
+      }
+    }, [isOpen]);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
+    
 
-    if (storedToken) {
+    if (user) {
       try {
-        const payload = JSON.parse(atob(storedToken.split('.')[1]));
-        setCurrentUserId(payload.id);
+        setCurrentUserId(user?.id);
       } catch (error) {
         console.error("Failed to parse token", error);
       }
@@ -51,11 +62,11 @@ const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   }, []);
 
 const checkUnreadMessages = async () => {
-  if (!token || !currentUserId) return;
+  if (!user?.token || !currentUserId) return;
 
   try {
     const groupsRes = await api.get('/group/my', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${user?.token}` }
     });
 
     const groups = groupsRes.data;
@@ -64,7 +75,7 @@ const checkUnreadMessages = async () => {
     for (const group of groups) {
       try {
         const messagesRes = await api.get(`/group/${group._id}/messages`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${user?.token}` }
         });
 
         const hasUnread = messagesRes.data.some((message: Message) =>
@@ -82,7 +93,7 @@ const checkUnreadMessages = async () => {
     }
 
     const conversationsRes = await api.get('/chat/conversations', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${user?.token}` }
     });
 
     const conversations = conversationsRes.data;
@@ -90,7 +101,7 @@ const checkUnreadMessages = async () => {
     for (const conv of conversations) {
       try {
         const messagesRes = await api.get(`/chat/${conv._id}/messages`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${user?.token}` }
         });
 
         const hasUnread = messagesRes.data.some((message: Message) =>
@@ -116,13 +127,13 @@ const checkUnreadMessages = async () => {
 
 
   useEffect(() => {
-    if (token && currentUserId) {
+    if (user?.token && currentUserId) {
       checkUnreadMessages();
       
       const interval = setInterval(checkUnreadMessages, 15000);
       return () => clearInterval(interval);
     }
-  }, [token, currentUserId]);
+  }, [user?.token, currentUserId]);
 
   const handleToggleOpen = () => {
     setIsOpen((prev) => {

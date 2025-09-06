@@ -21,9 +21,10 @@ type Project = {
     role: string;
   }[];
   tasks: string[];
-  client: string
-  clientEmail: string
-  status: string
+  client: string;
+  clientEmail: string;
+  status: string;
+  isActive: boolean;
 }
 
 const Projects: FC = () => {
@@ -102,7 +103,7 @@ const Projects: FC = () => {
 
       <div className='flex flex-col gap-4'>
         {projects.map((project) => (
-          <Link href={`/manager/project/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
+          <Link href={`/manager/project/${project._id}`} key={project._id} className={`p-3 px-5 border border-[#ddd] rounded-md flex flex-col gap-3 ${project.isActive === false ? 'bg-red-100' : 'bg-white'}`}>
             <div className='flex justify-between'>
               <div>
                 <h2 className='text-xl font-semibold'>{project.name}</h2>
@@ -131,23 +132,25 @@ const Projects: FC = () => {
           </Link>
         ))}
 
-        <div className="flex justify-center mt-4 gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(prev => prev - 1)}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="px-4 py-2">{page} / {totalPages}</span>
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(prev => prev + 1)}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        { projects.length > 10 && 
+          <div className="flex justify-center mt-4 gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(prev => prev - 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="px-4 py-2">{page} / {totalPages}</span>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        }
       </div>
     </div>
   );
