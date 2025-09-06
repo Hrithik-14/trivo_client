@@ -68,6 +68,8 @@ export default function RootLayout({ children }: MainContainerProps) {
   const user = useSelector((state: RootState) => state.user.user);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
+  console.log(user);
+  
   const checkUnreadNotifications = useCallback(async () => {
     if (!user?.id) return;
 
@@ -144,7 +146,7 @@ export default function RootLayout({ children }: MainContainerProps) {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm text-gray-800">
-                    {user?.name || "MINHAJ"}
+                    {user?.name || "Unkonown"}
                   </span>
                   <span className="text-xs text-gray-500">
                     {user?.employeeCode || "N/A"}

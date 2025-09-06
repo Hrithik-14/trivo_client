@@ -661,6 +661,18 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
 
   const projectId = slug;
 
+
+  useEffect(() => {
+    if (showMessenger) {
+      const width = 500;
+      const height = 600;
+      setPosition({
+        x: (window.innerWidth - width) / 2,
+        y: window.scrollY + (window.innerHeight - height) / 2,
+      });
+    }
+  }, [showMessenger]);
+
   useEffect(() => {
     const fetchProject = async () => {
       try {
@@ -813,7 +825,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
 
   return (
     <>
-      <div className="flex flex-col gap-5 bg-white p-5 px-8">
+      <div className="flex flex-col gap-5 bg-white p-5 px-8 overflow-hidden">
         {isModalOpen && (
           <AddProject
             onClose={handleCloseModal}
@@ -830,7 +842,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
               Edit Project
             </Link>
           </div>
-        ) : role === "manager" ? (
+        ) : role === "manager" && project.isActive === true ? (
           <div className="w-full flex justify-end">
             <button
               onClick={handleAdd}
@@ -849,7 +861,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
             <p className="text-gray-600 text-sm">{project.description}</p>
           </div>
           <div className="flex gap-3">
-            { role === 'manager' ? (
+            { role === 'manager' && project.isActive === true ? (
               <select
               value={project.status}
               onChange={(e) => handleStatusChange(e.target.value as "Ongoing" | "Completed")}
@@ -1158,38 +1170,38 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
           </div>
         </div>
       </div>
-      {showMessenger && selectedContact && (
-        <Rnd
-          size={{ width: 500, height: 600 }}
-          position={position}
-          bounds="window"
-          onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
-          enableResizing={false}
-          dragHandleClassName="drag-handle"
-          className="fixed z-50 bg-white rounded-lg shadow-2xl"
-        >
-          <div className="bg-white rounded-lg shadow-2xl w-[500px] h-[600px] flex flex-col">
-            <div className="drag-handle bg-blue-400 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
-              <h3 className="font-semibold">Messenger</h3>
-              <button
-                onClick={() => {
-                  setShowMessenger(false);
-                  setSelectedContact(null);
-                }}
-                className="text-white hover:bg-blue-600 p-1 rounded"
-              >
-                <Plus className="rotate-45" />
-              </button>
+        {showMessenger && selectedContact && (
+          <Rnd
+            size={{ width: 500, height: 600 }}
+            position={position}
+            bounds="window"
+            onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
+            enableResizing={false}
+            dragHandleClassName="drag-handle"
+            className="fixed z-50 bg-white rounded-lg shadow-2xl"
+          >
+            <div className="bg-white rounded-lg shadow-2xl w-full h-full flex flex-col">
+              <div className="drag-handle bg-blue-400 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
+                <h3 className="font-semibold">Messenger</h3>
+                <button
+                  onClick={() => {
+                    setShowMessenger(false);
+                    setSelectedContact(null);
+                  }}
+                  className="text-white hover:bg-blue-600 p-1 rounded"
+                >
+                  <Plus className="rotate-45" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <Messenger
+                  role={role as "admin" | "manager" | "employee"}
+                  initialContact={selectedContact}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <Messenger
-                role={role as "admin" | "manager" | "employee"}
-                initialContact={selectedContact}
-              />
-            </div>
-          </div>
-        </Rnd>
-      )}
+          </Rnd>
+        )}
     </>
   );
 };

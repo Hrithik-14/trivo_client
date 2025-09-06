@@ -53,6 +53,7 @@ interface MultipleDailyReportsForm {
 interface Project {
   name: string;
   _id: string;
+  isActive: boolean
 }
 
 interface Task {
@@ -71,7 +72,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors,isSubmitting },
   } = useForm<MultipleDailyReportsForm>({
     defaultValues: {
       reports: [
@@ -219,7 +220,7 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       >
                         <option value="">Select a project...</option>
-                        {projects.map((p) => (
+                        {projects.filter((n) => n.isActive === true).map((p) => (
                           <option key={p._id} value={p._id}>
                             {p.name}
                           </option>
@@ -376,9 +377,10 @@ const CreateDailyReport: FC<{ onClose: () => void }> = ({ onClose }) => {
             <div className="flex justify-end space-x-4">
               <button
                 type="submit"
-                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 flex items-center space-x-2"
+                disabled={isSubmitting}
+                className={`px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 flex items-center space-x-2 ${isSubmitting ? "bg-green-500 text-white shadow-lg" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
               >
-                <span>Submit Reports</span>
+                {isSubmitting ? 'Submitting...' : 'Submit Reports'}
               </button>
             </div>
           </div>
@@ -575,12 +577,6 @@ const DailyReport: FC = () => {
       </div>
 
       <div className="mx-auto py-8  px-4">
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
         <div className="flex justify-between gap-4 mb-6">
           <div className="flex gap-2">
             <select

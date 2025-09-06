@@ -55,7 +55,7 @@ import toast from 'react-hot-toast'
 const onSubmit = async (data: LoginFormData) => {
   try {
     const res = await api.post('/auth/login', data)
-    toast.success('Login successful!')
+    toast.success('Login successful!')    
 
     localStorage.setItem("token", res.data.token)
 
@@ -66,6 +66,7 @@ const onSubmit = async (data: LoginFormData) => {
       employeeCode: res.data.user.employeeCode,
       role: res.data.user.role,
       token: res.data.token,
+      profileImage: res.data.profileImage
     }))
 
     reset()

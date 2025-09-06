@@ -266,9 +266,10 @@ type Project = {
       name: string;
     }[];
     tasks: string[];
-    client: string
-    clientEmail: string
-    status: string
+    client: string;
+    clientEmail: string;
+    status: string;
+    isActive: boolean
 }
 
 
@@ -364,11 +365,9 @@ const Projects: FC = () => {
                 <ProjectSearch/>
             </div>
 
-            {/* Render all projects */}
             <div className='flex flex-col gap-4'>
                 {projects.map((project) => (
-               
-                   <Link href={`/admin/Project/${project._id}`} key={project._id} className='p-3 px-5 bg-white border border-[#ddd] rounded-md flex flex-col gap-3'>
+                  <Link href={`/admin/Project/${project._id}`} key={project._id} className={`p-3 px-5 border  rounded-md flex flex-col gap-3 ${project.isActive === false ? 'bg-red-100 border-red-200' : 'bg-white border-[#ddd]'}`}>
                         <div className='flex justify-between'>
                             <div>
                                 <h2 className='text-xl font-semibold'>{project.name}</h2>
@@ -397,6 +396,7 @@ const Projects: FC = () => {
                       
                     </Link>
                 ))}
+            { projects.length > 10 && 
             <div className="flex justify-center mt-4 gap-2">
                 <button
                     disabled={page === 1}
@@ -413,7 +413,7 @@ const Projects: FC = () => {
                 >
                     Next
                 </button>
-            </div>
+            </div>}
             </div>
         </div>
     );
