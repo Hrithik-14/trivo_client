@@ -230,7 +230,7 @@ const ManagerReport = () => {
       setReports(Array.isArray(response.data.report) ? response.data.report : []);
     } catch (error: unknown) {
       const axiosErr = error as AxiosError<{ error: string }>;
-      console.error(axiosErr.response?.data?.error || "Failed to load notifications");
+      toast.error(axiosErr.response?.data?.error || "Failed to load notifications");
       
       setReports([]);
     } finally {
