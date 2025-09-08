@@ -198,7 +198,7 @@ export default function RootLayout({ children }: MainContainerProps) {
               </Link>
               <Link
                 href={"/employee/events"}
-                className={` w-fit py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                   pathname === "/employee/events" ? "bg-black text-white" : ""
                 }`}
               >

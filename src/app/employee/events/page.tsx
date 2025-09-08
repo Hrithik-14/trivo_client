@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import api from "@/app/api/axios";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 import { useEmployeeAuthGuard } from "@/app/hooks/useEmployeeAuthGuard";
 
 interface Alert {
@@ -9,8 +11,6 @@ interface Alert {
   forUsers?: string[];
   message: string;
   image?: string;
-  name?: string;
-  destination?: string;
 }
 
 const AlertCard: React.FC<{ alert: Alert }> = ({ alert }) => {
@@ -39,83 +39,48 @@ const AlertCard: React.FC<{ alert: Alert }> = ({ alert }) => {
 
 const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [userId, setUserId] = useState<string>("");
-  const { loading } = useEmployeeAuthGuard()
+  const user = useSelector((state: RootState) => state.user.user)
+  const { loading } = useEmployeeAuthGuard();
+
+
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    if (!user?.id) return;
+
+    const fetchAlerts = async () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUserId(parsedUser?.id || parsedUser?._id || ""); 
-      } catch (e) {
-        console.error("Invalid user object in localStorage", e);
+        const res = await api.get(`/alerts/${user?.id}`);
+        const normalAlerts = res.data?.alerts ?? [];
+        setAlerts(normalAlerts);
+      } catch (err) {
+        console.error("Error fetching alerts", err);
       }
-    }
-  }, []);
+    };
 
-useEffect(() => {
-  if (!userId) return;
-
-  const fetchAlerts = async () => {
-    try {
-      const res1 = await api.get<Alert[]>(`/alerts/${userId}`);
-      const normalAlerts = res1.data ?? [];
-
-      const res2 = await api.get<Alert[]>(`/alerts/birthday/today`);
-      const birthdayUsers = res2.data ?? [];
-
-      const birthdayAlerts = birthdayUsers.map((user) => ({
-        message: `🎉 Today is ${user.name}'s birthday!`,
-        image: user.image || "/avatar.png",
-        forUsers: [userId],
-      }));
-
-      const res3 = await api.get<Alert[]>(`/alerts/yearly/today`);
-      const yearlyUsers = res3.data ?? [];
-      const yearlyAlerts = yearlyUsers.map((user) => ({
-        message: `🎊 Today is ${user.name}'s work anniversary!`,
-        image: user.image || "/avatar.png",
-        forUsers: [userId],
-      }));
-
-      const merged = [
-        ...normalAlerts,
-        ...birthdayAlerts,
-        ...yearlyAlerts,
-      ];
-
-      setAlerts(merged);
-    } catch (err) {
-      console.error("Error fetching alerts", err);
-    }
-  };
-
-  fetchAlerts();
-}, [userId]);
-
+    fetchAlerts();
+  }, [user?.id]);
 
   const userAlerts = alerts.filter(
     (alert) =>
       Array.isArray(alert.forUsers) &&
-      alert.forUsers.some((u) => String(u) === String(userId))
+      alert.forUsers.some((u) => String(u) === String(user?.id))
   );
 
-
-  if (loading) return (
-        <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading details...</p>
-            </div>
+  if (loading)
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading details...</p>
         </div>
+      </div>
     );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">📢 My Alerts</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">My Alerts</h2>
           <p className="text-gray-600">
             Stay updated with your personalized notifications
           </p>
