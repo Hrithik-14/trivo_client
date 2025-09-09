@@ -38,6 +38,7 @@ import {
 } from "react-hook-form";
 import toast from "react-hot-toast";
 import ManagersUserSearch from "@/app/components/UsersManager";
+import ClientPortal from "./ClientPortal";
 
 interface User {
   _id: string;
@@ -650,7 +651,9 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [loading, setLoading] = useState(true);
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const user = useSelector((state: RootState) => state.user.user);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const width = 500;
+  const height = 600;
+  const [position, setPosition] = useState<{ x: number; y: number } | undefined>(undefined);  
   const [showMessenger, setShowMessenger] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
@@ -662,15 +665,12 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const projectId = slug;
 
 
-  const width = 500;
-  const height = 600;
 
   useEffect(() => {
     if (showMessenger) {
-      const { innerWidth, innerHeight } = window;
       setPosition({
-        x: (innerWidth - width) / 2,
-        y: (innerHeight - height) / 2,
+        x: (window.innerWidth - width) / 2,
+        y: (window.innerHeight - height) / 2,
       });
     }
   }, [showMessenger]);
@@ -1173,13 +1173,10 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
         </div>
       </div>
         {showMessenger && selectedContact && (
-          <div className="fixed inset-0 z-50">
+          <ClientPortal>
           <Rnd
-            size={{ width: 500, height: 600 }}
-            position={{
-              x: (window.innerWidth - 500) / 2,
-              y: (window.innerHeight - 600) / 2,
-            }}
+            size={{ width, height }}
+            position={position}
             bounds="window"
             onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
             enableResizing={false}
@@ -1207,7 +1204,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
               </div>
             </div>
           </Rnd>
-          </div>
+          </ClientPortal>
         )}
     </>
   );
