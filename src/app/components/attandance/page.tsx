@@ -324,11 +324,13 @@ const AttendancePage: React.FC = () => {
         const dataMap: Record<string, AttendanceRecord> = {};
 
         attendance.forEach((record) => {
+
           const dateKey = formatDateForIndia(record.date);
           dataMap[dateKey] = record;
         });
 
         setAttendanceData(dataMap);
+
 
         const today = getIndiaDate();
         const todayKey = formatDateKeyForIndia(today);
