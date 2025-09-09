@@ -434,9 +434,6 @@ const Managers: FC = () => {
         <form onSubmit={(e) => e.preventDefault()}>
           <UserSearch role="manager" />
         </form>
-        <Link href="/admin/managers/managerRequest" className="py-2 px-5 bg-white border border-[#ddd] rounded hover:bg-gray-50 transition-colors">
-          Managers Request
-        </Link>
       </div>
       <div className="grid grid-cols-3 gap-5">
       {managers.map(manager => (

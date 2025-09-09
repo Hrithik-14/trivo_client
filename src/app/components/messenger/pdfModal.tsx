@@ -10,7 +10,6 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 
 
-// Dynamically import Viewer + Worker (never touched during SSR)
 const Viewer = dynamic(
   () => import("@react-pdf-viewer/core").then((mod) => mod.Viewer),
   { ssr: false }

@@ -324,14 +324,14 @@ const AttendancePage: React.FC = () => {
         const dataMap: Record<string, AttendanceRecord> = {};
 
         attendance.forEach((record) => {
-          // Use the new India timezone formatting function
+
           const dateKey = formatDateForIndia(record.date);
           dataMap[dateKey] = record;
         });
 
         setAttendanceData(dataMap);
 
-        // Check today's status using India timezone
+
         const today = getIndiaDate();
         const todayKey = formatDateKeyForIndia(today);
         const todayRecord = dataMap[todayKey];
@@ -792,6 +792,11 @@ const AttendancePage: React.FC = () => {
                         ...leaveForm,
                         leaveDate: new Date(e.target.value),
                       })
+                    }
+                    min={
+                      leaveForm.leaveType === "Regularization"
+                        ? undefined
+                        : new Date().toISOString().split("T")[0]
                     }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required

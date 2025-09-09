@@ -9,6 +9,8 @@
   import { useDispatch } from 'react-redux'
   import { setUser } from '@/app/store/userSlice'
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/app/store'
 
   interface LoginFormData {
     identifier: string
@@ -31,25 +33,24 @@ import toast from 'react-hot-toast'
       mode: 'onChange'
     })
 
+    const user = useSelector((state: RootState) => state.user.user);
     useEffect(() => {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  if (token && user?.role) {
-    if (user.role === "admin") {
+      if (user?.token && user?.role) {
+        if (user.role === "admin") {
 
-      router.push("/admin/dashboard")
-    } else if (user.role === "employee") {
-      router.push("/employee/dashboard")
-    } else if (user.role === "manager") {
-      router.push("/manager/dashboard")
-    } else {
-      router.push("/")
-    }
-  } else {
-    setLoading(false)
-  }
-}, [router]);
+          router.push("/admin/dashboard")
+        } else if (user.role === "employee") {
+          router.push("/employee/dashboard")
+        } else if (user.role === "manager") {
+          router.push("/manager/dashboard")
+        } else {
+          router.push("/")
+        }
+      } else {
+        setLoading(false)
+      }
+    }, [router, user?.token, user?.role]);
 
 
 const onSubmit = async (data: LoginFormData) => {
@@ -66,7 +67,7 @@ const onSubmit = async (data: LoginFormData) => {
       employeeCode: res.data.user.employeeCode,
       role: res.data.user.role,
       token: res.data.token,
-      profileImage: res.data.profileImage
+      profileImage: res.data.user.profileImage
     }))
 
     reset()
