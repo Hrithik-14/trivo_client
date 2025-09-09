@@ -156,6 +156,7 @@ const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
           {currentMonth.toLocaleString("default", {
             month: "long",
             year: "numeric",
+            timeZone: "Asia/Kolkata",
           })}
         </h2>
         <button
@@ -859,7 +860,7 @@ const AttendancePage: React.FC = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <CalendarIcon size={18} className="text-gray-500" />
-                  <h2>{new Date(leave.date).toLocaleDateString()}</h2>
+                  <h2>{new Date(leave.date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })}</h2>
                 </div>
               </div>
             ))}
@@ -908,7 +909,7 @@ const AttendancePage: React.FC = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <CalendarIcon size={18} className="text-gray-500" />
-                  <h2>{new Date(request.date).toLocaleDateString()}</h2>
+                  <h2>{new Date(request.date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })}</h2>
                 </div>
               </div>
             ))}
