@@ -650,7 +650,7 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [loading, setLoading] = useState(true);
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const user = useSelector((state: RootState) => state.user.user);
-  const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showMessenger, setShowMessenger] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
@@ -662,13 +662,15 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const projectId = slug;
 
 
+  const width = 500;
+  const height = 600;
+
   useEffect(() => {
     if (showMessenger) {
-      const width = 500;
-      const height = 600;
+      const { innerWidth, innerHeight } = window;
       setPosition({
-        x: (window.innerWidth - width) / 2,
-        y: window.scrollY + (window.innerHeight - height) / 2,
+        x: (innerWidth - width) / 2,
+        y: (innerHeight - height) / 2,
       });
     }
   }, [showMessenger]);
@@ -1171,9 +1173,13 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
         </div>
       </div>
         {showMessenger && selectedContact && (
+          <div className="fixed inset-0 z-50">
           <Rnd
             size={{ width: 500, height: 600 }}
-            position={position}
+            position={{
+              x: (window.innerWidth - 500) / 2,
+              y: (window.innerHeight - 600) / 2,
+            }}
             bounds="window"
             onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
             enableResizing={false}
@@ -1201,6 +1207,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
               </div>
             </div>
           </Rnd>
+          </div>
         )}
     </>
   );
