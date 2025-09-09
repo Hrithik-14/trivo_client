@@ -102,6 +102,29 @@ interface LeaveCount {
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
+// Utility functions for timezone handling
+const getIndiaDate = (date?: Date | string): Date => {
+  const inputDate = date ? new Date(date) : new Date();
+  // Create a new date in India timezone
+  return new Date(inputDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+};
+
+const formatDateForIndia = (date: Date | string): string => {
+  const inputDate = typeof date === 'string' ? new Date(date) : date;
+  // Get the date in India timezone and format as YYYY-MM-DD
+  const indiaDate = new Date(inputDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const year = indiaDate.getFullYear();
+  const month = String(indiaDate.getMonth() + 1).padStart(2, '0');
+  const day = String(indiaDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateKeyForIndia = (date: Date): string => {
+  // Create a date string in India timezone
+  const indiaDateString = date.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  return indiaDateString; // This returns YYYY-MM-DD format
+};
+
 const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
   selectedDate,
   onDateChange,
@@ -289,7 +312,7 @@ const AttendancePage: React.FC = () => {
         });
         setLeaveCount(res.data);
       } catch (err) {
-        console.error("Error in fetching leave count:", error);
+        console.error("Error in fetching leave count:", err);
       }
     };
     fetchTotalLeaveCount();
@@ -301,14 +324,16 @@ const AttendancePage: React.FC = () => {
         const dataMap: Record<string, AttendanceRecord> = {};
 
         attendance.forEach((record) => {
-          const dateKey = record.date.split("T")[0];
+          // Use the new India timezone formatting function
+          const dateKey = formatDateForIndia(record.date);
           dataMap[dateKey] = record;
         });
 
         setAttendanceData(dataMap);
 
-        const today = new Date();
-        const todayKey = today.toISOString().split("T")[0];
+        // Check today's status using India timezone
+        const today = getIndiaDate();
+        const todayKey = formatDateKeyForIndia(today);
         const todayRecord = dataMap[todayKey];
         setIsLoggedIn(todayRecord?.isActive || false);
       } catch (error) {
@@ -327,12 +352,10 @@ const AttendancePage: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const dateKey = formatDateKey(selectedDate);
-        const data = attendanceData[dateKey];
+        const dateKey = formatDateKeyForIndia(selectedDate);
 
-        const date = data?.date || selectedDate;
         const response = await api.get(`/singleday-status`, {
-          params: { date },
+          params: { date: dateKey },
           headers: { Authorization: `Bearer ${user?.token}` },
         });
         setDay(response.data);
@@ -380,7 +403,7 @@ const AttendancePage: React.FC = () => {
   }, [activeTab, user?.token]);
 
   const formatDateKey = (date: Date): string => {
-    return date.toISOString().split("T")[0];
+    return formatDateKeyForIndia(date);
   };
 
   const getStatusColor = (status: string): string => {
@@ -427,7 +450,7 @@ const AttendancePage: React.FC = () => {
     view,
   }: TileProps): React.ReactElement | null => {
     if (view === "month") {
-      const dateKey = formatDateKey(date);
+      const dateKey = formatDateKeyForIndia(date);
       const attendanceRecord = attendanceData[dateKey];
 
       if (attendanceRecord) {
@@ -456,7 +479,7 @@ const AttendancePage: React.FC = () => {
 
   const tileClassName = ({ date, view }: TileProps): string => {
     if (view === "month") {
-      const dateKey = formatDateKey(date);
+      const dateKey = formatDateKeyForIndia(date);
       const attendanceRecord = attendanceData[dateKey];
     }
     return "";
@@ -480,7 +503,7 @@ const AttendancePage: React.FC = () => {
       setError("");
 
       const requestBody = {
-        leaveDate: leaveForm.leaveDate.toISOString().split("T")[0],
+        leaveDate: formatDateKeyForIndia(leaveForm.leaveDate),
         leaveType: leaveForm.leaveType,
         description: leaveForm.description.trim(),
       };
