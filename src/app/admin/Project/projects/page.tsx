@@ -374,7 +374,7 @@ const Projects: FC = () => {
                                 <p className='text-sm text-[#696969]'>{project.description}</p>
                             </div>
                             <div className={`p-2 text-xs h-fit px-4 rounded-full border ${
-                              project.status === 'ongoing'
+                              project.status === 'Ongoing'
                                 ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
                                 : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
                             }`}>
