@@ -378,7 +378,7 @@ const Projects: FC = () => {
                                 ? 'bg-[#DBEAFE] border-[#93C5FD] text-[#3B82F6]'
                                 : 'bg-[#DCFCE7] border-[#86EFAC] text-[#22C55E]'
                             }`}>
-                              {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
+                              {project.status === 'Ongoing' ? 'Ongoing' : 'Completed'}
                             </div>
                         </div>
 
