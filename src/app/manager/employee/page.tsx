@@ -29,7 +29,6 @@ const jobRoleEnum = Object.keys(jobRoleLabels);
 
 
 
-// Validation schema with Zod
 const employeeSchema = z.object({
   name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
   designation: z.string().min(1, "Job role is required"),
@@ -79,7 +78,7 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
         pincode: "",
         managerId: user?.id,
         },
-        mode: "onChange" // Validates on every change
+        mode: "onChange"
     });
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +132,6 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
         
         toast.success(response.data.message || "Employee registered successfully!");
 
-        // Reset form and state
         reset();
         setImageFile(null);
         setImagePreview(null);
@@ -196,14 +194,12 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </label>
             </div>
 
-            {/* Form Fields Section */}
             <div className="w-full flex flex-col gap-2">
                 <div className="flex gap-5 items-center text-blue-500 border-b border-[#ddd] pb-2">
                 <User size={30} />
                 <p className="text-2xl font-semibold">Personal Information</p>
                 </div>
 
-                {/* Name, Job Role, and Manager Row */}
                 <div className="flex gap-5 w-full">
                 <div className="w-full">
                     <label className="text-xs font-semibold text-[#696969]">Full name</label>
@@ -248,7 +244,6 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
                 </div>
 
-                {/* Email, DOB, Phone Row */}
                 <div className="flex gap-5">
                 <div className="w-full">
                     <label className="text-xs font-semibold text-[#696969]">Email</label>
@@ -291,7 +286,6 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
                 </div>
 
-                {/* Address Section */}
                 <h2 className="text-lg font-semibold mt-4">Address:</h2>
                 <div className="flex flex-col gap-2">
                 <div className="w-full">
@@ -343,7 +337,6 @@ const AddEmployee: FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
                 </div>
 
-                {/* Submit Button */}
                 <div className="w-full flex justify-end mt-4">
                 <button
                     type="submit"

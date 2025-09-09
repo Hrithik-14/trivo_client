@@ -148,6 +148,14 @@ useEffect(() => {
               Employees
             </Link>
             <Link
+              href={"/admin/employee-Request"}
+              className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
+                pathname === "/admin/employee-Request" ? "bg-black text-white" : ""
+              }`}
+            >
+              Employee Request
+            </Link>
+            <Link
               href={"/admin/todays-leave"}
               className={` w-full py-1 md:py-2 px-2 md:px-4 text-sm md:text-base rounded ${
                 pathname === "/admin/todays-leave" ? "bg-black text-white" : ""

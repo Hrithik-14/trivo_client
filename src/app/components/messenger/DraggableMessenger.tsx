@@ -9,6 +9,7 @@ import Messenger from "./Messenger";
 import api from '@/app/api/axios';
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import ClientPortal from "../project/ClientPortal";
 
 interface DraggableMessengerProps {
   role: "admin" | "manager" | "employee";
@@ -33,21 +34,21 @@ const SIDEBAR_WIDTH = 300;
 
 const DraggableMessenger: FC<DraggableMessengerProps> = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
+  const width = 500;
+  const height = 600;
+  const [position, setPosition] = useState<{ x: number; y: number } | undefined>(undefined);
   const [unreadChatCount, setUnreadChatCount] = useState(0);  const [currentUserId, setCurrentUserId] = useState<string>("");
   const user = useSelector((state: RootState) => state.user.user)
 
 
-    useEffect(() => {
-      if (isOpen) {
-        const width = 500;
-        const height = 600;
-        setPosition({
-          x: (window.innerWidth - width) / 2,
-          y: window.scrollY + (window.innerHeight - height) / 2,
-        });
-      }
-    }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) {
+      setPosition({
+        x: (window.innerWidth - width) / 2,
+        y: (window.innerHeight - height) / 2,
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     
@@ -162,31 +163,33 @@ const checkUnreadMessages = async () => {
       </button>
 
       {isOpen && (
-        <Rnd
-          size={{ width: 500, height: 600 }}
-          position={position}
-          bounds="window"
-          onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
-          enableResizing={false}
-          dragHandleClassName="drag-handle"
-          className="fixed z-50 bg-white rounded-lg shadow-2xl"
-        >
-          <div className="flex flex-col h-full">
-            <div className="drag-handle bg-blue-400 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Messenger</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="hover:bg-blue-600 p-1 rounded"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
+        <ClientPortal>
+          <Rnd
+            size={{ width: 500, height: 600 }}
+            position={position}
+            bounds="window"
+            onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
+            enableResizing={false}
+            dragHandleClassName="drag-handle"
+            className="fixed z-50 bg-white rounded-lg shadow-2xl"
+          >
+            <div className="flex flex-col h-full">
+              <div className="drag-handle bg-blue-400 text-white px-4 py-2 rounded-t-lg flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Messenger</h3>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="hover:bg-blue-600 p-1 rounded"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
 
-              <Messenger role={role} />
+                <Messenger role={role} />
+              </div>
             </div>
-          </div>
-        </Rnd>
+          </Rnd>
+        </ClientPortal>
       )}
 
     </div>

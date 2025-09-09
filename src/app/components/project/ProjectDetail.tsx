@@ -38,6 +38,7 @@ import {
 } from "react-hook-form";
 import toast from "react-hot-toast";
 import ManagersUserSearch from "@/app/components/UsersManager";
+import ClientPortal from "./ClientPortal";
 
 interface User {
   _id: string;
@@ -650,7 +651,9 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const [loading, setLoading] = useState(true);
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const user = useSelector((state: RootState) => state.user.user);
-  const [position, setPosition] = useState({ x: SIDEBAR_WIDTH + 20, y: 20 });
+  const width = 500;
+  const height = 600;
+  const [position, setPosition] = useState<{ x: number; y: number } | undefined>(undefined);  
   const [showMessenger, setShowMessenger] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
@@ -662,13 +665,12 @@ const ProjectDetail: FC<Props> = ({ role, slug }) => {
   const projectId = slug;
 
 
+
   useEffect(() => {
     if (showMessenger) {
-      const width = 500;
-      const height = 600;
       setPosition({
         x: (window.innerWidth - width) / 2,
-        y: window.scrollY + (window.innerHeight - height) / 2,
+        y: (window.innerHeight - height) / 2,
       });
     }
   }, [showMessenger]);
@@ -1171,8 +1173,9 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
         </div>
       </div>
         {showMessenger && selectedContact && (
+          <ClientPortal>
           <Rnd
-            size={{ width: 500, height: 600 }}
+            size={{ width, height }}
             position={position}
             bounds="window"
             onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
@@ -1201,6 +1204,7 @@ const handleStatusChange = async (newStatus: "Ongoing" | "Completed") => {
               </div>
             </div>
           </Rnd>
+          </ClientPortal>
         )}
     </>
   );

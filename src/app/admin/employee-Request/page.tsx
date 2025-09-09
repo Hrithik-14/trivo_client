@@ -204,11 +204,11 @@ const renderRequestCard = (request: Request) => (
         <div className="flex flex-col gap-5">
         <div className="bg-white p-5 px-5 border border-[#ddd] rounded flex gap-3 items-center">
             <Calendar size={35} className="p-2 bg-blue-500 text-white rounded" />
-            <h2 className="text-xl font-semibold">Managers Request</h2>
+            <h2 className="text-xl font-semibold">Employee Request</h2>
         </div>
 
         <div>
-            <h2 className="text-sm font-semibold mb-1">
+            <h2 className="text-sm font-semibold mb-2">
             Regularization ({regularizationRequests.length})
             </h2>
             {regularizationRequests.length === 0 ? (
@@ -225,7 +225,7 @@ const renderRequestCard = (request: Request) => (
         </div>
 
         <div>
-            <h2 className="text-sm font-semibold mb-1">
+            <h2 className="text-sm font-semibold mb-2">
             Leave Request ({leaveRequests.length})
             </h2>
             {leaveRequests.length === 0 ? (

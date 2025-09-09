@@ -103,7 +103,7 @@ const Projects: FC = () => {
 
       <div className='flex flex-col gap-4'>
         {projects.map((project) => (
-          <Link href={`/manager/project/${project._id}`} key={project._id} className={`p-3 px-5 border border-[#ddd] rounded-md flex flex-col gap-3 ${project.isActive === false ? 'bg-red-100' : 'bg-white'}`}>
+          <Link href={`/manager/project/${project._id}`} key={project._id} className={`p-3 px-5 border rounded-md flex flex-col gap-3 ${project.isActive === false ? 'bg-red-50 border-red-200' : 'bg-white border-[#ddd]'}`}>
             <div className='flex justify-between'>
               <div>
                 <h2 className='text-xl font-semibold'>{project.name}</h2>

@@ -92,7 +92,6 @@ export const AudioPlayer: FC<AudioPlayerProps> = ({ fileUrl }) => {
         )}
       </button>
 
-      {/* Progress Bar and Time */}
       <div className="flex-1 min-w-0">
         <div 
           className="relative h-2 bg-gray-300 rounded-full cursor-pointer mb-1"

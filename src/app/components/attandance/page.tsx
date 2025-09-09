@@ -102,6 +102,29 @@ interface LeaveCount {
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
+// Utility functions for timezone handling
+const getIndiaDate = (date?: Date | string): Date => {
+  const inputDate = date ? new Date(date) : new Date();
+  // Create a new date in India timezone
+  return new Date(inputDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+};
+
+const formatDateForIndia = (date: Date | string): string => {
+  const inputDate = typeof date === 'string' ? new Date(date) : date;
+  // Get the date in India timezone and format as YYYY-MM-DD
+  const indiaDate = new Date(inputDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const year = indiaDate.getFullYear();
+  const month = String(indiaDate.getMonth() + 1).padStart(2, '0');
+  const day = String(indiaDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateKeyForIndia = (date: Date): string => {
+  // Create a date string in India timezone
+  const indiaDateString = date.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  return indiaDateString; // This returns YYYY-MM-DD format
+};
+
 const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
   selectedDate,
   onDateChange,
@@ -156,6 +179,7 @@ const SimpleCalendar: React.FC<SimpleCalendarProps> = ({
           {currentMonth.toLocaleString("default", {
             month: "long",
             year: "numeric",
+            timeZone: "Asia/Kolkata",
           })}
         </h2>
         <button
@@ -288,7 +312,7 @@ const AttendancePage: React.FC = () => {
         });
         setLeaveCount(res.data);
       } catch (err) {
-        console.error("Error in fetching leave count:", error);
+        console.error("Error in fetching leave count:", err);
       }
     };
     fetchTotalLeaveCount();
@@ -300,14 +324,14 @@ const AttendancePage: React.FC = () => {
         const dataMap: Record<string, AttendanceRecord> = {};
 
         attendance.forEach((record) => {
-          const dateKey = record.date.split("T")[0];
+          const dateKey = formatDateForIndia(record.date);
           dataMap[dateKey] = record;
         });
 
         setAttendanceData(dataMap);
 
-        const today = new Date();
-        const todayKey = today.toISOString().split("T")[0];
+        const today = getIndiaDate();
+        const todayKey = formatDateKeyForIndia(today);
         const todayRecord = dataMap[todayKey];
         setIsLoggedIn(todayRecord?.isActive || false);
       } catch (error) {
@@ -326,12 +350,10 @@ const AttendancePage: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const dateKey = formatDateKey(selectedDate);
-        const data = attendanceData[dateKey];
+        const dateKey = formatDateKeyForIndia(selectedDate);
 
-        const date = data?.date || selectedDate;
         const response = await api.get(`/singleday-status`, {
-          params: { date },
+          params: { date: dateKey },
           headers: { Authorization: `Bearer ${user?.token}` },
         });
         setDay(response.data);
@@ -379,7 +401,7 @@ const AttendancePage: React.FC = () => {
   }, [activeTab, user?.token]);
 
   const formatDateKey = (date: Date): string => {
-    return date.toISOString().split("T")[0];
+    return formatDateKeyForIndia(date);
   };
 
   const getStatusColor = (status: string): string => {
@@ -410,6 +432,7 @@ const AttendancePage: React.FC = () => {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       });
     } catch {
       return timeString;
@@ -425,7 +448,7 @@ const AttendancePage: React.FC = () => {
     view,
   }: TileProps): React.ReactElement | null => {
     if (view === "month") {
-      const dateKey = formatDateKey(date);
+      const dateKey = formatDateKeyForIndia(date);
       const attendanceRecord = attendanceData[dateKey];
 
       if (attendanceRecord) {
@@ -454,7 +477,7 @@ const AttendancePage: React.FC = () => {
 
   const tileClassName = ({ date, view }: TileProps): string => {
     if (view === "month") {
-      const dateKey = formatDateKey(date);
+      const dateKey = formatDateKeyForIndia(date);
       const attendanceRecord = attendanceData[dateKey];
     }
     return "";
@@ -478,7 +501,7 @@ const AttendancePage: React.FC = () => {
       setError("");
 
       const requestBody = {
-        leaveDate: leaveForm.leaveDate.toISOString().split("T")[0],
+        leaveDate: formatDateKeyForIndia(leaveForm.leaveDate),
         leaveType: leaveForm.leaveType,
         description: leaveForm.description.trim(),
       };
@@ -586,6 +609,7 @@ const AttendancePage: React.FC = () => {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Kolkata",
     });
 
     if (!day?.dayStatus && !day?.des) {
@@ -767,6 +791,11 @@ const AttendancePage: React.FC = () => {
                         leaveDate: new Date(e.target.value),
                       })
                     }
+                    min={
+                      leaveForm.leaveType === "Regularization"
+                        ? undefined
+                        : new Date().toISOString().split("T")[0]
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -857,7 +886,7 @@ const AttendancePage: React.FC = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <CalendarIcon size={18} className="text-gray-500" />
-                  <h2>{new Date(leave.date).toLocaleDateString()}</h2>
+                  <h2>{new Date(leave.date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })}</h2>
                 </div>
               </div>
             ))}
@@ -906,7 +935,7 @@ const AttendancePage: React.FC = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <CalendarIcon size={18} className="text-gray-500" />
-                  <h2>{new Date(request.date).toLocaleDateString()}</h2>
+                  <h2>{new Date(request.date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })}</h2>
                 </div>
               </div>
             ))}
