@@ -586,6 +586,7 @@ const AttendancePage: React.FC = () => {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Kolkata",
     });
 
     if (!day?.dayStatus && !day?.des) {
