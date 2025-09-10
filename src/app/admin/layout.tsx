@@ -11,6 +11,7 @@ import { RootState } from "../store";
 import api from "../api/axios";
 import { clearUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
+import Notifications from "../components/notification/Notification";
 
 
 interface MainContainerProps {
@@ -34,27 +35,29 @@ export default function RootLayout({ children }: MainContainerProps) {
   const user = useSelector((state: RootState) => state.user.user)
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-const checkUnreadNotifications = useCallback(async () => {
-  if (!user?.id) return;
+  const checkUnreadNotifications = useCallback(async () => {
+    if (!user?.id) return;
 
-  try {
-    const res = await api.get(`/notification/${user.id}`, { params: { page: 1, limit: 50 } });
-    const notifications = res.data.notifications;
+    try {
+      const res = await api.get(`/notification/${user.id}`, { params: { page: 1, limit: 50 } });
+      const notifications = res.data.notifications;
 
-    const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
-    setUnreadNotificationCount(unreadCount);
-  } catch (error) {
-    console.error("Failed to fetch notifications", error);
-  }
-}, [user?.id])
+      const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
+      setUnreadNotificationCount(unreadCount);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  }, [user?.id])
 
-useEffect(() => {
-  if (user?.id) {
-    checkUnreadNotifications();
-    const interval = setInterval(checkUnreadNotifications, 30000);
-    return () => clearInterval(interval);
-  }
-}, [user?.id, checkUnreadNotifications]);
+  useEffect(() => {
+    if (user?.id) {
+      checkUnreadNotifications();
+      const interval = setInterval(checkUnreadNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id, checkUnreadNotifications]);
+
+
 
 
   const logout = () => {

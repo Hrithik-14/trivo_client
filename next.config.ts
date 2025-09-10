@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // 🚀 Completely ignore "canvas"
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^canvas$/,
