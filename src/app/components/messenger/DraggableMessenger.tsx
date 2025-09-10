@@ -197,5 +197,3 @@ const checkUnreadMessages = async () => {
 };
 
 export default DraggableMessenger;
-
-
